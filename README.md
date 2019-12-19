@@ -42,7 +42,7 @@ func main() {
 ## Client Example
 
 ```
-$ ssh host echo this is my wish
+$ ssh -p 5555 host echo this is my wish
 
 this is my wish
 ```
