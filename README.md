@@ -33,7 +33,8 @@ func echoHandler(s wish.Session) {
 
 func main() {
         port := 5555
-        server := wish.NewServer(port)
+        keyPath := "./.ssh/id_rsa"
+        server := wish.NewServer(keyPath, port)
         server.addHandler("echo", echoHandler)
         server.Start()
 }
