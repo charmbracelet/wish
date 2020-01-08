@@ -2,6 +2,7 @@ package wish
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 
@@ -10,9 +11,11 @@ import (
 )
 
 type Server struct {
-	router *Router
-	server *ssh.Server
-	port   int
+	router         *Router
+	Server         *ssh.Server
+	Port           int
+	PublicKeyData  []byte
+	PrivateKeyData []byte
 }
 
 type Router struct {
@@ -20,18 +23,14 @@ type Router struct {
 	defaultRoute SessionHandler
 }
 
-func NewServer(port int) *Server {
+func NewServer(keyPath string, port int) (*Server, error) {
 	s := &Server{}
 	routes := make(map[string]SessionHandler)
 	s.router = &Router{
 		routes: routes,
 	}
-	home, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatalf("Can't read user home: %s\n", err)
-	}
-	kf := ssh.HostKeyFile(fmt.Sprintf("%s/.ssh/id_rsa", home))
-	s.server = &ssh.Server{
+	kf := ssh.HostKeyFile(keyPath)
+	s.Server = &ssh.Server{
 		Version:          "OpenSSH_7.6p1",
 		Addr:             fmt.Sprintf(":%d", port),
 		Handler:          s.sessionHandler,
@@ -39,8 +38,29 @@ func NewServer(port int) *Server {
 		// PasswordHandler:      s.passHandler,
 		// ServerConfigCallback: s.serverConfigCallback,
 	}
-	s.server.SetOption(kf)
-	return s
+	s.Server.SetOption(kf)
+	pubKeyPath := fmt.Sprintf("%s.pub", keyPath)
+	if f, err := os.Open(keyPath); err == nil {
+		defer f.Close()
+		if d, err := ioutil.ReadAll(f); err == nil {
+			s.PrivateKeyData = d
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+	if pf, err := os.Open(pubKeyPath); err == nil {
+		defer pf.Close()
+		if d, err := ioutil.ReadAll(pf); err == nil {
+			s.PrivateKeyData = d
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+	return s, nil
 }
 
 func (me *Server) AddHandler(route string, h SessionHandler) {
@@ -54,8 +74,8 @@ func (me *Server) Start() error {
 	if len(me.router.routes) == 0 {
 		return fmt.Errorf("no routes specified")
 	}
-	log.Printf("starting server on %s", me.server.Addr)
-	return me.server.ListenAndServe()
+	log.Printf("starting server on %s", me.Server.Addr)
+	return me.Server.ListenAndServe()
 }
 
 func (me *Server) sessionHandler(s ssh.Session) {
