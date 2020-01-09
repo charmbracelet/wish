@@ -1,6 +1,9 @@
 package wish
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -11,11 +14,11 @@ import (
 )
 
 type Server struct {
-	router         *Router
-	Server         *ssh.Server
-	Port           int
-	PublicKeyData  []byte
-	PrivateKeyData []byte
+	router     *Router
+	Server     *ssh.Server
+	Port       int
+	PublicKey  *rsa.PublicKey
+	PrivateKey *rsa.PrivateKey
 }
 
 type Router struct {
@@ -43,7 +46,12 @@ func NewServer(keyPath string, port int) (*Server, error) {
 	if f, err := os.Open(keyPath); err == nil {
 		defer f.Close()
 		if d, err := ioutil.ReadAll(f); err == nil {
-			s.PrivateKeyData = d
+			block, _ := pem.Decode(d)
+			pk, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+			if err != nil {
+				return nil, err
+			}
+			s.PrivateKey = pk
 		} else {
 			return nil, err
 		}
@@ -53,7 +61,12 @@ func NewServer(keyPath string, port int) (*Server, error) {
 	if pf, err := os.Open(pubKeyPath); err == nil {
 		defer pf.Close()
 		if d, err := ioutil.ReadAll(pf); err == nil {
-			s.PrivateKeyData = d
+			block, _ := pem.Decode(d)
+			pk, err := x509.ParsePKCS1PublicKey(block.Bytes)
+			if err != nil {
+				return nil, err
+			}
+			s.PublicKey = pk
 		} else {
 			return nil, err
 		}
