@@ -17,7 +17,7 @@ type Server struct {
 	router     *Router
 	Server     *ssh.Server
 	Port       int
-	PublicKey  *rsa.PublicKey
+	PublicKey  gossh.PublicKey
 	PrivateKey *rsa.PrivateKey
 }
 
@@ -42,7 +42,6 @@ func NewServer(keyPath string, port int) (*Server, error) {
 		// ServerConfigCallback: s.serverConfigCallback,
 	}
 	s.Server.SetOption(kf)
-	pubKeyPath := fmt.Sprintf("%s.pub", keyPath)
 	if f, err := os.Open(keyPath); err == nil {
 		defer f.Close()
 		if d, err := ioutil.ReadAll(f); err == nil {
@@ -58,11 +57,11 @@ func NewServer(keyPath string, port int) (*Server, error) {
 	} else {
 		return nil, err
 	}
+	pubKeyPath := fmt.Sprintf("%s.pub", keyPath)
 	if pf, err := os.Open(pubKeyPath); err == nil {
 		defer pf.Close()
 		if d, err := ioutil.ReadAll(pf); err == nil {
-			block, _ := pem.Decode(d)
-			pk, err := x509.ParsePKCS1PublicKey(block.Bytes)
+			pk, _, _, _, err := gossh.ParseAuthorizedKey(d)
 			if err != nil {
 				return nil, err
 			}
