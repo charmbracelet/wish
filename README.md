@@ -14,29 +14,32 @@ around SSH. Instead of URL based routing, Wish uses commands issued to the
 package main
 
 import (
-        "fmt"
-        "strings"
+	"fmt"
+	"strings"
 
-        "github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish"
 )
 
 func echoHandler(s wish.Session) {
-        var out string
-        cmd := s.Command()
-        if len(cmd) > 1 {
-                out = strings.join(cmd[1:], " ")
-        } else {
-                out = "Usage: ssh HOST echo SOME STUFF"
-        }
-        s.Write([]byte(fmt.Sprintf("\n\n%s\n", out)))
+	var out string
+	cmd := s.Command()
+	if len(cmd) > 1 {
+		out = strings.Join(cmd[1:], " ")
+	} else {
+		out = "Usage: ssh HOST echo SOME STUFF"
+	}
+	s.Write([]byte(fmt.Sprintf("\n\n%s\n", out)))
 }
 
 func main() {
-        port := 5555
-        keyPath := "./.ssh/id_rsa"
-        server := wish.NewServer(keyPath, port)
-        server.addHandler("echo", echoHandler)
-        server.Start()
+	port := 5555
+	keyPath := ".ssh/id_rsa"
+	server, err := wish.NewServer(keyPath, port)
+	if err != nil {
+		panic(err)
+	}
+	server.AddHandler("echo", echoHandler)
+	server.Start()
 }
 ```
 
