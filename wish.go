@@ -1,9 +1,6 @@
 package wish
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -14,11 +11,10 @@ import (
 )
 
 type Server struct {
-	router     *Router
-	Server     *ssh.Server
-	Port       int
-	PublicKey  gossh.PublicKey
-	PrivateKey *rsa.PrivateKey
+	router    *Router
+	Server    *ssh.Server
+	Port      int
+	PublicKey gossh.PublicKey
 }
 
 type Router struct {
@@ -42,21 +38,6 @@ func NewServer(keyPath string, port int) (*Server, error) {
 		// ServerConfigCallback: s.serverConfigCallback,
 	}
 	s.Server.SetOption(kf)
-	if f, err := os.Open(keyPath); err == nil {
-		defer f.Close()
-		if d, err := ioutil.ReadAll(f); err == nil {
-			block, _ := pem.Decode(d)
-			pk, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-			if err != nil {
-				return nil, err
-			}
-			s.PrivateKey = pk
-		} else {
-			return nil, err
-		}
-	} else {
-		return nil, err
-	}
 	pubKeyPath := fmt.Sprintf("%s.pub", keyPath)
 	if pf, err := os.Open(pubKeyPath); err == nil {
 		defer pf.Close()
