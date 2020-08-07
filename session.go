@@ -17,5 +17,6 @@ func (s *Session) KeyText() (string, error) {
 	if s.Session.PublicKey() == nil {
 		return "", fmt.Errorf("Session doesn't have public key")
 	}
-	return base64.StdEncoding.EncodeToString(s.Session.PublicKey().Marshal()), nil
+	kb := base64.StdEncoding.EncodeToString(s.Session.PublicKey().Marshal())
+	return fmt.Sprintf("%s %s", s.Session.PublicKey().Type(), kb), nil
 }
