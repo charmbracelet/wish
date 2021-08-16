@@ -8,8 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"wish"
 
+	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
 

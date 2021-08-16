@@ -3,8 +3,8 @@ package logging
 import (
 	"log"
 	"time"
-	"wish"
 
+	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
 

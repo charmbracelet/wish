@@ -1,9 +1,8 @@
 package bubbletea
 
 import (
-	"wish"
-
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
 
