@@ -1,109 +1,45 @@
 package wish
 
 import (
-	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
+	"path/filepath"
+	"strings"
 
+	"github.com/charmbracelet/charm/keygen"
 	"github.com/gliderlabs/ssh"
-	gossh "golang.org/x/crypto/ssh"
 )
 
-type Server struct {
-	router    *Router
-	Server    *ssh.Server
-	Port      int
-	PublicKey gossh.PublicKey
-}
+type Middleware func(ssh.Handler) ssh.Handler
 
-type Router struct {
-	routes       map[string]SessionHandler
-	defaultRoute SessionHandler
-}
-
-func NewServer(keyPath string, port int) (*Server, error) {
-	s := &Server{}
-	routes := make(map[string]SessionHandler)
-	s.router = &Router{
-		routes: routes,
-	}
-	kf := ssh.HostKeyFile(keyPath)
-	s.Server = &ssh.Server{
-		Version:          "OpenSSH_7.6p1",
-		Addr:             fmt.Sprintf(":%d", port),
-		Handler:          s.sessionHandler,
-		PublicKeyHandler: s.authHandler,
-		// PasswordHandler:      s.passHandler,
-		// ServerConfigCallback: s.serverConfigCallback,
-	}
-	s.Server.SetOption(kf)
-	pubKeyPath := fmt.Sprintf("%s.pub", keyPath)
-	if pf, err := os.Open(pubKeyPath); err == nil {
-		defer pf.Close()
-		if d, err := ioutil.ReadAll(pf); err == nil {
-			pk, _, _, _, err := gossh.ParseAuthorizedKey(d)
-			if err != nil {
-				return nil, err
-			}
-			s.PublicKey = pk
-		} else {
-			return nil, err
-		}
-	} else {
+func NewServer(addr string, keyPath string, mw ...Middleware) (*ssh.Server, error) {
+	s := &ssh.Server{}
+	s.Version = "OpenSSH_7.6p1"
+	s.Addr = addr
+	s.PasswordHandler = passHandler
+	s.PublicKeyHandler = authHandler
+	kps := strings.Split(keyPath, string(filepath.Separator))
+	kp := strings.Join(kps[:len(kps)-1], string(filepath.Separator))
+	n := strings.TrimRight(kps[len(kps)-1], "_ed25519")
+	_, err := keygen.NewSSHKeyPair(kp, n, nil, "ed25519")
+	if err != nil {
 		return nil, err
 	}
+	k := ssh.HostKeyFile(keyPath)
+	err = s.SetOption(k)
+	if err != nil {
+		return nil, err
+	}
+	h := func(s ssh.Session) {}
+	for _, m := range mw {
+		h = m(h)
+	}
+	s.Handler = h
 	return s, nil
 }
 
-func (me *Server) AddHandler(route string, h SessionHandler) {
-	if len(me.router.routes) == 0 {
-		me.router.defaultRoute = h
-	}
-	me.router.routes[route] = h
-}
-
-func (me *Server) Start() error {
-	if len(me.router.routes) == 0 {
-		return fmt.Errorf("no routes specified")
-	}
-	log.Printf("starting server on %s", me.Server.Addr)
-	return me.Server.ListenAndServe()
-}
-
-func (me *Server) sessionHandler(s ssh.Session) {
-	// s.Write([]byte("\x1b[2J\x1b[1;1H")) // TODO middleware
-	var route string
-	cmds := s.Command()
-	if len(cmds) > 0 {
-		route = cmds[0]
-	}
-	me.router.Route(route, Session{s})
-}
-
-func (me *Server) authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
+func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 	return true
 }
 
-func (me *Server) passHandler(ctx ssh.Context, pass string) bool {
-	return false
-}
-
-func (me *Server) bannerCallback(cm gossh.ConnMetadata) string {
-	return fmt.Sprintf("\nHello %s put whatever you want as a password. It's no big whoop!\n\n", cm.User())
-}
-
-func (me *Server) serverConfigCallback(ctx ssh.Context) *gossh.ServerConfig {
-	return &gossh.ServerConfig{
-		BannerCallback: me.bannerCallback,
-	}
-}
-
-func (r *Router) Route(route string, s Session) {
-	h, ok := r.routes[route]
-	if !ok {
-		r.defaultRoute(s)
-		return
-	}
-	h(s)
+func passHandler(ctx ssh.Context, pass string) bool {
+	return true
 }
