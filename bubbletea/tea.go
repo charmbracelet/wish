@@ -15,6 +15,15 @@ func Middleware(bth BubbleTeaHandler) wish.Middleware {
 			if m != nil {
 				opts = append(opts, tea.WithInput(s), tea.WithOutput(s))
 				p := tea.NewProgram(m, opts...)
+				_, windowChanges, _ := s.Pty()
+				go func() {
+					for {
+						w := <-windowChanges
+						if p != nil {
+							p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+						}
+					}
+				}()
 				_ = p.Start()
 			}
 			sh(s)
