@@ -13,7 +13,22 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-func gitMiddleware(repoDir string, authedKeys []ssh.PublicKey) wish.Middleware {
+func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middleware {
+	var err error
+	var ak1, ak2 []ssh.PublicKey
+	if authorizedKeys != "" {
+		ak1, err = parseKeysFromString(strings.Trim(authorizedKeys, "\n"))
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	if authorizedKeysFile != "" {
+		ak2, err = parseKeysFromFile(authorizedKeysFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	authedKeys := append(ak1, ak2...)
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			cmd := s.Command()
@@ -54,19 +69,6 @@ func gitMiddleware(repoDir string, authedKeys []ssh.PublicKey) wish.Middleware {
 			sh(s)
 		}
 	}
-}
-
-func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middleware {
-	ak1, err := parseKeysFromString(authorizedKeys)
-	if err != nil {
-		log.Fatal(err)
-	}
-	ak2, err := parseKeysFromFile(authorizedKeysFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	authedKeys := append(ak1, ak2...)
-	return gitMiddleware(repoDir, authedKeys)
 }
 
 func MiddlewareWithKeys(repoDir, authorizedKeys string) wish.Middleware {
@@ -111,6 +113,9 @@ func parseKeysFromString(keys string) ([]ssh.PublicKey, error) {
 func addKeys(s *bufio.Scanner, keys *[]ssh.PublicKey) error {
 	for s.Scan() {
 		pt := s.Text()
+		if pt == "" {
+			continue
+		}
 		log.Printf("Adding authorized key: %s", pt)
 		pk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(pt))
 		if err != nil {
