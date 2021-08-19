@@ -28,12 +28,16 @@ func NewServer(addr string, keyPath string, mw ...Middleware) (*ssh.Server, erro
 	if err != nil {
 		return nil, err
 	}
+	s.Handler = HandlerFromMiddleware(mw...)
+	return s, nil
+}
+
+func HandlerFromMiddleware(mw ...Middleware) ssh.Handler {
 	h := func(s ssh.Session) {}
 	for _, m := range mw {
 		h = m(h)
 	}
-	s.Handler = h
-	return s, nil
+	return h
 }
 
 func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
