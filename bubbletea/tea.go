@@ -6,8 +6,14 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
+// BubbleTeaHander is the function Bubble Tea apps implement to hook into the
+// SSH Middleware. This will create a new tea.Program for every connection and
+// start it with the tea.ProgramOptions returned.
 type BubbleTeaHandler func(ssh.Session) (tea.Model, []tea.ProgramOption)
 
+// Middleware takes a BubbleTeaHandler and hooks the input and output for the
+// ssh.Session into the tea.Program. It also captures window resize events and
+// sends them to the tea.Program as tea.WindowSizeMsgs.
 func Middleware(bth BubbleTeaHandler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {

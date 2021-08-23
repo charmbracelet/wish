@@ -8,6 +8,10 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
+// Middleware provides basic connection logging. Connects are logged with the
+// remote address, invoked command, TERM setting, window dimensions and if the
+// auth was public key based. Disconnect will log the remote address and
+// connection duration.
 func Middleware() wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {

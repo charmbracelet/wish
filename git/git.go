@@ -13,6 +13,10 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
+// Middleware adds Git server functionality to the ssh.Server. Repos are stored
+// in the provided repoDir. If an authorizedKeys string or authorizedKeysFile
+// path are provided, they will be used to authorize all pushes otherwise
+// anyone can push. All repos are publicly readable.
 func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middleware {
 	var err error
 	var ak1, ak2 []ssh.PublicKey
@@ -71,10 +75,15 @@ func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middlew
 	}
 }
 
+// MiddlewareWithKeys will create Middleware with the provided authorizedKeys.
+// The authorizedKeys string content should be of the same format as an ssh
+// authorized_keys file.
 func MiddlewareWithKeys(repoDir, authorizedKeys string) wish.Middleware {
 	return Middleware(repoDir, authorizedKeys, "")
 }
 
+// MiddlewareWithKeyPath will create Middleware with the specified
+// authorized_keys file.
 func MiddlewareWithKeyPath(repoDir, authorizedKeysFile string) wish.Middleware {
 	return Middleware(repoDir, "", authorizedKeysFile)
 }

@@ -8,9 +8,16 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
+// Middleware is a function that takes an ssh.Handler and returns an
+// ssh.Handler. Implementations should call the provided handler argument.
 type Middleware func(ssh.Handler) ssh.Handler
 
-func NewServer(addr string, keyPath string, mw ...Middleware) (*ssh.Server, error) {
+// NewServer is returns a default SSH server with the provided Middleware. A
+// new SSH key pair of type ed25519 will be created if one does not exist. By
+// default this server will accept all incoming connections, password and
+// public key.
+func NewServer(addr string, keyPath string, mw ...Middleware) (*ssh.Server,
+	error) {
 	s := &ssh.Server{}
 	s.Version = "OpenSSH_7.6p1"
 	s.Addr = addr
@@ -32,6 +39,9 @@ func NewServer(addr string, keyPath string, mw ...Middleware) (*ssh.Server, erro
 	return s, nil
 }
 
+// HandlerFromMiddleware composes the provided Middleware and return a
+// ssh.Handler. This useful if you manually create an ssh.Server and want to
+// set the Server.Handler.
 func HandlerFromMiddleware(mw ...Middleware) ssh.Handler {
 	h := func(s ssh.Session) {}
 	for _, m := range mw {
