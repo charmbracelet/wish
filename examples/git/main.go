@@ -21,11 +21,13 @@ const repoDir = ".repos"
 
 func main() {
 	s, err := wish.NewServer(
-		fmt.Sprintf("%s:%d", host, port),
-		".ssh/git_server_ed25519",
-		gm.Middleware(repoDir, "", ""),
-		gitListMiddleware,
-		lm.Middleware(),
+		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
+		wish.WithHostKeyPath(".ssh/git_server_ed25519"),
+		wish.WithMiddlewares(
+			gm.Middleware(repoDir, "", ""),
+			gitListMiddleware,
+			lm.Middleware(),
+		),
 	)
 	if err != nil {
 		log.Fatalln(err)

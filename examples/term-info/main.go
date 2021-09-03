@@ -19,10 +19,12 @@ const port = 23232
 
 func main() {
 	s, err := wish.NewServer(
-		fmt.Sprintf("%s:%d", host, port),
-		".ssh/term_info_ed25519",
-		bm.Middleware(teaHandler),
-		lm.Middleware(),
+		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
+		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
+		wish.WithMiddlewares(
+			bm.Middleware(teaHandler),
+			lm.Middleware(),
+		),
 	)
 	if err != nil {
 		log.Fatalln(err)

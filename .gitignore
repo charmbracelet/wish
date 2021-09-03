@@ -1,4 +1,6 @@
-examples/*/.ssh
+examples/*
+!examples/git
+!examples/term-info
 examples/term-info/term-info
 examples/git/git
 examples/git/.repos
