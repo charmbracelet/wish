@@ -1,11 +1,12 @@
 package wish
 
 import (
-	"path/filepath"
-	"strings"
+	"crypto/ed25519"
+	"crypto/rand"
+	"encoding/pem"
 
-	"github.com/charmbracelet/charm/keygen"
 	"github.com/gliderlabs/ssh"
+	"github.com/mikesmitty/edkey"
 )
 
 // Middleware is a function that takes an ssh.Handler and returns an
@@ -16,38 +17,45 @@ type Middleware func(ssh.Handler) ssh.Handler
 // new SSH key pair of type ed25519 will be created if one does not exist. By
 // default this server will accept all incoming connections, password and
 // public key.
-func NewServer(addr string, keyPath string, mw ...Middleware) (*ssh.Server,
+func NewServer(ops ...ssh.Option) (*ssh.Server,
 	error) {
 	s := &ssh.Server{}
+	// Some sensible defaults
 	s.Version = "OpenSSH_7.6p1"
-	s.Addr = addr
 	s.PasswordHandler = passHandler
 	s.PublicKeyHandler = authHandler
-	kps := strings.Split(keyPath, string(filepath.Separator))
-	kp := strings.Join(kps[:len(kps)-1], string(filepath.Separator))
-	n := strings.TrimRight(kps[len(kps)-1], "_ed25519")
-	_, err := keygen.NewSSHKeyPair(kp, n, nil, "ed25519")
-	if err != nil {
-		return nil, err
+	for _, op := range ops {
+		if err := s.SetOption(op); err != nil {
+			return nil, err
+		}
 	}
-	k := ssh.HostKeyFile(keyPath)
-	err = s.SetOption(k)
-	if err != nil {
-		return nil, err
+	if len(s.HostSigners) == 0 {
+		k, err := generateEd25519Key()
+		if err != nil {
+			return nil, err
+		}
+		err = s.SetOption(WithHostKeyPEM(k))
+		if err != nil {
+			return nil, err
+		}
 	}
-	s.Handler = HandlerFromMiddleware(mw...)
 	return s, nil
 }
 
-// HandlerFromMiddleware composes the provided Middleware and return a
-// ssh.Handler. This useful if you manually create an ssh.Server and want to
-// set the Server.Handler.
-func HandlerFromMiddleware(mw ...Middleware) ssh.Handler {
-	h := func(s ssh.Session) {}
-	for _, m := range mw {
-		h = m(h)
+func generateEd25519Key() ([]byte, error) {
+	// Generate keys
+	_, key, err := ed25519.GenerateKey(rand.Reader)
+	if err != nil {
+		return nil, err
 	}
-	return h
+
+	// Encode PEM
+	pemBlock := pem.EncodeToMemory(&pem.Block{
+		Type:  "OPENSSH PRIVATE KEY",
+		Bytes: edkey.MarshalED25519PrivateKey(key),
+	})
+
+	return pemBlock, nil
 }
 
 func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
