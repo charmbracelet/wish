@@ -6,10 +6,8 @@ replace github.com/charmbracelet/charm => ../charm
 
 replace github.com/charmbracelet/wish => ./
 
-replace github.com/charmbracelet/bubbletea => ../bubbletea
-
 require (
-	github.com/charmbracelet/bubbletea v0.14.1
+	github.com/charmbracelet/bubbletea v0.15.0
 	github.com/charmbracelet/charm v0.8.6
 	github.com/gliderlabs/ssh v0.3.3
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
