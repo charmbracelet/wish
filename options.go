@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/charm/keygen"
+	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
 )
 
@@ -45,7 +45,7 @@ func WithHostKeyPath(path string) ssh.Option {
 		kps := strings.Split(path, string(filepath.Separator))
 		kp := strings.Join(kps[:len(kps)-1], string(filepath.Separator))
 		n := strings.TrimSuffix(kps[len(kps)-1], "_ed25519")
-		_, err := keygen.NewSSHKeyPair(kp, n, nil, "ed25519")
+		_, err := keygen.NewWithWrite(kp, n, nil, keygen.Ed25519)
 		if err != nil {
 			return func(*ssh.Server) error {
 				return err

@@ -8,7 +8,7 @@ replace github.com/charmbracelet/wish => ./
 
 require (
 	github.com/charmbracelet/bubbletea v0.15.0
-	github.com/charmbracelet/charm v0.8.6
+	github.com/charmbracelet/keygen v0.1.2
 	github.com/gliderlabs/ssh v0.3.3
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 )
@@ -24,7 +24,7 @@ require (
 	github.com/muesli/termenv v0.9.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
-	golang.org/x/crypto v0.0.0-20210616213533-5ff15b29337e // indirect
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
 	golang.org/x/term v0.0.0-20210422114643-f5beecf764ed // indirect
 )
