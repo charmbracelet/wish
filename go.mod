@@ -10,7 +10,6 @@ require (
 	github.com/charmbracelet/bubbletea v0.15.0
 	github.com/charmbracelet/keygen v0.1.2
 	github.com/gliderlabs/ssh v0.3.3
-	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a
 )
 
 require (
@@ -19,6 +18,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.14-0.20210829144114-504425e14f74 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/muesli/termenv v0.9.0 // indirect

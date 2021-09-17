@@ -1,12 +1,8 @@
 package wish
 
 import (
-	"crypto/ed25519"
-	"crypto/rand"
-	"encoding/pem"
-
+	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
-	"github.com/mikesmitty/edkey"
 )
 
 // Middleware is a function that takes an ssh.Handler and returns an
@@ -30,32 +26,16 @@ func NewServer(ops ...ssh.Option) (*ssh.Server,
 		}
 	}
 	if len(s.HostSigners) == 0 {
-		k, err := generateEd25519Key()
+		k, err := keygen.New("", "", nil, keygen.Ed25519)
 		if err != nil {
 			return nil, err
 		}
-		err = s.SetOption(WithHostKeyPEM(k))
+		err = s.SetOption(WithHostKeyPEM(k.PrivateKeyPEM))
 		if err != nil {
 			return nil, err
 		}
 	}
 	return s, nil
-}
-
-func generateEd25519Key() ([]byte, error) {
-	// Generate keys
-	_, key, err := ed25519.GenerateKey(rand.Reader)
-	if err != nil {
-		return nil, err
-	}
-
-	// Encode PEM
-	pemBlock := pem.EncodeToMemory(&pem.Block{
-		Type:  "OPENSSH PRIVATE KEY",
-		Bytes: edkey.MarshalED25519PrivateKey(key),
-	})
-
-	return pemBlock, nil
 }
 
 func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
