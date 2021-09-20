@@ -2,10 +2,6 @@ module github.com/charmbracelet/wish
 
 go 1.17
 
-replace github.com/charmbracelet/charm => ../charm
-
-replace github.com/charmbracelet/wish => ./
-
 require (
 	github.com/charmbracelet/bubbletea v0.15.0
 	github.com/charmbracelet/keygen v0.1.2

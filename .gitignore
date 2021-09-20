@@ -2,5 +2,7 @@ examples/*
 !examples/git
 !examples/term-info
 examples/term-info/term-info
+examples/term-info/.ssh
 examples/git/git
+examples/git/.ssh
 examples/git/.repos
