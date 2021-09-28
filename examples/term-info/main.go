@@ -15,7 +15,7 @@ import (
 )
 
 const host = "localhost"
-const port = 23232
+const port = 23234
 
 func main() {
 	s, err := wish.NewServer(

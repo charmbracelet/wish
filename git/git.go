@@ -59,11 +59,12 @@ func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middlew
 						fatalGit(s, err)
 						break
 					}
-					c := exec.CommandContext(ctx, cmd[0], rp)
-					c.Dir = "./"
-					c.Stdout = s
-					c.Stdin = s
-					err = c.Run()
+					err = runCmd(s, "./", cmd[0], rp)
+					if err != nil {
+						fatalGit(s, err)
+						break
+					}
+					err = runCmd(s, rp, "git", "update-server-info")
 					if err != nil {
 						fatalGit(s, err)
 						break
@@ -179,6 +180,18 @@ func ensureRepo(ctx context.Context, dir string, repo string) error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func runCmd(s ssh.Session, dir, name string, args ...string) error {
+	usi := exec.CommandContext(s.Context(), name, args...)
+	usi.Dir = dir
+	usi.Stdout = s
+	usi.Stdin = s
+	err := usi.Run()
+	if err != nil {
+		return err
 	}
 	return nil
 }
