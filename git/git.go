@@ -41,41 +41,49 @@ func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middlew
 			if len(cmd) == 2 {
 				switch cmd[0] {
 				case "git-upload-pack", "git-upload-archive", "git-receive-pack":
-					if len(authedKeys) > 0 && cmd[0] == "git-receive-pack" {
-						authed := false
+					authed := len(authedKeys) == 0
+					r := cmd[1]
+					rp := fmt.Sprintf("%s%s", repoDir, r)
+					ctx := s.Context()
+					if len(authedKeys) > 0 {
 						for _, pk := range authedKeys {
 							if ssh.KeysEqual(pk, s.PublicKey()) {
 								authed = true
 							}
 						}
+					}
+					if cmd[0] == "git-receive-pack" {
 						if !authed {
 							fatalGit(s, fmt.Errorf("you are not authorized to do this"))
 							break
 						}
-					}
-					r := cmd[1]
-					rp := fmt.Sprintf("%s%s", repoDir, r)
-					ctx := s.Context()
-					err := ensureRepo(ctx, repoDir, r)
-					if err != nil {
-						fatalGit(s, err)
-						break
-					}
-					err = runCmd(s, "./", cmd[0], rp)
-					if err != nil {
-						fatalGit(s, err)
-						break
-					}
-					err = runCmd(s, rp, "git", "update-server-info")
-					if err != nil {
-						fatalGit(s, err)
-						break
-					}
-					if cmd[0] == "git-receive-pack" {
+						err := ensureRepo(ctx, repoDir, r)
+						if err != nil {
+							fatalGit(s, err)
+							break
+						}
+						err = runCmd(s, "./", cmd[0], rp)
+						if err != nil {
+							fatalGit(s, err)
+							break
+						}
+						err = runCmd(s, rp, "git", "update-server-info")
+						if err != nil {
+							fatalGit(s, err)
+							break
+						}
 						err = ensureDefaultBranch(s, rp)
 						if err != nil {
 							fatalGit(s, err)
 							break
+						}
+					} else if cmd[0] == "git-upload-archive" || cmd[0] == "git-upload-pack" {
+						if exists, err := fileExists(rp); exists && err == nil {
+							err = runCmd(s, "./", cmd[0], rp)
+							if err != nil {
+								fatalGit(s, err)
+								break
+							}
 						}
 					}
 				}
