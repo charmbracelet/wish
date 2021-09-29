@@ -13,8 +13,7 @@ type Middleware func(ssh.Handler) ssh.Handler
 // new SSH key pair of type ed25519 will be created if one does not exist. By
 // default this server will accept all incoming connections, password and
 // public key.
-func NewServer(ops ...ssh.Option) (*ssh.Server,
-	error) {
+func NewServer(ops ...ssh.Option) (*ssh.Server, error) {
 	s := &ssh.Server{}
 	// Some sensible defaults
 	s.Version = "OpenSSH_7.6p1"

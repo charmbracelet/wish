@@ -11,6 +11,8 @@ import (
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
 )
 
 // Middleware adds Git server functionality to the ssh.Server. Repos are stored
@@ -68,6 +70,13 @@ func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middlew
 					if err != nil {
 						fatalGit(s, err)
 						break
+					}
+					if cmd[0] == "git-receive-pack" {
+						err = ensureDefaultBranch(s, rp)
+						if err != nil {
+							fatalGit(s, err)
+							break
+						}
 					}
 				}
 			}
@@ -191,6 +200,34 @@ func runCmd(s ssh.Session, dir, name string, args ...string) error {
 	usi.Stdin = s
 	err := usi.Run()
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func ensureDefaultBranch(s ssh.Session, repoPath string) error {
+	r, err := git.PlainOpen(repoPath)
+	if err != nil {
+		return err
+	}
+	brs, err := r.Branches()
+	if err != nil {
+		return err
+	}
+	defer brs.Close()
+	fb, err := brs.Next()
+	if err != nil {
+		return err
+	}
+	// Rename the default branch to the first branch available
+	_, err = r.Head()
+	if err == plumbing.ErrReferenceNotFound {
+		err = runCmd(s, repoPath, "git", "branch", "-M", fb.Name().Short())
+		if err != nil {
+			return err
+		}
+	}
+	if err != nil && err != plumbing.ErrReferenceNotFound {
 		return err
 	}
 	return nil
