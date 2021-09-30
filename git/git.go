@@ -11,9 +11,89 @@ import (
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
+	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/protocol/packp"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	"github.com/go-git/go-git/v5/plumbing/transport/server"
+	"github.com/go-git/go-git/v5/utils/ioutil"
 )
+
+func serveUploadPack(s ssh.Session, ups transport.UploadPackSession) (err error) {
+	adv, err := ups.AdvertisedReferences()
+	if err != nil {
+		log.Print("adv ref")
+		log.Print(err)
+		return err
+	}
+	err = adv.Encode(s)
+	if err != nil {
+		log.Print("encode adv")
+		log.Print(err)
+		return err
+	}
+	r := packp.NewUploadPackRequest()
+	if err = r.Decode(s); err != nil {
+		log.Print("decode req")
+		log.Print(err)
+		return err
+	}
+	res, err := ups.UploadPack(s.Context(), r)
+	if err != nil {
+		log.Print("upload")
+		log.Print(err)
+		return err
+	}
+	err = res.Encode(s)
+	if err != nil {
+		log.Print("encode res")
+		log.Print(err)
+		return err
+	}
+	log.Printf("%+v", res)
+	return err
+}
+
+func serveReceivePack(s ssh.Session, rps transport.ReceivePackSession) error {
+	in := s
+	out := ioutil.WriteNopCloser(s)
+	adv, err := rps.AdvertisedReferencesContext(s.Context())
+	if err != nil {
+		log.Print("adv ref")
+		log.Print(err)
+		return err
+	}
+	err = adv.Encode(out)
+	if err != nil {
+		log.Print("encode adv")
+		log.Print(err)
+		return err
+	}
+	r := packp.NewReferenceUpdateRequest()
+	if err = r.Decode(in); err != nil {
+		log.Print("decode req")
+		log.Print(err)
+		return err
+	}
+	res, err := rps.ReceivePack(s.Context(), r)
+	if res != nil {
+		for _, c := range res.CommandStatuses {
+			log.Printf("%+v", c)
+		}
+		if err := res.Encode(out); err != nil {
+			log.Print("encode res")
+			log.Print(err)
+			return err
+		}
+	}
+	if err != nil {
+		log.Print("receive")
+		log.Print(err)
+		return err
+	}
+	return nil
+}
 
 // Middleware adds Git server functionality to the ssh.Server. Repos are stored
 // in the provided repoDir. If an authorizedKeys string or authorizedKeysFile
@@ -39,55 +119,65 @@ func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middlew
 		return func(s ssh.Session) {
 			cmd := s.Command()
 			if len(cmd) == 2 {
-				switch cmd[0] {
-				case "git-upload-pack", "git-upload-archive", "git-receive-pack":
-					authed := len(authedKeys) == 0
-					r := cmd[1]
-					rp := fmt.Sprintf("%s%s", repoDir, r)
-					ctx := s.Context()
-					if len(authedKeys) > 0 {
-						for _, pk := range authedKeys {
-							if ssh.KeysEqual(pk, s.PublicKey()) {
-								authed = true
-							}
-						}
-					}
-					if cmd[0] == "git-receive-pack" {
-						if !authed {
-							fatalGit(s, fmt.Errorf("you are not authorized to do this"))
-							break
-						}
-						err := ensureRepo(ctx, repoDir, r)
-						if err != nil {
-							fatalGit(s, err)
-							break
-						}
-						err = runCmd(s, "./", cmd[0], rp)
-						if err != nil {
-							fatalGit(s, err)
-							break
-						}
-						err = runCmd(s, rp, "git", "update-server-info")
-						if err != nil {
-							fatalGit(s, err)
-							break
-						}
-						err = ensureDefaultBranch(s, rp)
-						if err != nil {
-							fatalGit(s, err)
-							break
-						}
-					} else if cmd[0] == "git-upload-archive" || cmd[0] == "git-upload-pack" {
-						if exists, err := fileExists(rp); exists && err == nil {
-							err = runCmd(s, "./", cmd[0], rp)
-							if err != nil {
-								fatalGit(s, err)
-								break
-							}
+				authed := len(authedKeys) == 0
+				if len(authedKeys) > 0 {
+					for _, pk := range authedKeys {
+						if ssh.KeysEqual(pk, s.PublicKey()) {
+							authed = true
 						}
 					}
 				}
+				log.Printf("authed: %v", authed)
+				method := cmd[0]
+				repo := cmd[1]
+				rp := fmt.Sprintf("%s%s", repoDir, repo)
+				loader := server.NewFilesystemLoader(osfs.New(rp))
+				srv := server.NewServer(loader)
+				ep, err := transport.NewEndpoint(fmt.Sprintf("ssh://%s", s.LocalAddr().String()))
+				if err != nil {
+					log.Print(err)
+					fatalGit(s, err)
+					goto OUT
+				}
+
+				switch method {
+				case transport.UploadPackServiceName:
+					ups, err := srv.NewUploadPackSession(ep, nil)
+					if err != nil {
+						log.Print("upload pack sess")
+						log.Print(err)
+						goto OUT
+					}
+					err = serveUploadPack(s, ups)
+					if err != nil {
+						log.Print("serve up pack")
+						log.Print(err)
+						goto OUT
+					}
+				case transport.ReceivePackServiceName:
+					if authed && !repoExists(rp) {
+						err = initRepo(s.Context(), rp)
+						if err != nil {
+							log.Print("init repo")
+							log.Print(err)
+							goto OUT
+						}
+					}
+					rps, err := srv.NewReceivePackSession(ep, nil)
+					if err != nil {
+						log.Print("receive pack sess")
+						log.Print(err)
+						goto OUT
+					}
+					err = serveReceivePack(s, rps)
+					if err != nil {
+						log.Print("serve receive pack")
+						log.Print(err)
+						goto OUT
+					}
+				}
 			}
+		OUT:
 			sh(s)
 		}
 	}
@@ -173,6 +263,19 @@ func fatalGit(s ssh.Session, err error) {
 	pktLine := fmt.Sprintf("%04x%s\n", len(msg)+5, msg)
 	_, _ = s.Write([]byte(pktLine))
 	s.Exit(1)
+}
+
+func repoExists(path string) bool {
+	_, err := git.PlainOpen(path)
+	return err == nil
+}
+
+func initRepo(ctx context.Context, repoPath string) error {
+	_, err := git.PlainInit(repoPath, true)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func ensureRepo(ctx context.Context, dir string, repo string) error {
