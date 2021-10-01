@@ -19,12 +19,33 @@ const port = 23233
 const host = "localhost"
 const repoDir = ".repos"
 
+type auth struct {
+	access gm.AccessLevel
+}
+
+func (a auth) AuthRepo(repo string, pk ssh.PublicKey) gm.AccessLevel {
+	return a.access
+}
+
+func passHandler(ctx ssh.Context, password string) bool {
+	return false
+}
+
+func pkHandler(ctx ssh.Context, key ssh.PublicKey) bool {
+	return true
+}
+
 func main() {
+	// A simple Auth implementation to allow global read write access.
+	a := auth{gm.NoAccess}
+
 	s, err := wish.NewServer(
+		ssh.PublicKeyAuth(pkHandler),
+		ssh.PasswordAuth(passHandler),
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/git_server_ed25519"),
 		wish.WithMiddlewares(
-			gm.Middleware(repoDir, "", ""),
+			gm.Middleware(repoDir, a),
 			gitListMiddleware,
 			lm.Middleware(),
 		),

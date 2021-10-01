@@ -15,76 +15,77 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 )
 
+// ErrNotAuthed represents unauthorized access.
+var ErrNotAuthed = fmt.Errorf("you are not authorized to do this")
+
+// ErrSystemMalfunction represents a general system error returned to clients.
+var ErrSystemMalfunction = fmt.Errorf("something went wrong")
+
+// AccessLevel is the level of access allowed to a repo.
+type AccessLevel int
+
+const (
+	NoAccess AccessLevel = iota
+	ReadOnlyAccess
+	ReadWriteAccess
+	AdminAccess
+)
+
+// PushCallback represents a function that will be called after every push if
+// passed to MiddlewareWithPushCallback.
+type PushCallback func(string, ssh.PublicKey)
+
+// Auth is an interface that allows for custom authorization implementations.
+// Prior to git access, AuthRepo will be called with the ssh.Session public key
+// key and the repo name. Implementers return the appropriate AccessLevel.
+type Auth interface {
+	AuthRepo(string, ssh.PublicKey) AccessLevel
+}
+
 // Middleware adds Git server functionality to the ssh.Server. Repos are stored
-// in the provided repoDir. If an authorizedKeys string or authorizedKeysFile
-// path are provided, they will be used to authorize all pushes otherwise
-// anyone can push. All repos are publicly readable.
-func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middleware {
-	var err error
-	var ak1, ak2 []ssh.PublicKey
-	if authorizedKeys != "" {
-		ak1, err = parseKeysFromString(strings.Trim(authorizedKeys, "\n"))
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	if authorizedKeysFile != "" {
-		ak2, err = parseKeysFromFile(authorizedKeysFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-	authedKeys := append(ak1, ak2...)
+// in the specified repo directory. The provided Auth implementation will be
+// checked for access on a per repo basis for a ssh.Session public key.
+func Middleware(repoDir string, auth Auth) wish.Middleware {
+	return MiddlewareWithPushCallback(repoDir, auth, nil)
+}
+
+// MiddlewareWithPushCallback is the same as Middleware but will call the
+// provided callback after a successful push with the repo name and ssh.Session
+// public key.
+func MiddlewareWithPushCallback(repoDir string, auth Auth, cb PushCallback) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			cmd := s.Command()
 			if len(cmd) == 2 {
-				switch cmd[0] {
-				case "git-upload-pack", "git-upload-archive", "git-receive-pack":
-					authed := len(authedKeys) == 0
-					r := cmd[1]
-					rp := fmt.Sprintf("%s%s", repoDir, r)
-					ctx := s.Context()
-					if len(authedKeys) > 0 {
-						for _, pk := range authedKeys {
-							if ssh.KeysEqual(pk, s.PublicKey()) {
-								authed = true
-							}
+				gc := cmd[0]
+				repo := cmd[1]
+				pk := s.PublicKey()
+				access := auth.AuthRepo(repo, pk)
+				switch gc {
+				case "git-receive-pack":
+					switch access {
+					case ReadWriteAccess, AdminAccess:
+						err := gitReceivePack(s, gc, repoDir, repo)
+						if err != nil {
+							log.Printf("git-receive-pack error: %s", err)
+							fatalGit(s, ErrSystemMalfunction)
 						}
+						if cb != nil {
+							cb(repo, pk)
+						}
+					default:
+						fatalGit(s, ErrNotAuthed)
 					}
-					if cmd[0] == "git-receive-pack" {
-						if !authed {
-							fatalGit(s, fmt.Errorf("you are not authorized to do this"))
-							break
-						}
-						err := ensureRepo(ctx, repoDir, r)
+				case "git-upload-archive", "git-upload-pack":
+					switch access {
+					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
+						err := gitUploadPack(s, gc, repoDir, repo)
 						if err != nil {
-							fatalGit(s, err)
-							break
+							log.Printf("%s error: %s", gc, err)
+							fatalGit(s, ErrSystemMalfunction)
 						}
-						err = runCmd(s, "./", cmd[0], rp)
-						if err != nil {
-							fatalGit(s, err)
-							break
-						}
-						err = runCmd(s, rp, "git", "update-server-info")
-						if err != nil {
-							fatalGit(s, err)
-							break
-						}
-						err = ensureDefaultBranch(s, rp)
-						if err != nil {
-							fatalGit(s, err)
-							break
-						}
-					} else if cmd[0] == "git-upload-archive" || cmd[0] == "git-upload-pack" {
-						if exists, err := fileExists(rp); exists && err == nil {
-							err = runCmd(s, "./", cmd[0], rp)
-							if err != nil {
-								fatalGit(s, err)
-								break
-							}
-						}
+					default:
+						fatalGit(s, ErrNotAuthed)
 					}
 				}
 			}
@@ -93,17 +94,37 @@ func Middleware(repoDir, authorizedKeys, authorizedKeysFile string) wish.Middlew
 	}
 }
 
-// MiddlewareWithKeys will create Middleware with the provided authorizedKeys.
-// The authorizedKeys string content should be of the same format as an ssh
-// authorized_keys file.
-func MiddlewareWithKeys(repoDir, authorizedKeys string) wish.Middleware {
-	return Middleware(repoDir, authorizedKeys, "")
+func gitReceivePack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
+	rp := fmt.Sprintf("%s%s", repoDir, repo)
+	ctx := s.Context()
+	err := ensureRepo(ctx, repoDir, repo)
+	if err != nil {
+		return err
+	}
+	err = runCmd(s, "./", gitCmd, rp)
+	if err != nil {
+		return err
+	}
+	err = runCmd(s, rp, "git", "update-server-info")
+	if err != nil {
+		return err
+	}
+	err = ensureDefaultBranch(s, rp)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-// MiddlewareWithKeyPath will create Middleware with the specified
-// authorized_keys file.
-func MiddlewareWithKeyPath(repoDir, authorizedKeysFile string) wish.Middleware {
-	return Middleware(repoDir, "", authorizedKeysFile)
+func gitUploadPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
+	rp := fmt.Sprintf("%s%s", repoDir, repo)
+	if exists, err := fileExists(rp); exists && err == nil {
+		err = runCmd(s, "./", gitCmd, rp)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func parseKeysFromFile(path string) ([]ssh.PublicKey, error) {

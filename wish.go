@@ -17,8 +17,6 @@ func NewServer(ops ...ssh.Option) (*ssh.Server, error) {
 	s := &ssh.Server{}
 	// Some sensible defaults
 	s.Version = "OpenSSH_7.6p1"
-	s.PasswordHandler = passHandler
-	s.PublicKeyHandler = authHandler
 	for _, op := range ops {
 		if err := s.SetOption(op); err != nil {
 			return nil, err
@@ -35,12 +33,4 @@ func NewServer(ops ...ssh.Option) (*ssh.Server, error) {
 		}
 	}
 	return s, nil
-}
-
-func authHandler(ctx ssh.Context, key ssh.PublicKey) bool {
-	return true
-}
-
-func passHandler(ctx ssh.Context, pass string) bool {
-	return true
 }

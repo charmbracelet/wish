@@ -22,8 +22,7 @@ You can see a demo of the Wish middleware in action at: `ssh beta.charm.sh`
 ### Git
 
 The Git middleware adds `git` server functionality to any ssh.Server. It
-supports repo creation on initial push and public key based authorization. The
-git server currently makes all repos publicly readable.
+supports repo creation on initial push and custom public key based auth.
 
 This middleware requires that `git` is installed on the server.
 
