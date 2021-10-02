@@ -37,7 +37,7 @@ func pkHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 
 func main() {
 	// A simple Auth implementation to allow global read write access.
-	a := auth{gm.NoAccess}
+	a := auth{gm.ReadWriteAccess}
 
 	s, err := wish.NewServer(
 		ssh.PublicKeyAuth(pkHandler),
