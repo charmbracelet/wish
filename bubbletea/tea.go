@@ -1,6 +1,8 @@
 package bubbletea
 
 import (
+	"log"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
@@ -17,6 +19,7 @@ type BubbleTeaHandler func(ssh.Session) (tea.Model, []tea.ProgramOption)
 func Middleware(bth BubbleTeaHandler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
+			errc := make(chan error, 1)
 			m, opts := bth(s)
 			if m != nil {
 				opts = append(opts, tea.WithInput(s), tea.WithOutput(s))
@@ -24,13 +27,23 @@ func Middleware(bth BubbleTeaHandler) wish.Middleware {
 				_, windowChanges, _ := s.Pty()
 				go func() {
 					for {
-						w := <-windowChanges
-						if p != nil {
-							p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+						select {
+						case <-s.Context().Done():
+							if p != nil {
+								p.Send(tea.Quit())
+							}
+						case w := <-windowChanges:
+							if p != nil {
+								p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+							}
+						case err := <-errc:
+							if err != nil {
+								log.Print(err)
+							}
 						}
 					}
 				}()
-				_ = p.Start()
+				errc <- p.Start()
 			}
 			sh(s)
 		}
