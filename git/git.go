@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/charmbracelet/wish"
@@ -31,48 +32,39 @@ const (
 	AdminAccess
 )
 
-// PushCallback represents a function that will be called after every push if
-// passed to MiddlewareWithPushCallback.
-type PushCallback func(string, ssh.PublicKey)
-
-// Auth is an interface that allows for custom authorization implementations.
-// Prior to git access, AuthRepo will be called with the ssh.Session public key
-// key and the repo name. Implementers return the appropriate AccessLevel.
-type Auth interface {
+// GitHooks is an interface that allows for custom authorization
+// implementations and post push/fetch notifications. Prior to git access,
+// AuthRepo will be called with the ssh.Session public key and the repo name.
+// Implementers return the appropriate AccessLevel.
+type GitHooks interface {
 	AuthRepo(string, ssh.PublicKey) AccessLevel
+	Push(string, ssh.PublicKey)
+	Fetch(string, ssh.PublicKey)
 }
 
 // Middleware adds Git server functionality to the ssh.Server. Repos are stored
-// in the specified repo directory. The provided Auth implementation will be
+// in the specified repo directory. The provided GitHooks implementation will be
 // checked for access on a per repo basis for a ssh.Session public key.
-func Middleware(repoDir string, auth Auth) wish.Middleware {
-	return MiddlewareWithPushCallback(repoDir, auth, nil)
-}
-
-// MiddlewareWithPushCallback is the same as Middleware but will call the
-// provided callback after a successful push with the repo name and ssh.Session
-// public key.
-func MiddlewareWithPushCallback(repoDir string, auth Auth, cb PushCallback) wish.Middleware {
+// GitHooks.Push and GitHooks.Fetch will be called on successful completion of
+// thier commands.
+func Middleware(repoDir string, gh GitHooks) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			cmd := s.Command()
 			if len(cmd) == 2 {
 				gc := cmd[0]
-				repo := cmd[1] // will be `/REPO`
+				repo := cmd[1][1:] // cmd[1] will be `/REPO`
 				pk := s.PublicKey()
-				// strip leading slash from repo name
-				access := auth.AuthRepo(repo[1:], pk)
+				access := gh.AuthRepo(repo, pk)
 				switch gc {
 				case "git-receive-pack":
 					switch access {
 					case ReadWriteAccess, AdminAccess:
 						err := gitReceivePack(s, gc, repoDir, repo)
 						if err != nil {
-							log.Printf("git-receive-pack error: %s", err)
 							fatalGit(s, ErrSystemMalfunction)
-						}
-						if cb != nil {
-							cb(repo, pk)
+						} else {
+							gh.Push(repo, pk)
 						}
 					default:
 						fatalGit(s, ErrNotAuthed)
@@ -82,8 +74,9 @@ func MiddlewareWithPushCallback(repoDir string, auth Auth, cb PushCallback) wish
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
 						err := gitUploadPack(s, gc, repoDir, repo)
 						if err != nil {
-							log.Printf("%s error: %s", gc, err)
 							fatalGit(s, ErrSystemMalfunction)
+						} else {
+							gh.Fetch(repo, pk)
 						}
 					default:
 						fatalGit(s, ErrNotAuthed)
@@ -96,12 +89,12 @@ func MiddlewareWithPushCallback(repoDir string, auth Auth, cb PushCallback) wish
 }
 
 func gitReceivePack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
-	rp := fmt.Sprintf("%s%s", repoDir, repo)
 	ctx := s.Context()
 	err := ensureRepo(ctx, repoDir, repo)
 	if err != nil {
 		return err
 	}
+	rp := filepath.Join(repoDir, repo)
 	err = runCmd(s, "./", gitCmd, rp)
 	if err != nil {
 		return err
@@ -118,7 +111,7 @@ func gitReceivePack(s ssh.Session, gitCmd string, repoDir string, repo string) e
 }
 
 func gitUploadPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
-	rp := fmt.Sprintf("%s%s", repoDir, repo)
+	rp := filepath.Join(repoDir, repo)
 	if exists, err := fileExists(rp); exists && err == nil {
 		err = runCmd(s, "./", gitCmd, rp)
 		if err != nil {
@@ -208,7 +201,7 @@ func ensureRepo(ctx context.Context, dir string, repo string) error {
 			return err
 		}
 	}
-	rp := fmt.Sprintf("%s%s", dir, repo)
+	rp := filepath.Join(dir, repo)
 	exists, err = fileExists(rp)
 	if err != nil {
 		return err
