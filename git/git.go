@@ -58,9 +58,10 @@ func MiddlewareWithPushCallback(repoDir string, auth Auth, cb PushCallback) wish
 			cmd := s.Command()
 			if len(cmd) == 2 {
 				gc := cmd[0]
-				repo := cmd[1]
+				repo := cmd[1] // will be `/REPO`
 				pk := s.PublicKey()
-				access := auth.AuthRepo(repo, pk)
+				// strip leading slash from repo name
+				access := auth.AuthRepo(repo[1:], pk)
 				switch gc {
 				case "git-receive-pack":
 					switch access {
