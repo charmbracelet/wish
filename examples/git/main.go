@@ -19,12 +19,20 @@ const port = 23233
 const host = "localhost"
 const repoDir = ".repos"
 
-type auth struct {
+type app struct {
 	access gm.AccessLevel
 }
 
-func (a auth) AuthRepo(repo string, pk ssh.PublicKey) gm.AccessLevel {
+func (a app) AuthRepo(repo string, pk ssh.PublicKey) gm.AccessLevel {
 	return a.access
+}
+
+func (a app) Push(repo string, pk ssh.PublicKey) {
+	log.Printf("pushed %s", repo)
+}
+
+func (a app) Fetch(repo string, pk ssh.PublicKey) {
+	log.Printf("fetch %s", repo)
 }
 
 func passHandler(ctx ssh.Context, password string) bool {
@@ -36,8 +44,8 @@ func pkHandler(ctx ssh.Context, key ssh.PublicKey) bool {
 }
 
 func main() {
-	// A simple Auth implementation to allow global read write access.
-	a := auth{gm.ReadWriteAccess}
+	// A simple GitHooks implementation to allow global read write access.
+	a := app{gm.ReadWriteAccess}
 
 	s, err := wish.NewServer(
 		ssh.PublicKeyAuth(pkHandler),

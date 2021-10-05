@@ -46,7 +46,7 @@ type GitHooks interface {
 // in the specified repo directory. The provided GitHooks implementation will be
 // checked for access on a per repo basis for a ssh.Session public key.
 // GitHooks.Push and GitHooks.Fetch will be called on successful completion of
-// thier commands.
+// their commands.
 func Middleware(repoDir string, gh GitHooks) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
