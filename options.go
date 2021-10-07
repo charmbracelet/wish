@@ -25,10 +25,10 @@ func WithVersion(version string) ssh.Option {
 	}
 }
 
-// WithMiddlewares composes the provided Middleware and return a
-// ssh.Option. This useful if you manually create an ssh.Server and want to
-// set the Server.Handler.
-func WithMiddlewares(mw ...Middleware) ssh.Option {
+// WithMiddleware composes the provided Middleware and return a ssh.Option.
+// This useful if you manually create an ssh.Server and want to set the
+// Server.Handler.
+func WithMiddleware(mw ...Middleware) ssh.Option {
 	return func(s *ssh.Server) error {
 		h := func(s ssh.Session) {}
 		for _, m := range mw {
