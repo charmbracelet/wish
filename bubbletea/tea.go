@@ -30,7 +30,7 @@ func Middleware(bth BubbleTeaHandler) wish.Middleware {
 						select {
 						case <-s.Context().Done():
 							if p != nil {
-								p.Send(tea.Quit())
+								p.Quit()
 							}
 						case w := <-windowChanges:
 							if p != nil {
