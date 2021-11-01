@@ -40,7 +40,7 @@ server with automatic server key generation.
 
 ## Examples
 
-There are examples for a standalone [Bubble Tea application](examples/term-info)
+There are examples for a standalone [Bubble Tea application](examples/bubbletea)
 and [Git server](examples/git) in the [examples](examples) folder. To see a
 more real-world application that combines Bubble Tea and Git, you can take a
 look at [Soft Serve](https://github.com/charmbracelet/soft-serve) which uses
