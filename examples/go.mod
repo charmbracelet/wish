@@ -9,7 +9,7 @@ replace github.com/charmbracelet/bubbletea => ../../bubbletea
 replace github.com/charmbracelet/wish => ../
 
 require (
-	github.com/charmbracelet/bubbletea v0.15.0
+	github.com/charmbracelet/bubbletea v0.19.0
 	github.com/charmbracelet/wish v0.0.0-20210823165316-d78c851f07fe
 	github.com/gliderlabs/ssh v0.3.3
 )
@@ -20,6 +20,7 @@ require (
 	github.com/acomagu/bufpipe v1.0.3 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/charmbracelet/keygen v0.1.2 // indirect
+	github.com/charmbracelet/lipgloss v0.4.0 // indirect
 	github.com/containerd/console v1.0.2 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
