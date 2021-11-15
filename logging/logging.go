@@ -18,7 +18,7 @@ func Middleware() wish.Middleware {
 			ct := time.Now()
 			hpk := s.PublicKey() != nil
 			pty, _, _ := s.Pty()
-			log.Printf("%s connect %v %v %s %v %v\n", s.RemoteAddr().String(), hpk, s.Command(), pty.Term, pty.Window.Width, pty.Window.Height)
+			log.Printf("%s connect %s %v %v %s %v %v\n", s.User(), s.RemoteAddr().String(), hpk, s.Command(), pty.Term, pty.Window.Width, pty.Window.Height)
 			sh(s)
 			log.Printf("%s disconnect %s\n", s.RemoteAddr().String(), time.Since(ct))
 		}
