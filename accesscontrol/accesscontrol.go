@@ -1,5 +1,5 @@
-// Package readonly provides a middleware that allows you to restrict the commands the user can execute.
-package readonly
+// Package accesscontrol provides a middleware that allows you to restrict the commands the user can execute.
+package accesscontrol
 
 import (
 	"github.com/charmbracelet/wish"

@@ -1,11 +1,11 @@
-package readonly_test
+package accesscontrol_test
 
 import (
 	"bytes"
 	"io"
 	"testing"
 
-	"github.com/charmbracelet/wish/readonly"
+	"github.com/charmbracelet/wish/accesscontrol"
 	"github.com/charmbracelet/wish/testsession"
 	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
@@ -79,7 +79,7 @@ func TestMiddleware(t *testing.T) {
 
 func setup(t *testing.T, w io.Writer, allowedCmds ...string) *gossh.Session {
 	session, _, cleanup := testsession.New(t, &ssh.Server{
-		Handler: readonly.Middleware(allowedCmds...)(func(s ssh.Session) {
+		Handler: accesscontrol.Middleware(allowedCmds...)(func(s ssh.Session) {
 			s.Write([]byte(out))
 		}),
 	}, nil)
