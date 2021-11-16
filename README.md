@@ -12,12 +12,14 @@ provides useful functionality as ready-to-go middleware.
 
 ### Bubble Tea
 
-The Bubble Tea middleware makes it easy to serve any Bubble Tea application
-over SSH. Each SSH session will get their own tea.Program with the SSH pty
-input and output connected. Window dimension and resize messages are also
-captured and sent to the tea.Program as tea.WindoSizeMsgs.
+The Bubble Tea middleware makes it easy to serve any [Bubble Tea][bubbletea]
+application over SSH. Each SSH session will get their own `tea.Program` with
+the SSH pty input and output connected. Window dimension and resize messages
+are also captured and sent to the `tea.Program` as `tea.WindowSizeMsg`s.
 
-You can see a demo of the Wish middleware in action at: `ssh beta.charm.sh`
+You can see a demo of the Wish middleware in action at: `ssh git.charm.sh`
+
+[bubbletea]: https://github.com/charmbracelet/bubbletea
 
 ### Git
 
