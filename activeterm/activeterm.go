@@ -1,3 +1,4 @@
+// Package activeterm provides a middleware to block inactive PTYs.
 package activeterm
 
 import (
