@@ -67,6 +67,14 @@ func TestMiddleware(t *testing.T) {
 		}
 		requireEmpty(t, b.String())
 	})
+
+	t.Run("allowed cmds with allowed cmd followed disallowed cmd", func(t *testing.T) {
+		var b bytes.Buffer
+		if err := setup(t, &b, "echo").Run("cat echo"); err == nil {
+			t.Error(err)
+		}
+		requireEmpty(t, b.String())
+	})
 }
 
 func setup(t *testing.T, w io.Writer, allowedCmds ...string) *gossh.Session {
