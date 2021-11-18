@@ -1,14 +1,11 @@
 package git
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
@@ -117,56 +114,6 @@ func gitUploadPack(s ssh.Session, gitCmd string, repoDir string, repo string) er
 		if err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func parseKeysFromFile(path string) ([]ssh.PublicKey, error) {
-	authedKeys := make([]ssh.PublicKey, 0)
-	hasAuth, err := fileExists(path)
-	if err != nil {
-		return nil, err
-	}
-	if hasAuth {
-		f, err := os.Open(path)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer f.Close()
-		scanner := bufio.NewScanner(f)
-		err = addKeys(scanner, &authedKeys)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return authedKeys, nil
-}
-
-func parseKeysFromString(keys string) ([]ssh.PublicKey, error) {
-	authedKeys := make([]ssh.PublicKey, 0)
-	scanner := bufio.NewScanner(strings.NewReader(keys))
-	err := addKeys(scanner, &authedKeys)
-	if err != nil {
-		return nil, err
-	}
-	return authedKeys, nil
-}
-
-func addKeys(s *bufio.Scanner, keys *[]ssh.PublicKey) error {
-	for s.Scan() {
-		pt := s.Text()
-		if pt == "" {
-			continue
-		}
-		log.Printf("Adding authorized key: %s", pt)
-		pk, _, _, _, err := ssh.ParseAuthorizedKey([]byte(pt))
-		if err != nil {
-			return err
-		}
-		*keys = append(*keys, pk)
-	}
-	if err := s.Err(); err != nil {
-		return err
 	}
 	return nil
 }
