@@ -154,8 +154,7 @@ func ensureRepo(ctx context.Context, dir string, repo string) error {
 		return err
 	}
 	if !exists {
-		c := exec.CommandContext(ctx, "git", "init", "--bare", rp)
-		err = c.Run()
+		_, err := git.PlainInit(rp, true)
 		if err != nil {
 			return err
 		}
