@@ -50,7 +50,10 @@ func Middleware(repoDir string, gh GitHooks) wish.Middleware {
 			cmd := s.Command()
 			if len(cmd) == 2 {
 				gc := cmd[0]
-				repo := cmd[1][1:] // cmd[1] will be `/REPO`
+				repo := cmd[1] // cmd[1] will be `/REPO`
+				if len(repo) > 0 && repo[0] == '/' {
+					repo = repo[1:]
+				}
 				pk := s.PublicKey()
 				access := gh.AuthRepo(repo, pk)
 				switch gc {
