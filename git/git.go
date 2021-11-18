@@ -99,11 +99,11 @@ func gitReceivePack(s ssh.Session, gitCmd string, repoDir string, repo string) e
 	if err != nil {
 		return err
 	}
-	err = runCmd(s, rp, "git", "update-server-info")
+	err = ensureDefaultBranch(s, rp)
 	if err != nil {
 		return err
 	}
-	err = ensureDefaultBranch(s, rp)
+	err = runCmd(s, rp, "git", "update-server-info")
 	if err != nil {
 		return err
 	}
