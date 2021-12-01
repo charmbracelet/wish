@@ -1,5 +1,16 @@
 # Wish
 
+<p>
+    <picture>
+        <source srcset="https://stuff.charm.sh/wish/wish-header.webp" type="image/webp">
+        <img style="width: 247px" src="https://stuff.charm.sh/wish/wish-header.png" alt="A nice rendering of a star, anthropomorphized somewhat by means of a smile, with the words ‘Charm Wish’ next to it">
+    </picture><br>
+    <a href="https://github.com/charmbracelet/skate/releases"><img src="https://img.shields.io/github/release/charmbracelet/wish.svg" alt="Latest Release"></a>
+    <a href="https://pkg.go.dev/github.com/charmbracelet/wish?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="GoDoc"></a>
+    <a href="https://github.com/charmbracelet/skate/actions"><img src="https://github.com/charmbracelet/wish/workflows/Build/badge.svg" alt="Build Status"></a>
+</p>
+
+
 Make SSH apps, just like that! 💫
 
 SSH is an excellent platform to build remotely accessible applications on. It
@@ -60,3 +71,15 @@ Git as a CMS and provides a TUI over SSH for interacting with pushed repos.
 
 [bubbletea]: https://github.com/charmbracelet/bubbletea
 [gliderlabs/ssh]: https://github.com/gliderlabs/ssh
+
+## License
+
+[MIT](https://github.com/charmbracelet/wish/raw/main/LICENSE)
+
+***
+
+Part of [Charm](https://charm.sh).
+
+<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge-unrounded.jpg" width="400"></a>
+
+Charm热爱开源 • Charm loves open source
