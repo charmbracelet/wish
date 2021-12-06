@@ -8,6 +8,8 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/charmbracelet/wish"
 	gm "github.com/charmbracelet/wish/git"
@@ -61,9 +63,19 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	log.Printf("Starting SSH server on %s:%d", host, port)
-	err = s.ListenAndServe()
-	if err != nil {
+	go func() {
+		if err = s.ListenAndServe(); err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	<-done
+	log.Println("Stopping SSH server")
+	if err := s.Close(); err != nil {
 		log.Fatalln(err)
 	}
 }
