@@ -72,6 +72,17 @@ Git as a CMS and provides a TUI over SSH for interacting with pushed repos.
 [bubbletea]: https://github.com/charmbracelet/bubbletea
 [gliderlabs/ssh]: https://github.com/gliderlabs/ssh
 
+## Pro Tip
+
+When building various Wish applications locally you can add the following to
+your `~/.ssh/config` to avoid having to clear out `localhost` entries in your
+`~/.ssh/known_hosts` file:
+
+```
+Host localhost
+    UserKnownHostsFile /dev/null
+```
+
 ## License
 
 [MIT](https://github.com/charmbracelet/wish/raw/main/LICENSE)
