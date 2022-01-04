@@ -1,8 +1,6 @@
 package accesscontrol_test
 
 import (
-	"bytes"
-	"io"
 	"testing"
 
 	"github.com/charmbracelet/wish/accesscontrol"
@@ -29,61 +27,59 @@ func TestMiddleware(t *testing.T) {
 	}
 
 	t.Run("no allowed cmds no cmd", func(t *testing.T) {
-		var b bytes.Buffer
-		if err := setup(t, &b).Run(""); err != nil {
+		out, err := setup(t).Output("")
+		if err != nil {
 			t.Error(err)
 		}
-		requireOutput(t, b.String())
+		requireOutput(t, string(out))
 	})
 
 	t.Run("no allowed cmds with cmd", func(t *testing.T) {
-		var b bytes.Buffer
-		if err := setup(t, &b).Run("echo"); err == nil {
+		out, err := setup(t).Output("echo")
+		if err == nil {
 			t.Errorf("should have errored")
 		}
-		requireEmpty(t, b.String())
+		requireEmpty(t, string(out))
 	})
 
 	t.Run("allowed cmds no cmd", func(t *testing.T) {
-		var b bytes.Buffer
-		if err := setup(t, &b, "echo").Run(""); err != nil {
+		out, err := setup(t, "echo").Output("")
+		if err != nil {
 			t.Error(err)
 		}
-		requireOutput(t, b.String())
+		requireOutput(t, string(out))
 	})
 
 	t.Run("allowed cmds with allowed cmd", func(t *testing.T) {
-		var b bytes.Buffer
-		if err := setup(t, &b, "echo").Run("echo"); err != nil {
+		out, err := setup(t, "echo").Output("echo")
+		if err != nil {
 			t.Error(err)
 		}
-		requireOutput(t, b.String())
+		requireOutput(t, string(out))
 	})
 
 	t.Run("allowed cmds with disallowed cmd", func(t *testing.T) {
-		var b bytes.Buffer
-		if err := setup(t, &b, "echo").Run("cat"); err == nil {
+		out, err := setup(t, "echo").Output("cat")
+		if err == nil {
 			t.Error(err)
 		}
-		requireEmpty(t, b.String())
+		requireEmpty(t, string(out))
 	})
 
 	t.Run("allowed cmds with allowed cmd followed disallowed cmd", func(t *testing.T) {
-		var b bytes.Buffer
-		if err := setup(t, &b, "echo").Run("cat echo"); err == nil {
+		out, err := setup(t, "echo").Output("cat echo")
+		if err == nil {
 			t.Error(err)
 		}
-		requireEmpty(t, b.String())
+		requireEmpty(t, string(out))
 	})
 }
 
-func setup(tb testing.TB, w io.Writer, allowedCmds ...string) *gossh.Session {
+func setup(tb testing.TB, allowedCmds ...string) *gossh.Session {
 	tb.Helper()
-	session := testsession.New(tb, &ssh.Server{
+	return testsession.New(tb, &ssh.Server{
 		Handler: accesscontrol.Middleware(allowedCmds...)(func(s ssh.Session) {
 			s.Write([]byte(out))
 		}),
 	}, nil)
-	session.Stdout = w
-	return session
 }

@@ -1,7 +1,6 @@
 package testsession
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 
@@ -15,12 +14,11 @@ func TestSession(t *testing.T) {
 			_, _ = fmt.Fprint(s, out)
 		},
 	}, nil)
-	var w bytes.Buffer
-	session.Stdout = &w
-	if err := session.Run(""); err != nil {
+	result, err := session.Output("")
+	if err != nil {
 		t.Errorf("expected no error, got %v", err)
 	}
-	if w.String() != out {
-		t.Errorf("expected %q, got %q", out, w.String())
+	if string(result) != out {
+		t.Errorf("expected %q, got %q", out, string(result))
 	}
 }
