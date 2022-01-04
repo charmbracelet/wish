@@ -77,13 +77,13 @@ func TestMiddleware(t *testing.T) {
 	})
 }
 
-func setup(t *testing.T, w io.Writer, allowedCmds ...string) *gossh.Session {
-	session, _, cleanup := testsession.New(t, &ssh.Server{
+func setup(tb testing.TB, w io.Writer, allowedCmds ...string) *gossh.Session {
+	tb.Helper()
+	session := testsession.New(tb, &ssh.Server{
 		Handler: accesscontrol.Middleware(allowedCmds...)(func(s ssh.Session) {
 			s.Write([]byte(out))
 		}),
 	}, nil)
-	t.Cleanup(cleanup)
 	session.Stdout = w
 	return session
 }

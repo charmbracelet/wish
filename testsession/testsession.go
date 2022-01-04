@@ -1,3 +1,5 @@
+// Package testsession provides utilities to test SSH sessions.
+//
 // more or less copied from gliderlabs/ssh tests
 package testsession
 
@@ -10,7 +12,8 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) (*gossh.Session, *gossh.Client, func()) {
+// New SSH session and client.
+func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) *gossh.Session {
 	tb.Helper()
 	l := newLocalListener()
 	go srv.Serve(l)
@@ -27,7 +30,7 @@ func newLocalListener() net.Listener {
 	return l
 }
 
-func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) (*gossh.Session, *gossh.Client, func()) {
+func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) *gossh.Session {
 	tb.Helper()
 	if config == nil {
 		config = &gossh.ClientConfig{
@@ -48,8 +51,9 @@ func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) (*
 	if err != nil {
 		tb.Fatal(err)
 	}
-	return session, client, func() {
+	tb.Cleanup(func() {
 		session.Close()
 		client.Close()
-	}
+	})
+	return session
 }

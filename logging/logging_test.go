@@ -18,11 +18,9 @@ func TestMiddleware(t *testing.T) {
 }
 
 func setup(t *testing.T) *gossh.Session {
-	session, _, cleanup := testsession.New(t, &ssh.Server{
+	return testsession.New(t, &ssh.Server{
 		Handler: logging.Middleware()(func(s ssh.Session) {
 			s.Write([]byte("hello"))
 		}),
 	}, nil)
-	t.Cleanup(cleanup)
-	return session
 }
