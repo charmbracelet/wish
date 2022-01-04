@@ -81,7 +81,7 @@ func WithIdleTimeout(d time.Duration) ssh.Option {
 	}
 }
 
-// WithMaxTimeout returns an ssh.Option that sets the connection's absolute timeout,
+// WithMaxTimeout returns an ssh.Option that sets the connection's absolute timeout.
 func WithMaxTimeout(d time.Duration) ssh.Option {
 	return func(s *ssh.Server) error {
 		s.MaxTimeout = d
