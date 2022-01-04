@@ -17,8 +17,9 @@ func TestMiddleware(t *testing.T) {
 	})
 }
 
-func setup(t *testing.T) *gossh.Session {
-	return testsession.New(t, &ssh.Server{
+func setup(tb testing.TB) *gossh.Session {
+	tb.Helper()
+	return testsession.New(tb, &ssh.Server{
 		Handler: logging.Middleware()(func(s ssh.Session) {
 			s.Write([]byte("hello"))
 		}),
