@@ -2,6 +2,8 @@
 package activeterm
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
@@ -12,6 +14,7 @@ func Middleware() wish.Middleware {
 		return func(s ssh.Session) {
 			_, _, active := s.Pty()
 			if !active {
+				fmt.Fprintln(s, "Requires an active PTY")
 				s.Exit(1)
 				return
 			}

@@ -11,8 +11,12 @@ import (
 
 func TestMiddleware(t *testing.T) {
 	t.Run("inactive term", func(t *testing.T) {
-		if err := setup(t).Run(""); err == nil {
+		out, err := setup(t).Output("")
+		if err == nil {
 			t.Errorf("tests should be an inactive pty")
+		}
+		if string(out) != "Requires an active PTY\n" {
+			t.Errorf("invalid output: %q", string(out))
 		}
 	})
 }

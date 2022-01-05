@@ -1,6 +1,7 @@
 package accesscontrol_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/charmbracelet/wish/accesscontrol"
@@ -12,10 +13,11 @@ import (
 const out = "hello world"
 
 func TestMiddleware(t *testing.T) {
-	requireEmpty := func(tb testing.TB, s string) {
+	requireDenied := func(tb testing.TB, s, cmd string) {
 		tb.Helper()
-		if s != "" {
-			tb.Errorf("expected output to be empty, got %q", s)
+		expected := fmt.Sprintf("Command is not allowed: %s\n", cmd)
+		if s != expected {
+			t.Errorf("expected %q, got %q", expected, s)
 		}
 	}
 
@@ -39,7 +41,7 @@ func TestMiddleware(t *testing.T) {
 		if err == nil {
 			t.Errorf("should have errored")
 		}
-		requireEmpty(t, string(out))
+		requireDenied(t, string(out), "echo")
 	})
 
 	t.Run("allowed cmds no cmd", func(t *testing.T) {
@@ -63,7 +65,7 @@ func TestMiddleware(t *testing.T) {
 		if err == nil {
 			t.Error(err)
 		}
-		requireEmpty(t, string(out))
+		requireDenied(t, string(out), "cat")
 	})
 
 	t.Run("allowed cmds with allowed cmd followed disallowed cmd", func(t *testing.T) {
@@ -71,7 +73,7 @@ func TestMiddleware(t *testing.T) {
 		if err == nil {
 			t.Error(err)
 		}
-		requireEmpty(t, string(out))
+		requireDenied(t, string(out), "cat")
 	})
 }
 
