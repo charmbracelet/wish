@@ -1,8 +1,9 @@
+// Package testsession provides utilities to test SSH sessions.
+//
 // more or less copied from gliderlabs/ssh tests
 package testsession
 
 import (
-	"fmt"
 	"net"
 	"testing"
 
@@ -10,24 +11,32 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) (*gossh.Session, *gossh.Client, func()) {
+// New starts a local SSH server with the given config and returns a client session.
+// It automatically closes everything afterwards.
+func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) *gossh.Session {
 	tb.Helper()
-	l := newLocalListener()
-	go srv.Serve(l)
+	l := newLocalListener(tb)
+	go func() {
+		if err := srv.Serve(l); err != nil && err != ssh.ErrServerClosed {
+			tb.Fatalf("failed to serve: %v", err)
+		}
+	}()
+	tb.Cleanup(func() { srv.Close() })
 	return newClientSession(tb, l.Addr().String(), cfg)
 }
 
-func newLocalListener() net.Listener {
+func newLocalListener(tb testing.TB) net.Listener {
+	tb.Helper()
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		if l, err = net.Listen("tcp6", "[::1]:0"); err != nil {
-			panic(fmt.Sprintf("failed to listen on a port: %v", err))
+			tb.Fatalf("failed to listen on a port: %v", err)
 		}
 	}
 	return l
 }
 
-func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) (*gossh.Session, *gossh.Client, func()) {
+func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) *gossh.Session {
 	tb.Helper()
 	if config == nil {
 		config = &gossh.ClientConfig{
@@ -48,8 +57,9 @@ func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) (*
 	if err != nil {
 		tb.Fatal(err)
 	}
-	return session, client, func() {
+	tb.Cleanup(func() {
 		session.Close()
 		client.Close()
-	}
+	})
+	return session
 }

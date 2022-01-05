@@ -17,12 +17,11 @@ func TestMiddleware(t *testing.T) {
 	})
 }
 
-func setup(t *testing.T) *gossh.Session {
-	session, _, cleanup := testsession.New(t, &ssh.Server{
+func setup(tb testing.TB) *gossh.Session {
+	tb.Helper()
+	return testsession.New(tb, &ssh.Server{
 		Handler: activeterm.Middleware()(func(s ssh.Session) {
 			s.Write([]byte("hello"))
 		}),
 	}, nil)
-	t.Cleanup(cleanup)
-	return session
 }
