@@ -2,6 +2,8 @@
 package accesscontrol
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
@@ -21,6 +23,7 @@ func Middleware(cmds ...string) wish.Middleware {
 					return
 				}
 			}
+			fmt.Fprintln(s, "Command is not allowed: "+s.Command()[0])
 			s.Exit(1)
 		}
 	}
