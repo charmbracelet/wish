@@ -4,11 +4,13 @@ package main
 // and continually print up to date terminal information.
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/wish"
@@ -44,7 +46,9 @@ func main() {
 
 	<-done
 	log.Println("Stopping SSH server")
-	if err := s.Close(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer func() { cancel() }()
+	if err := s.Shutdown(ctx); err != nil {
 		log.Fatalln(err)
 	}
 }

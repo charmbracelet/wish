@@ -4,12 +4,14 @@ package main
 // directly to the server. To test `ssh -p 23233 localhost` once it's running.
 
 import (
+	"context"
 	"fmt"
 	"io/fs"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/charmbracelet/wish"
 	gm "github.com/charmbracelet/wish/git"
@@ -75,7 +77,9 @@ func main() {
 
 	<-done
 	log.Println("Stopping SSH server")
-	if err := s.Close(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer func() { cancel() }()
+	if err := s.Shutdown(ctx); err != nil {
 		log.Fatalln(err)
 	}
 }
