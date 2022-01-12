@@ -19,6 +19,9 @@ var ErrNotAuthed = fmt.Errorf("you are not authorized to do this")
 // ErrSystemMalfunction represents a general system error returned to clients.
 var ErrSystemMalfunction = fmt.Errorf("something went wrong")
 
+// ErrInvalidRepo represents an attempt to access a non-existent repo
+var ErrInvalidRepo = fmt.Errorf("invalid repo")
+
 // AccessLevel is the level of access allowed to a repo.
 type AccessLevel int
 
@@ -50,10 +53,9 @@ func Middleware(repoDir string, gh GitHooks) wish.Middleware {
 			cmd := s.Command()
 			if len(cmd) == 2 {
 				gc := cmd[0]
-				repo := cmd[1] // cmd[1] will be `/REPO`
-				if len(repo) > 0 && repo[0] == '/' {
-					repo = repo[1:]
-				}
+				repo := cmd[1] // cmd[1] should be `/REPO`
+				repo = filepath.Clean(repo)
+				repo = filepath.Base(repo)
 				pk := s.PublicKey()
 				access := gh.AuthRepo(repo, pk)
 				switch gc {
@@ -73,10 +75,13 @@ func Middleware(repoDir string, gh GitHooks) wish.Middleware {
 					switch access {
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
 						err := gitUploadPack(s, gc, repoDir, repo)
-						if err != nil {
-							fatalGit(s, ErrSystemMalfunction)
-						} else {
+						switch err {
+						case ErrInvalidRepo:
+							fatalGit(s, ErrInvalidRepo)
+						case nil:
 							gh.Fetch(repo, pk)
+						default:
+							fatalGit(s, ErrSystemMalfunction)
 						}
 					default:
 						fatalGit(s, ErrNotAuthed)
@@ -112,11 +117,16 @@ func gitReceivePack(s ssh.Session, gitCmd string, repoDir string, repo string) e
 
 func gitUploadPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
 	rp := filepath.Join(repoDir, repo)
-	if exists, err := fileExists(rp); exists && err == nil {
-		err = runCmd(s, "./", gitCmd, rp)
-		if err != nil {
-			return err
-		}
+	exists, err := fileExists(rp)
+	if !exists {
+		return ErrInvalidRepo
+	}
+	if err != nil {
+		return err
+	}
+	err = runCmd(s, "./", gitCmd, rp)
+	if err != nil {
+		return err
 	}
 	return nil
 }
