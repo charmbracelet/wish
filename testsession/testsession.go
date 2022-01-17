@@ -21,7 +21,9 @@ func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) *gossh.Session
 			tb.Fatalf("failed to serve: %v", err)
 		}
 	}()
-	tb.Cleanup(func() { srv.Close() })
+	tb.Cleanup(func() {
+		srv.Close() // nolint: errcheck
+	})
 	return newClientSession(tb, l.Addr().String(), cfg)
 }
 
@@ -47,7 +49,7 @@ func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) *g
 		}
 	}
 	if config.HostKeyCallback == nil {
-		config.HostKeyCallback = gossh.InsecureIgnoreHostKey()
+		config.HostKeyCallback = gossh.InsecureIgnoreHostKey() // nolint: gosec
 	}
 	client, err := gossh.Dial("tcp", addr, config)
 	if err != nil {
@@ -58,8 +60,8 @@ func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) *g
 		tb.Fatal(err)
 	}
 	tb.Cleanup(func() {
-		session.Close()
-		client.Close()
+		session.Close() // nolint: errcheck
+		client.Close()  // nolint: errcheck
 	})
 	return session
 }

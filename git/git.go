@@ -1,7 +1,6 @@
 package git
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -19,16 +18,23 @@ var ErrNotAuthed = fmt.Errorf("you are not authorized to do this")
 // ErrSystemMalfunction represents a general system error returned to clients.
 var ErrSystemMalfunction = fmt.Errorf("something went wrong")
 
-// ErrInvalidRepo represents an attempt to access a non-existent repo
+// ErrInvalidRepo represents an attempt to access a non-existent repo.
 var ErrInvalidRepo = fmt.Errorf("invalid repo")
 
 // AccessLevel is the level of access allowed to a repo.
 type AccessLevel int
 
 const (
+	// NoAccess does not allow access to the repo.
 	NoAccess AccessLevel = iota
+
+	// ReadOnlyAccess allows read-only access to the repo.
 	ReadOnlyAccess
+
+	// ReadWriteAccess allows read and write access to the repo.
 	ReadWriteAccess
+
+	// AdminAccess allows read, write, and admin access to the repo.
 	AdminAccess
 )
 
@@ -36,18 +42,26 @@ const (
 // implementations and post push/fetch notifications. Prior to git access,
 // AuthRepo will be called with the ssh.Session public key and the repo name.
 // Implementers return the appropriate AccessLevel.
-type GitHooks interface {
+//
+// Deprecated: use Hooks instead.
+type GitHooks = Hooks // nolint: revive
+
+// Hooks is an interface that allows for custom authorization
+// implementations and post push/fetch notifications. Prior to git access,
+// AuthRepo will be called with the ssh.Session public key and the repo name.
+// Implementers return the appropriate AccessLevel.
+type Hooks interface {
 	AuthRepo(string, ssh.PublicKey) AccessLevel
 	Push(string, ssh.PublicKey)
 	Fetch(string, ssh.PublicKey)
 }
 
 // Middleware adds Git server functionality to the ssh.Server. Repos are stored
-// in the specified repo directory. The provided GitHooks implementation will be
+// in the specified repo directory. The provided Hooks implementation will be
 // checked for access on a per repo basis for a ssh.Session public key.
-// GitHooks.Push and GitHooks.Fetch will be called on successful completion of
+// Hooks.Push and Hooks.Fetch will be called on successful completion of
 // their commands.
-func Middleware(repoDir string, gh GitHooks) wish.Middleware {
+func Middleware(repoDir string, gh Hooks) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			cmd := s.Command()
@@ -94,8 +108,7 @@ func Middleware(repoDir string, gh GitHooks) wish.Middleware {
 }
 
 func gitReceivePack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
-	ctx := s.Context()
-	err := ensureRepo(ctx, repoDir, repo)
+	err := ensureRepo(repoDir, repo)
 	if err != nil {
 		return err
 	}
@@ -147,10 +160,10 @@ func fatalGit(s ssh.Session, err error) {
 	msg := err.Error()
 	pktLine := fmt.Sprintf("%04x%s\n", len(msg)+5, msg)
 	_, _ = s.Write([]byte(pktLine))
-	s.Exit(1)
+	s.Exit(1) // nolint: errcheck
 }
 
-func ensureRepo(ctx context.Context, dir string, repo string) error {
+func ensureRepo(dir string, repo string) error {
 	exists, err := fileExists(dir)
 	if err != nil {
 		return err
@@ -180,8 +193,7 @@ func runCmd(s ssh.Session, dir, name string, args ...string) error {
 	usi.Dir = dir
 	usi.Stdout = s
 	usi.Stdin = s
-	err := usi.Run()
-	if err != nil {
+	if err := usi.Run(); err != nil {
 		return err
 	}
 	return nil

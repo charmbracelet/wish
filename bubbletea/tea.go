@@ -15,12 +15,12 @@ import (
 // start it with the tea.ProgramOptions returned.
 //
 // Deprecated: use Handler instead.
-type BubbleTeaHandler func(ssh.Session) (tea.Model, []tea.ProgramOption) // nolint: revive
+type BubbleTeaHandler = Handler // nolint: revive
 
 // Hander is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
-type Handler = BubbleTeaHandler
+type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
 
 // Middleware takes a Handler and hooks the input and output for the
 // ssh.Session into the tea.Program. It also captures window resize events and

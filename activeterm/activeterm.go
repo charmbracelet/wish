@@ -15,8 +15,8 @@ func Middleware() wish.Middleware {
 			_, _, active := s.Pty()
 			if !active {
 				fmt.Fprintln(s, "Requires an active PTY")
-				s.Exit(1)
-				return
+				s.Exit(1) // nolint: errcheck
+				return    // unreachable
 			}
 			sh(s)
 		}
