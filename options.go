@@ -92,7 +92,7 @@ func parseAuthorizedKeys(path string) ([]ssh.PublicKey, error) {
 	if err != nil {
 		return keys, fmt.Errorf("failed to parse %q: %w", path, err)
 	}
-	defer f.Close()
+	defer f.Close() // nolint: errcheck
 
 	rd := bufio.NewReader(f)
 	for {
