@@ -10,14 +10,14 @@ import (
 	"github.com/muesli/termenv"
 )
 
-// BubbleTeaHander is the function Bubble Tea apps implement to hook into the
+// BubbleTeaHandler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
 //
 // Deprecated: use Handler instead.
 type BubbleTeaHandler = Handler // nolint: revive
 
-// Hander is the function Bubble Tea apps implement to hook into the
+// Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
 type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
