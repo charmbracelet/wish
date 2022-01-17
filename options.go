@@ -1,6 +1,10 @@
 package wish
 
 import (
+	"bufio"
+	"errors"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,6 +65,51 @@ func WithHostKeyPath(path string) ssh.Option {
 // WithHostKeyPEM returns an ssh.Option that sets the host key from a PEM block.
 func WithHostKeyPEM(pem []byte) ssh.Option {
 	return ssh.HostKeyPEM(pem)
+}
+
+// WithAuthorizedKeys allows to use a SSH authorized_keys file to allowlist users.
+func WithAuthorizedKeys(path string) ssh.Option {
+	return func(s *ssh.Server) error {
+		keys, err := parseAuthorizedKeys(path)
+		if err != nil {
+			return err
+		}
+		return WithPublicKeyAuth(func(_ ssh.Context, key ssh.PublicKey) bool {
+			for _, upk := range keys {
+				if ssh.KeysEqual(upk, key) {
+					return true
+				}
+			}
+			return false
+		})(s)
+	}
+}
+
+func parseAuthorizedKeys(path string) ([]ssh.PublicKey, error) {
+	var keys []ssh.PublicKey
+
+	f, err := os.Open(path)
+	if err != nil {
+		return keys, fmt.Errorf("failed to parse %q: %w", path, err)
+	}
+	defer f.Close()
+
+	rd := bufio.NewReader(f)
+	for {
+		line, _, err := rd.ReadLine()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return keys, fmt.Errorf("failed to parse %q: %w", path, err)
+		}
+		upk, _, _, _, err := ssh.ParseAuthorizedKey(line)
+		if err != nil {
+			return keys, fmt.Errorf("failed to parse %q: %w", path, err)
+		}
+		keys = append(keys, upk)
+	}
+	return keys, nil
 }
 
 // WithPublicKeyAuth returns an ssh.Option that sets the public key auth handler.
