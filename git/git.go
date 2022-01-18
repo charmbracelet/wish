@@ -1,7 +1,10 @@
 package git
 
 import (
+<<<<<<< HEAD
 	"errors"
+=======
+>>>>>>> origin/main
 	"fmt"
 	"log"
 	"os"
