@@ -112,7 +112,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 	}
 }
 
-func gitReceivePack(ssess ssh.Session, path string) error {
+func gitReceivePack(sess ssh.Session, path string) error {
 	ep, err := transport.NewEndpoint(path)
 	if err != nil {
 		return err
@@ -127,18 +127,18 @@ func gitReceivePack(ssess ssh.Session, path string) error {
 		return fmt.Errorf("internal error in advertised references: %w", err)
 	}
 
-	if err := ar.Encode(ssess); err != nil {
+	if err := ar.Encode(sess); err != nil {
 		return fmt.Errorf("error in advertised references encoding: %w", err)
 	}
 
 	req := packp.NewReferenceUpdateRequest()
-	if err := req.Decode(io.NopCloser(ssess)); err != nil {
+	if err := req.Decode(io.NopCloser(sess)); err != nil {
 		return fmt.Errorf("error decoding: %w", err)
 	}
 
-	rs, err := s.ReceivePack(ssess.Context(), req)
+	rs, err := s.ReceivePack(sess.Context(), req)
 	if rs != nil {
-		if err := rs.Encode(ssess); err != nil && err != io.EOF {
+		if err := rs.Encode(sess); err != nil && err != io.EOF {
 			return fmt.Errorf("error in encoding report status %w", err)
 		}
 	}
@@ -154,7 +154,7 @@ func gitReceivePack(ssess ssh.Session, path string) error {
 	return nil
 }
 
-func gitUploadPack(ssess ssh.Session, path string) error {
+func gitUploadPack(sess ssh.Session, path string) error {
 	ep, err := transport.NewEndpoint(path)
 	if err != nil {
 		return err
@@ -170,22 +170,22 @@ func gitUploadPack(ssess ssh.Session, path string) error {
 		return fmt.Errorf("internal error in advertised references: %w", err)
 	}
 
-	if err := ar.Encode(ssess); err != nil {
+	if err := ar.Encode(sess); err != nil {
 		return fmt.Errorf("error in advertised references encoding: %w", err)
 	}
 
 	req := packp.NewUploadPackRequest()
-	if err := req.Decode(ssess); err != nil && err != io.EOF {
+	if err := req.Decode(sess); err != nil && err != io.EOF {
 		return fmt.Errorf("error decoding: %w", err)
 	}
 
 	var resp *packp.UploadPackResponse
-	resp, err = s.UploadPack(ssess.Context(), req)
+	resp, err = s.UploadPack(sess.Context(), req)
 	if err != nil {
 		return fmt.Errorf("error in upload pack: %w", err)
 	}
 
-	if err := resp.Encode(ssess); err != nil {
+	if err := resp.Encode(sess); err != nil {
 		return fmt.Errorf("error in encoding report status %w", err)
 	}
 	return nil
