@@ -147,7 +147,7 @@ func gitReceivePack(ssess ssh.Session, path string) error {
 		return fmt.Errorf("error in receive pack: %w", err)
 	}
 
-	if err := ensureDefaultBranch(ssess, path); err != nil {
+	if err := ensureDefaultBranch(path); err != nil {
 		log.Println("failed to ensure default branch", err)
 		return err
 	}
@@ -236,7 +236,7 @@ func ensureRepo(dir string, repo string) error {
 	return nil
 }
 
-func ensureDefaultBranch(s ssh.Session, repoPath string) error {
+func ensureDefaultBranch(repoPath string) error {
 	r, err := git.PlainOpen(repoPath)
 	if err != nil {
 		return err
