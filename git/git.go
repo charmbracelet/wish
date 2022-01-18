@@ -84,7 +84,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 						if err := ensureRepo(repoDir, repo); err != nil {
 							fatalGit(s, ErrSystemMalfunction)
 						}
-						if err := receivePack(s, filepath.Join(repoDir, repo)); err != nil {
+						if err := gitReceivePack(s, filepath.Join(repoDir, repo)); err != nil {
 							fatalGit(s, ErrSystemMalfunction)
 						}
 						gh.Push(repo, pk)
@@ -94,7 +94,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				case "git-upload-archive", "git-upload-pack":
 					switch access {
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
-						err := uploadPack(s, filepath.Join(repoDir, repo))
+						err := gitUploadPack(s, filepath.Join(repoDir, repo))
 						if err == nil {
 							gh.Fetch(repo, pk)
 						} else if errors.Is(err, transport.ErrRepositoryNotFound) {
@@ -110,6 +110,86 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 			sh(s)
 		}
 	}
+}
+
+func gitReceivePack(ssess ssh.Session, path string) error {
+	ep, err := transport.NewEndpoint(path)
+	if err != nil {
+		return err
+	}
+
+	s, err := server.DefaultServer.NewReceivePackSession(ep, nil)
+	if err != nil {
+		return fmt.Errorf("error creating session: %w", err)
+	}
+	ar, err := s.AdvertisedReferences()
+	if err != nil {
+		return fmt.Errorf("internal error in advertised references: %w", err)
+	}
+
+	if err := ar.Encode(ssess); err != nil {
+		return fmt.Errorf("error in advertised references encoding: %w", err)
+	}
+
+	req := packp.NewReferenceUpdateRequest()
+	if err := req.Decode(io.NopCloser(ssess)); err != nil {
+		return fmt.Errorf("error decoding: %w", err)
+	}
+
+	rs, err := s.ReceivePack(ssess.Context(), req)
+	if rs != nil {
+		if err := rs.Encode(ssess); err != nil && err != io.EOF {
+			return fmt.Errorf("error in encoding report status %w", err)
+		}
+	}
+
+	if err != nil {
+		return fmt.Errorf("error in receive pack: %w", err)
+	}
+
+	if err := ensureDefaultBranch(ssess, path); err != nil {
+		log.Println("failed to ensure default branch", err)
+		return err
+	}
+	return nil
+}
+
+func gitUploadPack(ssess ssh.Session, path string) error {
+	ep, err := transport.NewEndpoint(path)
+	if err != nil {
+		return err
+	}
+
+	// TODO: define and implement a server-side AuthMethod
+	s, err := server.DefaultServer.NewUploadPackSession(ep, nil)
+	if err != nil {
+		return fmt.Errorf("error creating session: %w", err)
+	}
+
+	ar, err := s.AdvertisedReferences()
+	if err != nil {
+		return fmt.Errorf("internal error in advertised references: %w", err)
+	}
+
+	if err := ar.Encode(ssess); err != nil {
+		return fmt.Errorf("error in advertised references encoding: %w", err)
+	}
+
+	req := packp.NewUploadPackRequest()
+	if err := req.Decode(ssess); err != nil && err != io.EOF {
+		return fmt.Errorf("error decoding: %w", err)
+	}
+
+	var resp *packp.UploadPackResponse
+	resp, err = s.UploadPack(ssess.Context(), req)
+	if err != nil {
+		return fmt.Errorf("error in upload pack: %w", err)
+	}
+
+	if err := resp.Encode(ssess); err != nil {
+		return fmt.Errorf("error in encoding report status %w", err)
+	}
+	return nil
 }
 
 func fileExists(path string) (bool, error) {
@@ -152,86 +232,6 @@ func ensureRepo(dir string, repo string) error {
 		if err != nil {
 			return err
 		}
-	}
-	return nil
-}
-
-func uploadPack(ssess ssh.Session, path string) error {
-	ep, err := transport.NewEndpoint(path)
-	if err != nil {
-		return err
-	}
-
-	// TODO: define and implement a server-side AuthMethod
-	s, err := server.DefaultServer.NewUploadPackSession(ep, nil)
-	if err != nil {
-		return fmt.Errorf("error creating session: %w", err)
-	}
-
-	ar, err := s.AdvertisedReferences()
-	if err != nil {
-		return fmt.Errorf("internal error in advertised references: %w", err)
-	}
-
-	if err := ar.Encode(ssess); err != nil {
-		return fmt.Errorf("error in advertised references encoding: %w", err)
-	}
-
-	req := packp.NewUploadPackRequest()
-	if err := req.Decode(ssess); err != nil && err != io.EOF {
-		return fmt.Errorf("error decoding: %w", err)
-	}
-
-	var resp *packp.UploadPackResponse
-	resp, err = s.UploadPack(ssess.Context(), req)
-	if err != nil {
-		return fmt.Errorf("error in upload pack: %w", err)
-	}
-
-	if err := resp.Encode(ssess); err != nil {
-		return fmt.Errorf("error in encoding report status %w", err)
-	}
-	return nil
-}
-
-func receivePack(ssess ssh.Session, path string) error {
-	ep, err := transport.NewEndpoint(path)
-	if err != nil {
-		return err
-	}
-
-	s, err := server.DefaultServer.NewReceivePackSession(ep, nil)
-	if err != nil {
-		return fmt.Errorf("error creating session: %w", err)
-	}
-	ar, err := s.AdvertisedReferences()
-	if err != nil {
-		return fmt.Errorf("internal error in advertised references: %w", err)
-	}
-
-	if err := ar.Encode(ssess); err != nil {
-		return fmt.Errorf("error in advertised references encoding: %w", err)
-	}
-
-	req := packp.NewReferenceUpdateRequest()
-	if err := req.Decode(io.NopCloser(ssess)); err != nil {
-		return fmt.Errorf("error decoding: %w", err)
-	}
-
-	rs, err := s.ReceivePack(ssess.Context(), req)
-	if rs != nil {
-		if err := rs.Encode(ssess); err != nil && err != io.EOF {
-			return fmt.Errorf("error in encoding report status %w", err)
-		}
-	}
-
-	if err != nil {
-		return fmt.Errorf("error in receive pack: %w", err)
-	}
-
-	if err := ensureDefaultBranch(ssess, path); err != nil {
-		log.Println("failed to ensure default branch", err)
-		return err
 	}
 	return nil
 }
