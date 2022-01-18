@@ -13,17 +13,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/server"
 )
 
-type gitServer struct {
-	transport.Transport
-}
-
-func newServer(path string) gitServer {
-	return gitServer{
-		server.DefaultServer, //NewServer(server.NewFilesystemLoader(osfs.New(path))),
-	}
-}
-
-func (src gitServer) uploadPack(ssess ssh.Session, path string) error {
+func uploadPack(ssess ssh.Session, path string) error {
 	ep, err := transport.NewEndpoint(path)
 	if err != nil {
 		return err
@@ -61,13 +51,13 @@ func (src gitServer) uploadPack(ssess ssh.Session, path string) error {
 	return nil
 }
 
-func (srv gitServer) receivePack(ssess ssh.Session, path string) error {
+func receivePack(ssess ssh.Session, path string) error {
 	ep, err := transport.NewEndpoint(path)
 	if err != nil {
 		return err
 	}
 
-	s, err := srv.NewReceivePackSession(ep, nil)
+	s, err := server.DefaultServer.NewReceivePackSession(ep, nil)
 	if err != nil {
 		return fmt.Errorf("error creating session: %w", err)
 	}
@@ -96,14 +86,14 @@ func (srv gitServer) receivePack(ssess ssh.Session, path string) error {
 		return fmt.Errorf("error in receive pack: %w", err)
 	}
 
-	if err := srv.ensureDefaultBranch(ssess, path); err != nil {
+	if err := ensureDefaultBranch(ssess, path); err != nil {
 		log.Println("failed to ensure default branch", err)
 		return err
 	}
 	return nil
 }
 
-func (srv gitServer) ensureDefaultBranch(s ssh.Session, repoPath string) error {
+func ensureDefaultBranch(s ssh.Session, repoPath string) error {
 	r, err := git.PlainOpen(repoPath)
 	if err != nil {
 		return err

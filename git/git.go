@@ -1,10 +1,7 @@
 package git
 
 import (
-<<<<<<< HEAD
 	"errors"
-=======
->>>>>>> origin/main
 	"fmt"
 	"log"
 	"os"
@@ -83,7 +80,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 						if err := ensureRepo(repoDir, repo); err != nil {
 							fatalGit(s, ErrSystemMalfunction)
 						}
-						if err := newServer(repoDir).receivePack(s, filepath.Join(repoDir, repo)); err != nil {
+						if err := receivePack(s, filepath.Join(repoDir, repo)); err != nil {
 							log.Println(err)
 							fatalGit(s, ErrSystemMalfunction)
 						}
@@ -94,7 +91,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				case "git-upload-archive", "git-upload-pack":
 					switch access {
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
-						err := newServer(repoDir).uploadPack(s, filepath.Join(repoDir, repo))
+						err := uploadPack(s, filepath.Join(repoDir, repo))
 						if err == nil {
 							gh.Fetch(repo, pk)
 						} else if errors.Is(err, transport.ErrRepositoryNotFound) {
@@ -137,7 +134,7 @@ func ensureRepo(dir string, repo string) error {
 		return err
 	}
 	if !exists {
-		err = os.MkdirAll(dir, os.ModeDir|os.FileMode(0700))
+		err = os.MkdirAll(dir, os.ModeDir|os.FileMode(0o700))
 		if err != nil {
 			return err
 		}
