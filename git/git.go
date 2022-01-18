@@ -3,7 +3,6 @@ package git
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -81,7 +80,6 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 							fatalGit(s, ErrSystemMalfunction)
 						}
 						if err := receivePack(s, filepath.Join(repoDir, repo)); err != nil {
-							log.Println(err)
 							fatalGit(s, ErrSystemMalfunction)
 						}
 						gh.Push(repo, pk)
