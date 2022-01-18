@@ -78,7 +78,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				pk := s.PublicKey()
 				access := gh.AuthRepo(repo, pk)
 				switch gc {
-				case "git-receive-pack":
+				case transport.ReceivePackServiceName:
 					switch access {
 					case ReadWriteAccess, AdminAccess:
 						if err := ensureRepo(repoDir, repo); err != nil {
@@ -91,16 +91,16 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 					default:
 						fatalGit(s, ErrNotAuthed)
 					}
-				case "git-upload-archive", "git-upload-pack":
+				case transport.UploadPackServiceName:
 					switch access {
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
 						err := gitUploadPack(s, filepath.Join(repoDir, repo))
 						if err == nil {
 							gh.Fetch(repo, pk)
 						} else if errors.Is(err, transport.ErrRepositoryNotFound) {
-							fatalGit(s, transport.ErrRepositoryNotFound)
+							fatalGit(s, ErrInvalidRepo)
 						} else {
-							fatalGit(s, fmt.Errorf("%s: %w", ErrSystemMalfunction.Error(), err))
+							fatalGit(s, ErrSystemMalfunction)
 						}
 					default:
 						fatalGit(s, ErrNotAuthed)
