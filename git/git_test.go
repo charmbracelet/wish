@@ -32,6 +32,7 @@ func TestGitMiddleware(t *testing.T) {
 			{pubkey, "repo4", AdminAccess},
 			{pubkey, "repo5", NoAccess},
 			{pubkey, "repo6", ReadOnlyAccess},
+			{pubkey, "repo7", AdminAccess},
 		},
 	}
 	srv, err := wish.NewServer(
@@ -92,6 +93,20 @@ func TestGitMiddleware(t *testing.T) {
 		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo6"))
 		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
 		requireError(t, runGit(t, pkPath, cwd, "push", "origin", "main"))
+	})
+
+	t.Run("create and clone repo on weird branch", func(t *testing.T) {
+		cwd := t.TempDir()
+		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "a-weird-branch-name"))
+		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo7"))
+		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGit(t, pkPath, cwd, "push", "origin", "a-weird-branch-name"))
+
+		cwd = t.TempDir()
+		requireNoError(t, runGit(t, pkPath, cwd, "clone", remote+"/repo7"))
+
+		requireHasAction(t, hooks.pushes, pubkey, "repo7")
+		requireHasAction(t, hooks.fetches, pubkey, "repo7")
 	})
 }
 

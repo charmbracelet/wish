@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -148,7 +147,6 @@ func gitReceivePack(sess ssh.Session, path string) error {
 	}
 
 	if err := ensureDefaultBranch(path); err != nil {
-		log.Println("failed to ensure default branch", err)
 		return err
 	}
 	return nil
