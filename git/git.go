@@ -160,7 +160,6 @@ func gitUploadPack(ssess ssh.Session, path string) error {
 		return err
 	}
 
-	// TODO: define and implement a server-side AuthMethod
 	s, err := server.DefaultServer.NewUploadPackSession(ep, nil)
 	if err != nil {
 		return fmt.Errorf("error creating session: %w", err)
