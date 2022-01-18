@@ -14,59 +14,12 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-type accessDetails struct {
-	key   ssh.PublicKey
-	repo  string
-	level AccessLevel
-}
-
-type action struct {
-	key  ssh.PublicKey
-	repo string
-}
-
-type testHooks struct {
-	sync.Mutex
-	pushes  []action
-	fetches []action
-	access  []accessDetails
-}
-
-func (h *testHooks) AuthRepo(repo string, key ssh.PublicKey) AccessLevel {
-	for _, dets := range h.access {
-		if dets.repo == repo && ssh.KeysEqual(key, dets.key) {
-			return dets.level
-		}
-	}
-	return NoAccess
-}
-
-func (h *testHooks) Push(repo string, key ssh.PublicKey) {
-	h.Lock()
-	defer h.Unlock()
-
-	h.pushes = append(h.pushes, action{key, repo})
-}
-
-func (h *testHooks) Fetch(repo string, key ssh.PublicKey) {
-	h.Lock()
-	defer h.Unlock()
-
-	h.fetches = append(h.fetches, action{key, repo})
-}
-
 func TestGitMiddleware(t *testing.T) {
+	pubkey, pkPath := createKeyPair(t)
+
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	requireNoError(t, err)
-
-	keyDir := t.TempDir()
-	_, err = keygen.NewWithWrite(keyDir, "id", nil, keygen.Ed25519)
-	requireNoError(t, err)
-	pk := filepath.Join(keyDir, "id_ed25519")
-	pubBytes, err := os.ReadFile(filepath.Join(keyDir, "id_ed25519.pub"))
-	requireNoError(t, err)
-	pubkey, _, _, _, err := ssh.ParseAuthorizedKey(pubBytes)
-	requireNoError(t, err)
+	remote := "ssh://" + l.Addr().String()
 
 	repoDir := t.TempDir()
 	hooks := &testHooks{
@@ -88,41 +41,36 @@ func TestGitMiddleware(t *testing.T) {
 		}),
 	)
 	requireNoError(t, err)
-
-	remote := "ssh://" + l.Addr().String()
-	// fmt.Printf(`git remote set-url wish %s/repo1 && git -c core.sshCommand="ssh -o 'UserKnownHostsFile=/dev/null' -o 'StrictHostKeyChecking=no' -i %s -F /dev/null" push wish go-git-server\n`, remote, pk)
-
 	go func() { srv.Serve(l) }()
-
 	t.Cleanup(func() { _ = srv.Close() })
 
 	t.Run("create repo on master", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pk, cwd, "init", "-b", "master"))
-		requireNoError(t, runGit(t, pk, cwd, "remote", "add", "origin", remote+"/repo1"))
-		requireNoError(t, runGit(t, pk, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireNoError(t, runGit(t, pk, cwd, "push", "origin", "master"))
+		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "master"))
+		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo1"))
+		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGit(t, pkPath, cwd, "push", "origin", "master"))
 		requireHasAction(t, hooks.pushes, pubkey, "repo1")
 	})
 
 	t.Run("create repo on main", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pk, cwd, "init", "-b", "main"))
-		requireNoError(t, runGit(t, pk, cwd, "remote", "add", "origin", remote+"/repo2"))
-		requireNoError(t, runGit(t, pk, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireNoError(t, runGit(t, pk, cwd, "push", "origin", "main"))
+		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo2"))
+		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGit(t, pkPath, cwd, "push", "origin", "main"))
 		requireHasAction(t, hooks.pushes, pubkey, "repo2")
 	})
 
 	t.Run("create and clone repo", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pk, cwd, "init", "-b", "main"))
-		requireNoError(t, runGit(t, pk, cwd, "remote", "add", "origin", remote+"/repo3"))
-		requireNoError(t, runGit(t, pk, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireNoError(t, runGit(t, pk, cwd, "push", "origin", "main"))
+		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo3"))
+		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGit(t, pkPath, cwd, "push", "origin", "main"))
 
 		cwd = t.TempDir()
-		requireNoError(t, runGit(t, pk, cwd, "clone", remote+"/repo3"))
+		requireNoError(t, runGit(t, pkPath, cwd, "clone", remote+"/repo3"))
 
 		requireHasAction(t, hooks.pushes, pubkey, "repo3")
 		requireHasAction(t, hooks.fetches, pubkey, "repo3")
@@ -130,20 +78,20 @@ func TestGitMiddleware(t *testing.T) {
 
 	t.Run("clone repo that doesnt exist", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireError(t, runGit(t, pk, cwd, "clone", remote+"/repo4"))
+		requireError(t, runGit(t, pkPath, cwd, "clone", remote+"/repo4"))
 	})
 
 	t.Run("clone repo with no access", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireError(t, runGit(t, pk, cwd, "clone", remote+"/repo5"))
+		requireError(t, runGit(t, pkPath, cwd, "clone", remote+"/repo5"))
 	})
 
 	t.Run("push repo with with readonly", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pk, cwd, "init", "-b", "main"))
-		requireNoError(t, runGit(t, pk, cwd, "remote", "add", "origin", remote+"/repo6"))
-		requireNoError(t, runGit(t, pk, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireError(t, runGit(t, pk, cwd, "push", "origin", "main"))
+		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo6"))
+		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireError(t, runGit(t, pkPath, cwd, "push", "origin", "main"))
 	})
 }
 
@@ -156,7 +104,6 @@ func runGit(t *testing.T, pk, cwd string, args ...string) error {
 		"-c", "commit.gpgSign=false",
 		"-c", "tag.gpgSign=false",
 		"-c", "log.showSignature=false",
-		// "-c", fmt.Sprintf(`core.sshCommand="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i %s -F /dev/null"`, pk),
 		"-c", "ssh.variant=ssh",
 	}
 	allArgs = append(allArgs, args...)
@@ -196,4 +143,59 @@ func requireHasAction(t *testing.T, actions []action, key ssh.PublicKey, repo st
 		}
 	}
 	t.Fatalf("expected action for %q, got none", repo)
+}
+
+func createKeyPair(t *testing.T) (ssh.PublicKey, string) {
+	t.Helper()
+
+	keyDir := t.TempDir()
+	_, err := keygen.NewWithWrite(keyDir, "id", nil, keygen.Ed25519)
+	requireNoError(t, err)
+	pk := filepath.Join(keyDir, "id_ed25519")
+	pubBytes, err := os.ReadFile(filepath.Join(keyDir, "id_ed25519.pub"))
+	requireNoError(t, err)
+	pubkey, _, _, _, err := ssh.ParseAuthorizedKey(pubBytes)
+	requireNoError(t, err)
+	return pubkey, pk
+}
+
+type accessDetails struct {
+	key   ssh.PublicKey
+	repo  string
+	level AccessLevel
+}
+
+type action struct {
+	key  ssh.PublicKey
+	repo string
+}
+
+type testHooks struct {
+	sync.Mutex
+	pushes  []action
+	fetches []action
+	access  []accessDetails
+}
+
+func (h *testHooks) AuthRepo(repo string, key ssh.PublicKey) AccessLevel {
+	for _, dets := range h.access {
+		if dets.repo == repo && ssh.KeysEqual(key, dets.key) {
+			return dets.level
+		}
+	}
+	return NoAccess
+}
+
+func (h *testHooks) Push(repo string, key ssh.PublicKey) {
+	h.Lock()
+	defer h.Unlock()
+
+	h.pushes = append(h.pushes, action{key, repo})
+}
+
+func (h *testHooks) Fetch(repo string, key ssh.PublicKey) {
+	h.Lock()
+	defer h.Unlock()
+
+	h.fetches = append(h.fetches, action{key, repo})
 }
