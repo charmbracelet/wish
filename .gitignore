@@ -6,3 +6,5 @@ examples/bubbletea/.ssh
 examples/git/git
 examples/git/.ssh
 examples/git/.repos
+.repos
+.ssh
