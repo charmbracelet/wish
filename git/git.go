@@ -85,6 +85,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 					default:
 						fatalGit(s, ErrNotAuthed)
 					}
+					return
 				case "git-upload-archive", "git-upload-pack":
 					switch access {
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
@@ -100,6 +101,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 					default:
 						fatalGit(s, ErrNotAuthed)
 					}
+					return
 				}
 			}
 			sh(s)
