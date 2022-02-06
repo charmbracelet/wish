@@ -64,10 +64,14 @@ server with automatic server key generation.
 ## Examples
 
 There are examples for a standalone [Bubble Tea application](examples/bubbletea)
-and [Git server](examples/git) in the [examples](examples) folder. To see a
-more real-world application that combines Bubble Tea and Git, you can take a
-look at [Soft Serve](https://github.com/charmbracelet/soft-serve) which uses
-Git as a CMS and provides a TUI over SSH for interacting with pushed repos.
+and [Git server](examples/git) in the [examples](examples) folder.
+
+## Apps Built With Wish
+
+* [Soft Serve](https://github.com/charmbracelet/soft-serve)
+* [Wishlist](https://github.com/charmbracelet/wishlist)
+* [SSHWordle](https://github.com/davidcroda/sshwordle)
+* [clidle](https://github.com/ajeetdsouza/clidle)
 
 [bubbletea]: https://github.com/charmbracelet/bubbletea
 [gliderlabs/ssh]: https://github.com/gliderlabs/ssh
