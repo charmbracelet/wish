@@ -3,12 +3,12 @@ module github.com/charmbracelet/wish
 go 1.17
 
 require (
-	github.com/charmbracelet/bubbletea v0.19.0
+	github.com/charmbracelet/bubbletea v0.19.4-0.20220208181305-42cd4c31919c
 	github.com/charmbracelet/keygen v0.1.2
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/gliderlabs/ssh v0.3.3
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/muesli/termenv v0.9.0
+	github.com/muesli/termenv v0.11.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 )
 
@@ -25,7 +25,7 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
-	github.com/mattn/go-isatty v0.0.14-0.20210829144114-504425e14f74 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
 	github.com/mikesmitty/edkey v0.0.0-20170222072505-3356ea4e686a // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

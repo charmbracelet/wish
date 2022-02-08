@@ -63,6 +63,10 @@ func MiddlewareWithColorProfile(bth Handler, cp termenv.Profile) wish.Middleware
 					}
 				}()
 				errc <- p.Start()
+				// p.Kill() will force kill the program if it's still running,
+				// and restore the terminal to its original state in case of a
+				// tui crash
+				p.Kill()
 			}
 			sh(s)
 		}
