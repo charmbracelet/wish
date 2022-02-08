@@ -14,6 +14,10 @@ github.com/charmbracelet/bubbletea v0.19.4-0.20220208181305-42cd4c31919c h1:hcS4
 github.com/charmbracelet/bubbletea v0.19.4-0.20220208181305-42cd4c31919c/go.mod h1:5nPeULOIxbAMykb3ggwhw1kruS7nP+Y4Za9yEH4J27U=
 github.com/charmbracelet/keygen v0.1.2 h1:Gr/gdIOjDIxCTRVXpwa9tsXPoJPS2eGNehPoMnZLvTQ=
 github.com/charmbracelet/keygen v0.1.2/go.mod h1:kFQ3Cvop12fXWX1K29vxDxV9x8ujG4wBSXq//GySSSk=
+github.com/charmbracelet/keygen v0.2.0 h1:qIOzpnPRsbklVFw+syixgBl1E3q4u2fW9AmQ+ZVSwVw=
+github.com/charmbracelet/keygen v0.2.0/go.mod h1:kFQ3Cvop12fXWX1K29vxDxV9x8ujG4wBSXq//GySSSk=
+github.com/charmbracelet/keygen v0.2.1-0.20220208202440-953ea8f89cfd h1:3zgnucOwykdMKrfj+nvRX1xW0r57qnKecP+rUB0AsnU=
+github.com/charmbracelet/keygen v0.2.1-0.20220208202440-953ea8f89cfd/go.mod h1:kFQ3Cvop12fXWX1K29vxDxV9x8ujG4wBSXq//GySSSk=
 github.com/charmbracelet/lipgloss v0.4.0 h1:768h64EFkGUr8V5yAKV7/Ta0NiVceiPaV+PphaW1K9g=
 github.com/charmbracelet/lipgloss v0.4.0/go.mod h1:vmdkHvce7UzX6xkyf4cca8WlwdQ5RQr8fzta+xl7BOM=
 github.com/containerd/console v1.0.2 h1:Pi6D+aZXM+oUw1czuKgH5IJ+y0jhYcwBJfx5/Ghn9dE=

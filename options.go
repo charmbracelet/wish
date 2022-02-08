@@ -48,16 +48,15 @@ func WithMiddleware(mw ...Middleware) ssh.Option {
 // WithHostKeyFile returns an ssh.Option that sets the path to the private.
 func WithHostKeyPath(path string) ssh.Option {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
-		kps := strings.Split(path, string(filepath.Separator))
-		kp := strings.Join(kps[:len(kps)-1], string(filepath.Separator))
-		n := strings.TrimSuffix(kps[len(kps)-1], "_ed25519")
-		_, err := keygen.NewWithWrite(kp, n, nil, keygen.Ed25519)
+		dir, f := filepath.Split(path)
+		n := strings.TrimSuffix(f, "_ed25519")
+		_, err := keygen.NewWithWrite(dir, n, nil, keygen.Ed25519)
 		if err != nil {
 			return func(*ssh.Server) error {
 				return err
 			}
 		}
-		path = filepath.Join(kp, n+"_ed25519")
+		path = filepath.Join(dir, n+"_ed25519")
 	}
 	return ssh.HostKeyFile(path)
 }

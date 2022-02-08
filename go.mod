@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/charmbracelet/bubbletea v0.19.4-0.20220208181305-42cd4c31919c
-	github.com/charmbracelet/keygen v0.1.2
+	github.com/charmbracelet/keygen v0.2.1-0.20220208202440-953ea8f89cfd
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/gliderlabs/ssh v0.3.3
 	github.com/go-git/go-git/v5 v5.4.2
