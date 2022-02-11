@@ -101,7 +101,7 @@ func MiddlewareFS(fsys fs.FS) wish.Middleware {
 // Entry defines something that knows how to write itself and its path.
 type Entry interface {
 	Write(io.Writer) error
-	Path() string
+	path() string
 }
 
 // RootEntry defines a special kind of Entry, which can contain
@@ -123,7 +123,7 @@ type FileEntry struct {
 	Reader   io.Reader
 }
 
-func (e *FileEntry) Path() string { return e.Filepath }
+func (e *FileEntry) path() string { return e.Filepath }
 
 // Write a file to the given writer.
 func (e *FileEntry) Write(w io.Writer) error {
@@ -150,12 +150,12 @@ type NoDirRootEntry []Entry
 // Appennd the given entry to a child directory, or the the itself if
 // none matches.
 func (e *NoDirRootEntry) Append(entry Entry) {
-	parent := filepath.Dir(entry.Path())
+	parent := filepath.Dir(entry.path())
 
 	for _, child := range *e {
 		switch dir := child.(type) {
 		case *DirEntry:
-			if child.Path() == parent {
+			if child.path() == parent {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
@@ -192,7 +192,7 @@ type DirEntry struct {
 	Atime    int64
 }
 
-func (e *DirEntry) Path() string { return e.Filepath }
+func (e *DirEntry) path() string { return e.Filepath }
 
 // Write the current dir entry, all its contents (recursively), and the
 // dir closing to the given writer.
@@ -220,16 +220,16 @@ func (e *DirEntry) Write(w io.Writer) error {
 
 // Appends an entry to the folder or their children.
 func (e *DirEntry) Append(entry Entry) {
-	parent := filepath.Dir(entry.Path())
+	parent := filepath.Dir(entry.path())
 
 	for _, child := range e.Children {
 		switch dir := child.(type) {
 		case *DirEntry:
-			if child.Path() == parent {
+			if child.path() == parent {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
-			if strings.HasPrefix(parent, dir.Path()) {
+			if strings.HasPrefix(parent, dir.path()) {
 				dir.Append(entry)
 				return
 			}
