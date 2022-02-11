@@ -1,108 +1,96 @@
+// Package scp provides a SCP middleware for wish.
 package scp
 
 import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
 
+func MiddlewarePath(path string) wish.Middleware {
+	// TODO: handle path being a file
+	return MiddlewareFS(os.DirFS(path))
+}
+
 // Middleware handles SCPs from a file or dir to a filesystem.
 func MiddlewareFS(fsys fs.FS) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			isScp, root, recursive := details(s)
+			isScp, root, recursive := details(s.Command())
 			if !isScp {
 				sh(s)
 				return
 			}
 
-			if recursive {
-				rootEntry := &DirEntry{
-					Children: []Entry{},
-					Name:     root,
-					Filepath: root,
-					Mode:     "0755",
-					Mtime:    time.Now().Unix(),
-					Atime:    time.Now().Unix(),
+			if !recursive {
+				entry, closer, err := newFileEntry(fsys, root)
+				if err != nil {
+					errHandler(s, err)
+					return
 				}
-				if err := fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
+				defer closer()
+				if err := entry.Write(s); err != nil {
+					errHandler(s, err)
+					return
+				}
+				sh(s)
+				return
+			}
+
+			rootEntry, err := getRootEntry(fsys, root)
+			if err != nil {
+				errHandler(s, err)
+				return
+			}
+
+			var closers []func() error
+			defer func() {
+				for _, closer := range closers {
+					if err := closer(); err != nil {
+						log.Println("failed to close:", err)
+					}
+				}
+			}()
+
+			if err := fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return err
+				}
+				if path == root {
+					return nil
+				}
+
+				if d.IsDir() {
+					entry, err := newDirEntry(fsys, path)
 					if err != nil {
 						return err
 					}
-					if path == root {
-						return nil
-					}
-					info, err := d.Info()
+					rootEntry.Append(entry)
+				} else {
+					entry, closer, err := newFileEntry(fsys, path)
 					if err != nil {
-						return fmt.Errorf("failed to walk: %w", err)
+						return err
 					}
+					closers = append(closers, closer)
+					rootEntry.Append(entry)
+				}
 
-					if d.IsDir() {
-						rootEntry.Append(&DirEntry{
-							Children: []Entry{},
-							Name:     d.Name(),
-							Filepath: path,
-							Mode:     octalPerms(info),
-							Mtime:    info.ModTime().Unix(),
-							Atime:    info.ModTime().Unix(),
-						})
-					} else {
-						f, err := fsys.Open(path)
-						if err != nil {
-							return err
-						}
-						rootEntry.Append(&FileEntry{
-							Name:     d.Name(),
-							Filepath: path,
-							Mode:     octalPerms(info),
-							Mtime:    info.ModTime().Unix(),
-							Atime:    info.ModTime().Unix(),
-							Size:     info.Size(),
-							Reader:   f,
-						})
-					}
-
-					return nil
-				}); err != nil {
-					errHandler(s, fmt.Errorf("walk failed: %w", err))
-					return
-				}
-				if err := rootEntry.Write(s); err != nil {
-					errHandler(s, err)
-					return
-				}
-			} else {
-				f, err := fsys.Open(root)
-				if err != nil {
-					errHandler(s, err)
-					return
-				}
-				info, err := f.Stat()
-				if err != nil {
-					errHandler(s, err)
-					return
-				}
-				fe := &FileEntry{
-					Name:     root,
-					Filepath: root,
-					Mode:     octalPerms(info),
-					Mtime:    info.ModTime().Unix(),
-					Atime:    info.ModTime().Unix(),
-					Size:     info.Size(),
-					Reader:   f,
-				}
-				if err := fe.Write(s); err != nil {
-					errHandler(s, err)
-					return
-				}
+				return nil
+			}); err != nil {
+				errHandler(s, fmt.Errorf("walk failed: %w", err))
+				return
+			}
+			if err := rootEntry.Write(s); err != nil {
+				errHandler(s, err)
+				return
 			}
 
 			sh(s)
@@ -110,44 +98,21 @@ func MiddlewareFS(fsys fs.FS) wish.Middleware {
 	}
 }
 
-func octalPerms(info fs.FileInfo) string {
-	return "0" + strconv.FormatUint(uint64(info.Mode().Perm()), 8)
-}
-
-func MiddlewarePath(path string) wish.Middleware {
-	// TODO: handle path being a file
-	return MiddlewareFS(os.DirFS(path))
-}
-
-func details(s ssh.Session) (bool, string, bool) {
-	cmd := s.Command()
-	if len(cmd) == 0 || cmd[0] != "scp" {
-		return false, "", false
-	}
-
-	var name string
-	var recursive bool
-	for i, p := range cmd {
-		if p == "-r" {
-			recursive = true
-		}
-		if p == "-f" {
-			name = cmd[i+1]
-		}
-	}
-	return true, name, recursive
-}
-
-func errHandler(s ssh.Session, err error) {
-	s.Stderr().Write([]byte(err.Error()))
-	s.Exit(1)
-}
-
+// Entry defines something that knows how to write itself and its path.
 type Entry interface {
 	Write(io.Writer) error
 	Path() string
 }
 
+// RootEntry defines a special kind of Entry, which can contain
+// children.
+type RootEntry interface {
+	Write(io.Writer) error
+	Append(entry Entry)
+}
+
+// FileEntry is an Entry that reads from a Reader, defining a file and
+// its contents.
 type FileEntry struct {
 	Name     string
 	Filepath string
@@ -155,17 +120,17 @@ type FileEntry struct {
 	Mtime    int64
 	Atime    int64
 	Size     int64
-	Reader   io.ReadCloser
+	Reader   io.Reader
 }
 
 func (e *FileEntry) Path() string { return e.Filepath }
 
+// Write a file to the given writer.
 func (e *FileEntry) Write(w io.Writer) error {
 	content, err := io.ReadAll(e.Reader)
 	if err != nil {
 		return fmt.Errorf("failed to read file: %q: %w", e.Filepath, err)
 	}
-	defer e.Reader.Close()
 	for _, bts := range [][]byte{
 		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
 		[]byte(fmt.Sprintf("C%s %d %s\n", e.Mode, e.Size, e.Name)),
@@ -179,6 +144,45 @@ func (e *FileEntry) Write(w io.Writer) error {
 	return nil
 }
 
+// NoDirRootEntry is a root entry that can only has children.
+type NoDirRootEntry []Entry
+
+// Appennd the given entry to a child directory, or the the itself if
+// none matches.
+func (e *NoDirRootEntry) Append(entry Entry) {
+	parent := filepath.Dir(entry.Path())
+
+	for _, child := range *e {
+		switch dir := child.(type) {
+		case *DirEntry:
+			if child.Path() == parent {
+				dir.Children = append(dir.Children, entry)
+				return
+			}
+			if strings.HasPrefix(parent, dir.Filepath) {
+				dir.Append(entry)
+				return
+			}
+		default:
+			continue
+		}
+	}
+
+	*e = append(*e, entry)
+}
+
+// Write recursively writes all the children to the given writer.
+func (e *NoDirRootEntry) Write(w io.Writer) error {
+	for _, child := range *e {
+		if err := child.Write(w); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// DirEntry is an Entry with mode, possibly children, and possibly a
+// parent.
 type DirEntry struct {
 	Children []Entry
 	Name     string
@@ -190,6 +194,8 @@ type DirEntry struct {
 
 func (e *DirEntry) Path() string { return e.Filepath }
 
+// Write the current dir entry, all its contents (recursively), and the
+// dir closing to the given writer.
 func (e *DirEntry) Write(w io.Writer) error {
 	for _, bts := range [][]byte{
 		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
@@ -200,8 +206,8 @@ func (e *DirEntry) Write(w io.Writer) error {
 		}
 	}
 
-	for _, ce := range e.Children {
-		if err := ce.Write(w); err != nil {
+	for _, child := range e.Children {
+		if err := child.Write(w); err != nil {
 			return err
 		}
 	}
@@ -212,21 +218,97 @@ func (e *DirEntry) Write(w io.Writer) error {
 	return nil
 }
 
-func (e *DirEntry) Append(ce Entry) {
-	parent := filepath.Dir(ce.Path())
-	for _, ee := range e.Children {
-		de, ok := ee.(*DirEntry)
-		if !ok {
+// Appends an entry to the folder or their children.
+func (e *DirEntry) Append(entry Entry) {
+	parent := filepath.Dir(entry.Path())
+
+	for _, child := range e.Children {
+		switch dir := child.(type) {
+		case *DirEntry:
+			if child.Path() == parent {
+				dir.Children = append(dir.Children, entry)
+				return
+			}
+			if strings.HasPrefix(parent, dir.Path()) {
+				dir.Append(entry)
+				return
+			}
+		default:
 			continue
 		}
-		if ee.Path() == parent {
-			de.Children = append(de.Children, ce)
-			return
+	}
+
+	e.Children = append(e.Children, entry)
+}
+
+func getRootEntry(fsys fs.FS, root string) (RootEntry, error) {
+	if root == "/" || root == "." {
+		return &NoDirRootEntry{}, nil
+	}
+	return newDirEntry(fsys, root)
+}
+
+func newFileEntry(fsys fs.FS, path string) (*FileEntry, func() error, error) {
+	info, err := fs.Stat(fsys, path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
+	}
+	f, err := fsys.Open(path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to open %q: %w", path, err)
+	}
+	return &FileEntry{
+		Name:     info.Name(),
+		Filepath: path,
+		Mode:     octalPerms(info),
+		Mtime:    info.ModTime().Unix(),
+		Atime:    info.ModTime().Unix(),
+		Size:     info.Size(),
+		Reader:   f,
+	}, f.Close, nil
+}
+
+func newDirEntry(fsys fs.FS, path string) (*DirEntry, error) {
+	info, err := fs.Stat(fsys, path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open dir: %q: %w", path, err)
+	}
+	return &DirEntry{
+		Children: []Entry{},
+		Name:     info.Name(),
+		Filepath: path,
+		Mode:     octalPerms(info),
+		Mtime:    info.ModTime().Unix(),
+		Atime:    info.ModTime().Unix(),
+	}, nil
+}
+
+func octalPerms(info fs.FileInfo) string {
+	return "0" + strconv.FormatUint(uint64(info.Mode().Perm()), 8)
+}
+
+func details(cmd []string) (bool, string, bool) {
+	if len(cmd) == 0 || cmd[0] != "scp" {
+		return false, "", false
+	}
+
+	var name string
+	var recursive bool
+	for i, p := range cmd {
+		if p == "-r" {
+			recursive = true
 		}
-		if strings.HasPrefix(parent, de.Path()) {
-			de.Append(ce)
-			return
+		if p == "-f" {
+			name = strings.TrimPrefix(strings.TrimPrefix(cmd[i+1], "./"), "/")
+			if name == "" {
+				name = "."
+			}
 		}
 	}
-	e.Children = append(e.Children, ce)
+	return true, name, recursive
+}
+
+func errHandler(s ssh.Session, err error) {
+	s.Stderr().Write([]byte(err.Error()))
+	s.Exit(1)
 }
