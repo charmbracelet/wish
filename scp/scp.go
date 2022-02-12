@@ -15,80 +15,28 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
+// MiddlewarePath handles SCPs from the given folder.
 func MiddlewarePath(path string) wish.Middleware {
-	// TODO: handle path being a file
-	return MiddlewareFS(os.DirFS(path))
-}
-
-// Middleware handles SCPs from a file or dir to a filesystem.
-func MiddlewareFS(fsys fs.FS) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			isScp, root, recursive := details(s.Command())
-			if !isScp {
+			info := GetInfo(s.Command())
+			if !info.Ok {
 				sh(s)
 				return
 			}
 
-			if !recursive {
-				entry, closer, err := newFileEntry(fsys, root)
-				if err != nil {
-					errHandler(s, err)
-					return
-				}
-				defer closer()
-				if err := entry.Write(s); err != nil {
-					errHandler(s, err)
-					return
-				}
-				sh(s)
-				return
-			}
+			log.Printf("%+v", info)
 
-			rootEntry, err := getRootEntry(fsys, root)
+			var err error
+			switch info.Op {
+			case OpCopyToClient:
+				err = copyToClient(s, info, path)
+			case OpCopyFromClient:
+				err = copyFromClient(s, info, path)
+			default:
+				err = fmt.Errorf("invalid operation")
+			}
 			if err != nil {
-				errHandler(s, err)
-				return
-			}
-
-			var closers []func() error
-			defer func() {
-				for _, closer := range closers {
-					if err := closer(); err != nil {
-						log.Println("failed to close:", err)
-					}
-				}
-			}()
-
-			if err := fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
-				if err != nil {
-					return err
-				}
-				if path == root {
-					return nil
-				}
-
-				if d.IsDir() {
-					entry, err := newDirEntry(fsys, path)
-					if err != nil {
-						return err
-					}
-					rootEntry.Append(entry)
-				} else {
-					entry, closer, err := newFileEntry(fsys, path)
-					if err != nil {
-						return err
-					}
-					closers = append(closers, closer)
-					rootEntry.Append(entry)
-				}
-
-				return nil
-			}); err != nil {
-				errHandler(s, fmt.Errorf("walk failed: %w", err))
-				return
-			}
-			if err := rootEntry.Write(s); err != nil {
 				errHandler(s, err)
 				return
 			}
@@ -96,6 +44,73 @@ func MiddlewareFS(fsys fs.FS) wish.Middleware {
 			sh(s)
 		}
 	}
+}
+
+func copyFromClient(s ssh.Session, info Info, path string) error {
+	log.Println("copy from client")
+	// TODO
+	return nil
+}
+
+func copyToClient(s ssh.Session, info Info, path string) error {
+	if !info.Recursive {
+		entry, closer, err := newFileEntry(info.Path)
+		if err != nil {
+			return err
+		}
+		defer closer()
+		if err := entry.Write(s); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	rootEntry, err := getRootEntry(path, info.Path)
+	if err != nil {
+		return err
+	}
+
+	var closers []func() error
+	defer func() {
+		for _, closer := range closers {
+			if err := closer(); err != nil {
+				log.Println("failed to close:", err)
+			}
+		}
+	}()
+
+	start := filepath.Join(path, info.Path)
+	if err := filepath.WalkDir(start, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if path == info.Path {
+			return nil
+		}
+
+		if d.IsDir() {
+			entry, err := newDirEntry(path)
+			if err != nil {
+				return err
+			}
+			rootEntry.Append(entry)
+		} else {
+			entry, closer, err := newFileEntry(path)
+			if err != nil {
+				return err
+			}
+			closers = append(closers, closer)
+			rootEntry.Append(entry)
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+	if err := rootEntry.Write(s); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Entry defines something that knows how to write itself and its path.
@@ -241,19 +256,19 @@ func (e *DirEntry) Append(entry Entry) {
 	e.Children = append(e.Children, entry)
 }
 
-func getRootEntry(fsys fs.FS, root string) (RootEntry, error) {
+func getRootEntry(start, root string) (RootEntry, error) {
 	if root == "/" || root == "." {
 		return &NoDirRootEntry{}, nil
 	}
-	return newDirEntry(fsys, root)
+	return newDirEntry(filepath.Join(start, root))
 }
 
-func newFileEntry(fsys fs.FS, path string) (*FileEntry, func() error, error) {
-	info, err := fs.Stat(fsys, path)
+func newFileEntry(path string) (*FileEntry, func() error, error) {
+	info, err := os.Stat(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
 	}
-	f, err := fsys.Open(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to open %q: %w", path, err)
 	}
@@ -268,8 +283,8 @@ func newFileEntry(fsys fs.FS, path string) (*FileEntry, func() error, error) {
 	}, f.Close, nil
 }
 
-func newDirEntry(fsys fs.FS, path string) (*DirEntry, error) {
-	info, err := fs.Stat(fsys, path)
+func newDirEntry(path string) (*DirEntry, error) {
+	info, err := os.Stat(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open dir: %q: %w", path, err)
 	}
@@ -287,25 +302,49 @@ func octalPerms(info fs.FileInfo) string {
 	return "0" + strconv.FormatUint(uint64(info.Mode().Perm()), 8)
 }
 
-func details(cmd []string) (bool, string, bool) {
+type Op byte
+
+const (
+	OpCopyToClient   Op = 'f'
+	OpCopyFromClient Op = 't'
+)
+
+type Info struct {
+	Ok        bool
+	Recursive bool
+	Path      string
+	Op        Op
+}
+
+func GetInfo(cmd []string) Info {
+	info := Info{}
 	if len(cmd) == 0 || cmd[0] != "scp" {
-		return false, "", false
+		return info
 	}
 
-	var name string
-	var recursive bool
+	info.Ok = true
+	getPath := func(i int) string {
+		// path := strings.TrimPrefix(strings.TrimPrefix(cmd[i+1], "./"), "/")
+		// if path == "" {
+		// 	path = "."
+		// }
+		// return path
+		return cmd[i+1]
+	}
+
 	for i, p := range cmd {
-		if p == "-r" {
-			recursive = true
-		}
-		if p == "-f" {
-			name = strings.TrimPrefix(strings.TrimPrefix(cmd[i+1], "./"), "/")
-			if name == "" {
-				name = "."
-			}
+		switch p {
+		case "-r":
+			info.Recursive = true
+		case "-f":
+			info.Path = getPath(i)
+			info.Op = OpCopyToClient
+		case "-t":
+			info.Op = OpCopyFromClient
+			info.Path = getPath(i)
 		}
 	}
-	return true, name, recursive
+	return info
 }
 
 func errHandler(s ssh.Session, err error) {
