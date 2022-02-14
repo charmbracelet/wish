@@ -3,6 +3,7 @@ package scp
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -13,14 +14,28 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
 )
 
-// MiddlewarePath handles SCPs from the given folder.
-func MiddlewarePath(path string) wish.Middleware {
+type CopyToClientHandler interface {
+	WalkDir(context.Context, ssh.PublicKey, string, fs.WalkDirFunc) error
+	NewDirEntry(context.Context, ssh.PublicKey, string) (*DirEntry, error)
+	NewFileEntry(context.Context, ssh.PublicKey, string) (*FileEntry, func() error, error)
+}
+
+type CopyFromClientHandler interface {
+	Mkdir(context.Context, ssh.PublicKey, *DirEntry) error
+	Write(context.Context, ssh.PublicKey, *FileEntry) (int, error)
+}
+
+type Handler interface {
+	CopyFromClientHandler
+	CopyToClientHandler
+}
+
+func Middleware(handler Handler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			info := GetInfo(s.Command())
@@ -32,9 +47,9 @@ func MiddlewarePath(path string) wish.Middleware {
 			var err error
 			switch info.Op {
 			case OpCopyToClient:
-				err = copyToClient(s, info, path)
+				err = copyToClient(s, info, handler)
 			case OpCopyFromClient:
-				err = copyFromClient(s, info, path)
+				err = copyFromClient(s, info, handler)
 			default:
 				err = fmt.Errorf("invalid operation")
 			}
@@ -56,13 +71,17 @@ var (
 
 var NULL = []byte{'\x00'}
 
-func copyFromClient(s ssh.Session, info Info, path string) error {
+func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) error {
 	// accepts the request
 	s.Write(NULL)
 
-	r := bufio.NewReader(s)
-	var mtime time.Time
-	var atime time.Time
+	var (
+		path        = "."
+		mtime int64 = 0
+		atime int64 = 0
+		r           = bufio.NewReader(s)
+	)
+
 	for {
 		line, _, err := r.ReadLine()
 		if err != nil {
@@ -74,15 +93,14 @@ func copyFromClient(s ssh.Session, info Info, path string) error {
 
 		matches := reTimestamp.FindAllStringSubmatch(string(line), 2)
 		if matches != nil {
-			log.Println("got a T header")
 			if len(matches) != 1 || len(matches[0]) != 3 {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
-			mtime, err = fromUnixTs(matches[0][1])
+			mtime, err = strconv.ParseInt(matches[0][1], 10, 64)
 			if err != nil {
 				return fmt.Errorf("failed to read line: %w", err)
 			}
-			atime, err = fromUnixTs(matches[0][2])
+			atime, err = strconv.ParseInt(matches[0][2], 10, 64)
 			if err != nil {
 				return fmt.Errorf("failed to read line: %w", err)
 			}
@@ -93,12 +111,11 @@ func copyFromClient(s ssh.Session, info Info, path string) error {
 
 		matches = reNewFile.FindAllStringSubmatch(string(line), 3)
 		if matches != nil {
-			log.Println("got a C header")
 			if len(matches) != 1 || len(matches[0]) != 4 {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
 			mode := matches[0][1]
-			size, err := strconv.Atoi(matches[0][2])
+			size, err := strconv.ParseInt(matches[0][2], 10, 64)
 			if err != nil {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
@@ -110,16 +127,31 @@ func copyFromClient(s ssh.Session, info Info, path string) error {
 			if _, err := r.Read(contents); err != nil {
 				return fmt.Errorf("cannot read %q: %w", name, err)
 			}
-			if len(contents) != size {
+			if int64(len(contents)) != size {
 				return fmt.Errorf("sizes don't match: %q != %q", size, len(contents))
 			}
-			log.Printf("read name=%q path=%q mode=%q size=%v mtime=%q atime=%q", name, filepath.Join(path, name), mode, size, mtime, atime)
+
+			if _, err := handler.Write(s.Context(), s.PublicKey(), &FileEntry{
+				Name:     name,
+				Filepath: filepath.Join(path, name),
+				Mode:     mode,
+				Mtime:    mtime,
+				Atime:    atime,
+				Size:     size,
+				Reader:   r,
+			}); err != nil {
+				return fmt.Errorf("failed to write file: %q: %w", name, err)
+			}
 
 			// read the trailing nil char
 			_, _ = r.ReadByte() // TODO: check if it is indeed a NULL
 
 			// says 'hey im done'
 			s.Write(NULL)
+
+			mtime = 0
+			atime = 0
+
 			continue
 		}
 
@@ -134,17 +166,27 @@ func copyFromClient(s ssh.Session, info Info, path string) error {
 			name := matches[0][2]
 
 			path = filepath.Join(path, name)
-			log.Printf("read dir name=%q path=%q mode=%q", name, path, mode)
+			if err := handler.Mkdir(s.Context(), s.PublicKey(), &DirEntry{
+				Name:     name,
+				Filepath: path,
+				Mode:     mode,
+				Mtime:    mtime,
+				Atime:    atime,
+			}); err != nil {
+				return fmt.Errorf("failed to create dir: %q: %w", name, err)
+			}
 
 			// says 'hey im done'
 			s.Write(NULL)
+
+			mtime = 0
+			atime = 0
+
 			continue
 		}
 
 		if string(line) == "E" {
-			log.Println("got a E header")
 			path = filepath.Dir(path)
-			log.Println("new path:", path)
 
 			// says 'hey im done'
 			s.Write(NULL)
@@ -156,17 +198,9 @@ func copyFromClient(s ssh.Session, info Info, path string) error {
 	return nil
 }
 
-func fromUnixTs(s string) (time.Time, error) {
-	ts, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return time.Unix(ts, 0), nil
-}
-
-func copyToClient(s ssh.Session, info Info, path string) error {
+func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 	if !info.Recursive {
-		entry, closer, err := newFileEntry(info.Path)
+		entry, closer, err := handler.NewFileEntry(s.Context(), s.PublicKey(), info.Path) // newFileEntry(handler, info.Path)
 		if err != nil {
 			return err
 		}
@@ -177,7 +211,7 @@ func copyToClient(s ssh.Session, info Info, path string) error {
 		return nil
 	}
 
-	rootEntry, err := getRootEntry(path, info.Path)
+	rootEntry, err := getRootEntry(s.Context(), s.PublicKey(), handler, info.Path)
 	if err != nil {
 		return err
 	}
@@ -191,8 +225,7 @@ func copyToClient(s ssh.Session, info Info, path string) error {
 		}
 	}()
 
-	start := filepath.Join(path, info.Path)
-	if err := filepath.WalkDir(start, func(path string, d fs.DirEntry, err error) error {
+	if err := handler.WalkDir(s.Context(), s.PublicKey(), info.Path, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -201,13 +234,13 @@ func copyToClient(s ssh.Session, info Info, path string) error {
 		}
 
 		if d.IsDir() {
-			entry, err := newDirEntry(path)
+			entry, err := handler.NewDirEntry(s.Context(), s.PublicKey(), path)
 			if err != nil {
 				return err
 			}
 			rootEntry.Append(entry)
 		} else {
-			entry, closer, err := newFileEntry(path)
+			entry, closer, err := handler.NewFileEntry(s.Context(), s.PublicKey(), path)
 			if err != nil {
 				return err
 			}
@@ -368,14 +401,15 @@ func (e *DirEntry) Append(entry Entry) {
 	e.Children = append(e.Children, entry)
 }
 
-func getRootEntry(start, root string) (RootEntry, error) {
+func getRootEntry(ctx context.Context, key ssh.PublicKey, handler CopyToClientHandler, root string) (RootEntry, error) {
 	if root == "/" || root == "." {
 		return &NoDirRootEntry{}, nil
 	}
-	return newDirEntry(filepath.Join(start, root))
+
+	return handler.NewDirEntry(ctx, key, root) // newDirEntry(filepath.Join(start, root))
 }
 
-func newFileEntry(path string) (*FileEntry, func() error, error) {
+func newFileEntry(handler, path string) (*FileEntry, func() error, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
