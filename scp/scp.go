@@ -29,8 +29,6 @@ func MiddlewarePath(path string) wish.Middleware {
 				return
 			}
 
-			log.Printf("%+v", info)
-
 			var err error
 			switch info.Op {
 			case OpCopyToClient:
@@ -52,6 +50,7 @@ func MiddlewarePath(path string) wish.Middleware {
 
 var (
 	reTimestamp = regexp.MustCompile("^T(\\d{10}) 0 (\\d{10}) 0$")
+	reNewFolder = regexp.MustCompile("^D(\\d{4}) 0 (.*)$")
 	reNewFile   = regexp.MustCompile("^C(\\d{4}) (\\d+) (.*)$")
 )
 
@@ -114,7 +113,7 @@ func copyFromClient(s ssh.Session, info Info, path string) error {
 			if len(contents) != size {
 				return fmt.Errorf("sizes don't match: %q != %q", size, len(contents))
 			}
-			log.Printf("read name=%q mode=%q size=%q mtime=%q atime=%q contents=%q", name, mode, size, mtime, atime, string(contents))
+			log.Printf("read name=%q path=%q mode=%q size=%v mtime=%q atime=%q", name, filepath.Join(path, name), mode, size, mtime, atime)
 
 			// read the trailing nil char
 			_, _ = r.ReadByte() // TODO: check if it is indeed a NULL
@@ -123,6 +122,36 @@ func copyFromClient(s ssh.Session, info Info, path string) error {
 			s.Write(NULL)
 			continue
 		}
+
+		matches = reNewFolder.FindAllStringSubmatch(string(line), 2)
+		if matches != nil {
+			log.Println("got a D header")
+			if len(matches) != 1 || len(matches[0]) != 3 {
+				return fmt.Errorf("cannot parse: %q", string(line))
+			}
+
+			mode := matches[0][1]
+			name := matches[0][2]
+
+			path = filepath.Join(path, name)
+			log.Printf("read dir name=%q path=%q mode=%q", name, path, mode)
+
+			// says 'hey im done'
+			s.Write(NULL)
+			continue
+		}
+
+		if string(line) == "E" {
+			log.Println("got a E header")
+			path = filepath.Dir(path)
+			log.Println("new path:", path)
+
+			// says 'hey im done'
+			s.Write(NULL)
+			continue
+		}
+
+		log.Println("unhandled", string(line))
 	}
 	return nil
 }
