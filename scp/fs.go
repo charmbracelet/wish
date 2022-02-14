@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/gliderlabs/ssh"
 )
@@ -19,8 +20,16 @@ var _ Handler = &fileSystemHandler{}
 
 func NewFileSystemHandler(root string) Handler {
 	return &fileSystemHandler{
-		root: root,
+		root: filepath.Clean(root),
 	}
+}
+
+func (h *fileSystemHandler) prefixed(path string) string {
+	path = filepath.Clean(path)
+	if strings.HasPrefix(path, h.root) {
+		return path
+	}
+	return filepath.Join(h.root, path)
 }
 
 func (h *fileSystemHandler) WalkDir(_ context.Context, _ ssh.PublicKey, path string, fn fs.WalkDirFunc) error {
@@ -28,7 +37,7 @@ func (h *fileSystemHandler) WalkDir(_ context.Context, _ ssh.PublicKey, path str
 }
 
 func (h *fileSystemHandler) NewDirEntry(_ context.Context, _ ssh.PublicKey, name string) (*DirEntry, error) {
-	path := filepath.Join(h.root, name)
+	path := h.prefixed(name)
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open dir: %q: %w", path, err)
@@ -44,7 +53,7 @@ func (h *fileSystemHandler) NewDirEntry(_ context.Context, _ ssh.PublicKey, name
 }
 
 func (h *fileSystemHandler) NewFileEntry(_ context.Context, _ ssh.PublicKey, name string) (*FileEntry, func() error, error) {
-	path := filepath.Join(h.root, name)
+	path := h.prefixed(name)
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
@@ -65,15 +74,14 @@ func (h *fileSystemHandler) NewFileEntry(_ context.Context, _ ssh.PublicKey, nam
 }
 
 func (h *fileSystemHandler) Mkdir(_ context.Context, _ ssh.PublicKey, entry *DirEntry) error {
-	if err := os.Mkdir(entry.Filepath, entry.Mode); err != nil {
+	if err := os.Mkdir(h.prefixed(entry.Filepath), entry.Mode); err != nil {
 		return fmt.Errorf("failed to create dir: %q: %w", entry.Filepath, err)
 	}
 	return nil
 }
 
 func (h *fileSystemHandler) Write(_ context.Context, _ ssh.PublicKey, entry *FileEntry) (int, error) {
-	// TODO: check paths here
-	f, err := os.OpenFile(filepath.Join(h.root, entry.Filepath), os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
+	f, err := os.OpenFile(h.prefixed(entry.Filepath), os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)
 	}

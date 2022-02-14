@@ -3,6 +3,7 @@ package scp
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -128,6 +129,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 
 			// accepts the header
 			s.Write(NULL)
+
 			contents := make([]byte, size)
 			if _, err := r.Read(contents); err != nil {
 				return fmt.Errorf("cannot read %q: %w", name, err)
@@ -136,6 +138,8 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 				return fmt.Errorf("sizes don't match: %q != %q", size, len(contents))
 			}
 
+			fmt.Println("HERE", fs.FileMode(uint32(mode)), matches[0][1])
+
 			if _, err := handler.Write(s.Context(), s.PublicKey(), &FileEntry{
 				Name:     name,
 				Filepath: filepath.Join(path, name),
@@ -143,7 +147,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 				Mtime:    mtime,
 				Atime:    atime,
 				Size:     size,
-				Reader:   r,
+				Reader:   bytes.NewReader(contents),
 			}); err != nil {
 				return fmt.Errorf("failed to write file: %q: %w", name, err)
 			}
@@ -203,6 +207,9 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 		// TODO: handle this better
 		log.Println("unhandled", string(line))
 	}
+
+	// says 'hey im done'
+	s.Write(NULL)
 	return nil
 }
 
