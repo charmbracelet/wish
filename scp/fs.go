@@ -17,6 +17,12 @@ type fileSystemHandler struct {
 
 var _ Handler = &fileSystemHandler{}
 
+func NewFileSystemHandler(root string) Handler {
+	return &fileSystemHandler{
+		root: root,
+	}
+}
+
 func (h *fileSystemHandler) WalkDir(_ context.Context, _ ssh.PublicKey, path string, fn fs.WalkDirFunc) error {
 	return filepath.WalkDir(filepath.Join(h.root, path), fn)
 }
@@ -59,13 +65,14 @@ func (h *fileSystemHandler) NewFileEntry(_ context.Context, _ ssh.PublicKey, nam
 }
 
 func (h *fileSystemHandler) Mkdir(_ context.Context, _ ssh.PublicKey, entry *DirEntry) error {
-	if err := os.Mkdir(filepath.Join(h.root, entry.Filepath), entry.Mode); err != nil {
+	if err := os.Mkdir(entry.Filepath, entry.Mode); err != nil {
 		return fmt.Errorf("failed to create dir: %q: %w", entry.Filepath, err)
 	}
 	return nil
 }
 
 func (h *fileSystemHandler) Write(_ context.Context, _ ssh.PublicKey, entry *FileEntry) (int, error) {
+	// TODO: check paths here
 	f, err := os.OpenFile(filepath.Join(h.root, entry.Filepath), os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)

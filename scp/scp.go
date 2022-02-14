@@ -414,7 +414,7 @@ func getRootEntry(ctx context.Context, key ssh.PublicKey, handler CopyToClientHa
 		return &NoDirRootEntry{}, nil
 	}
 
-	return handler.NewDirEntry(ctx, key, root) // newDirEntry(filepath.Join(start, root))
+	return handler.NewDirEntry(ctx, key, root)
 }
 
 type Op byte
@@ -437,28 +437,20 @@ func GetInfo(cmd []string) Info {
 		return info
 	}
 
-	info.Ok = true
-	getPath := func(i int) string {
-		// path := strings.TrimPrefix(strings.TrimPrefix(cmd[i+1], "./"), "/")
-		// if path == "" {
-		// 	path = "."
-		// }
-		// return path
-		return cmd[i+1]
-	}
-
 	for i, p := range cmd {
 		switch p {
 		case "-r":
 			info.Recursive = true
 		case "-f":
-			info.Path = getPath(i)
 			info.Op = OpCopyToClient
+			info.Path = cmd[i+1]
 		case "-t":
 			info.Op = OpCopyFromClient
-			info.Path = getPath(i)
+			info.Path = cmd[i+1]
 		}
 	}
+
+	info.Ok = true
 	return info
 }
 
