@@ -117,7 +117,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 
 			name := matches[0][3]
 
-			mode, err := strconv.ParseUint(matches[0][1], 10, 32)
+			mode, err := strconv.ParseUint(matches[0][1], 8, 32)
 			if err != nil {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
@@ -137,8 +137,6 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if int64(len(contents)) != size {
 				return fmt.Errorf("sizes don't match: %q != %q", size, len(contents))
 			}
-
-			fmt.Println("HERE", fs.FileMode(uint32(mode)), matches[0][1])
 
 			if _, err := handler.Write(s.Context(), s.PublicKey(), &FileEntry{
 				Name:     name,
@@ -170,7 +168,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
 
-			mode, err := strconv.ParseUint(matches[0][1], 10, 32)
+			mode, err := strconv.ParseUint(matches[0][1], 8, 32)
 			if err != nil {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
