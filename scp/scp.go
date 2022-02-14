@@ -9,7 +9,6 @@ import (
 	"io"
 	"io/fs"
 	"log"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -114,12 +113,18 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if len(matches) != 1 || len(matches[0]) != 4 {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
-			mode := matches[0][1]
+
+			name := matches[0][3]
+
+			mode, err := strconv.ParseUint(matches[0][1], 10, 32)
+			if err != nil {
+				return fmt.Errorf("cannot parse: %q", string(line))
+			}
+
 			size, err := strconv.ParseInt(matches[0][2], 10, 64)
 			if err != nil {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
-			name := matches[0][3]
 
 			// accepts the header
 			s.Write(NULL)
@@ -134,7 +139,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if _, err := handler.Write(s.Context(), s.PublicKey(), &FileEntry{
 				Name:     name,
 				Filepath: filepath.Join(path, name),
-				Mode:     mode,
+				Mode:     fs.FileMode(mode),
 				Mtime:    mtime,
 				Atime:    atime,
 				Size:     size,
@@ -157,19 +162,21 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 
 		matches = reNewFolder.FindAllStringSubmatch(string(line), 2)
 		if matches != nil {
-			log.Println("got a D header")
 			if len(matches) != 1 || len(matches[0]) != 3 {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
 
-			mode := matches[0][1]
+			mode, err := strconv.ParseUint(matches[0][1], 10, 32)
+			if err != nil {
+				return fmt.Errorf("cannot parse: %q", string(line))
+			}
 			name := matches[0][2]
 
 			path = filepath.Join(path, name)
 			if err := handler.Mkdir(s.Context(), s.PublicKey(), &DirEntry{
 				Name:     name,
 				Filepath: path,
-				Mode:     mode,
+				Mode:     fs.FileMode(mode),
 				Mtime:    mtime,
 				Atime:    atime,
 			}); err != nil {
@@ -193,6 +200,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			continue
 		}
 
+		// TODO: handle this better
 		log.Println("unhandled", string(line))
 	}
 	return nil
@@ -276,7 +284,7 @@ type RootEntry interface {
 type FileEntry struct {
 	Name     string
 	Filepath string
-	Mode     string
+	Mode     fs.FileMode
 	Mtime    int64
 	Atime    int64
 	Size     int64
@@ -293,7 +301,7 @@ func (e *FileEntry) Write(w io.Writer) error {
 	}
 	for _, bts := range [][]byte{
 		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
-		[]byte(fmt.Sprintf("C%s %d %s\n", e.Mode, e.Size, e.Name)),
+		[]byte(fmt.Sprintf("C%s %d %s\n", octalPerms(e.Mode), e.Size, e.Name)),
 		content,
 		{'\x00'},
 	} {
@@ -347,7 +355,7 @@ type DirEntry struct {
 	Children []Entry
 	Name     string
 	Filepath string
-	Mode     string
+	Mode     fs.FileMode
 	Mtime    int64
 	Atime    int64
 }
@@ -359,7 +367,7 @@ func (e *DirEntry) path() string { return e.Filepath }
 func (e *DirEntry) Write(w io.Writer) error {
 	for _, bts := range [][]byte{
 		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
-		[]byte(fmt.Sprintf("D%s 0 %s\n", e.Mode, e.Name)),
+		[]byte(fmt.Sprintf("D%s 0 %s\n", octalPerms(e.Mode), e.Name)),
 	} {
 		if _, err := w.Write(bts); err != nil {
 			return fmt.Errorf("failed to write dir: %q: %w", e.Filepath, err)
@@ -407,45 +415,6 @@ func getRootEntry(ctx context.Context, key ssh.PublicKey, handler CopyToClientHa
 	}
 
 	return handler.NewDirEntry(ctx, key, root) // newDirEntry(filepath.Join(start, root))
-}
-
-func newFileEntry(handler, path string) (*FileEntry, func() error, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
-	}
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to open %q: %w", path, err)
-	}
-	return &FileEntry{
-		Name:     info.Name(),
-		Filepath: path,
-		Mode:     octalPerms(info),
-		Mtime:    info.ModTime().Unix(),
-		Atime:    info.ModTime().Unix(),
-		Size:     info.Size(),
-		Reader:   f,
-	}, f.Close, nil
-}
-
-func newDirEntry(path string) (*DirEntry, error) {
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open dir: %q: %w", path, err)
-	}
-	return &DirEntry{
-		Children: []Entry{},
-		Name:     info.Name(),
-		Filepath: path,
-		Mode:     octalPerms(info),
-		Mtime:    info.ModTime().Unix(),
-		Atime:    info.ModTime().Unix(),
-	}, nil
-}
-
-func octalPerms(info fs.FileInfo) string {
-	return "0" + strconv.FormatUint(uint64(info.Mode().Perm()), 8)
 }
 
 type Op byte
@@ -496,4 +465,8 @@ func GetInfo(cmd []string) Info {
 func errHandler(s ssh.Session, err error) {
 	s.Stderr().Write([]byte(err.Error()))
 	s.Exit(1)
+}
+
+func octalPerms(info fs.FileMode) string {
+	return "0" + strconv.FormatUint(uint64(info.Perm()), 8)
 }
