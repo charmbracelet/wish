@@ -2,14 +2,18 @@
 package scp
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
@@ -46,10 +50,89 @@ func MiddlewarePath(path string) wish.Middleware {
 	}
 }
 
+var (
+	reTimestamp = regexp.MustCompile("^T(\\d{10}) 0 (\\d{10}) 0$")
+	reNewFile   = regexp.MustCompile("^C(\\d{4}) (\\d+) (.*)$")
+)
+
+var NULL = []byte{'\x00'}
+
 func copyFromClient(s ssh.Session, info Info, path string) error {
-	log.Println("copy from client")
-	// TODO
+	// accepts the request
+	s.Write(NULL)
+
+	r := bufio.NewReader(s)
+	var mtime time.Time
+	var atime time.Time
+	for {
+		line, _, err := r.ReadLine()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return fmt.Errorf("failed to read line: %w", err)
+		}
+
+		matches := reTimestamp.FindAllStringSubmatch(string(line), 2)
+		if matches != nil {
+			log.Println("got a T header")
+			if len(matches) != 1 || len(matches[0]) != 3 {
+				return fmt.Errorf("cannot parse: %q", string(line))
+			}
+			mtime, err = fromUnixTs(matches[0][1])
+			if err != nil {
+				return fmt.Errorf("failed to read line: %w", err)
+			}
+			atime, err = fromUnixTs(matches[0][2])
+			if err != nil {
+				return fmt.Errorf("failed to read line: %w", err)
+			}
+
+			// accepts the header
+			s.Write(NULL)
+		}
+
+		matches = reNewFile.FindAllStringSubmatch(string(line), 3)
+		if matches != nil {
+			log.Println("got a C header")
+			if len(matches) != 1 || len(matches[0]) != 4 {
+				return fmt.Errorf("cannot parse: %q", string(line))
+			}
+			mode := matches[0][1]
+			size, err := strconv.Atoi(matches[0][2])
+			if err != nil {
+				return fmt.Errorf("cannot parse: %q", string(line))
+			}
+			name := matches[0][3]
+
+			// accepts the header
+			s.Write(NULL)
+			contents := make([]byte, size)
+			if _, err := r.Read(contents); err != nil {
+				return fmt.Errorf("cannot read %q: %w", name, err)
+			}
+			if len(contents) != size {
+				return fmt.Errorf("sizes don't match: %q != %q", size, len(contents))
+			}
+			log.Printf("read name=%q mode=%q size=%q mtime=%q atime=%q contents=%q", name, mode, size, mtime, atime, string(contents))
+
+			// read the trailing nil char
+			_, _ = r.ReadByte() // TODO: check if it is indeed a NULL
+
+			// says 'hey im done'
+			s.Write(NULL)
+			continue
+		}
+	}
 	return nil
+}
+
+func fromUnixTs(s string) (time.Time, error) {
+	ts, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Unix(ts, 0), nil
 }
 
 func copyToClient(s ssh.Session, info Info, path string) error {
