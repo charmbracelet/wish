@@ -10,78 +10,76 @@ import (
 var update = os.Getenv("UPDATE") != ""
 
 func TestGetRootEntry(t *testing.T) {
+	path := t.TempDir()
+	handler := NewFileSystemHandler(path)
+
 	t.Run("/", func(t *testing.T) {
-		fsys := os.DirFS(t.TempDir())
-		entry, err := getRootEntry(fsys, "/")
+		entry, err := getRootEntry(nil, handler, "/")
 		requireNoError(t, err)
 		_, ok := entry.(*NoDirRootEntry)
 		requireEqual(t, true, ok)
 	})
 
 	t.Run(".", func(t *testing.T) {
-		fsys := os.DirFS(t.TempDir())
-		entry, err := getRootEntry(fsys, ".")
+		entry, err := getRootEntry(nil, handler, ".")
 		requireNoError(t, err)
 		_, ok := entry.(*NoDirRootEntry)
 		requireEqual(t, true, ok)
 	})
 
 	t.Run("unknown folder", func(t *testing.T) {
-		fsys := os.DirFS(t.TempDir())
-		_, err := getRootEntry(fsys, "nope")
+		_, err := getRootEntry(nil, handler, "nope")
 		requireError(t, err)
 	})
 
 	t.Run("folder", func(t *testing.T) {
-		path := t.TempDir()
-		fsys := os.DirFS(path)
 		os.Mkdir(filepath.Join(path, "folder"), 0755)
 
-		entry, err := getRootEntry(fsys, "folder")
+		entry, err := getRootEntry(nil, handler, "folder")
 		requireNoError(t, err)
 		_, ok := entry.(*DirEntry)
 		requireEqual(t, true, ok)
 	})
 }
 
-func TestDetails(t *testing.T) {
+func TestGetInfo(t *testing.T) {
 	t.Run("no exec", func(t *testing.T) {
-		isScp, _, _ := details([]string{})
-		if isScp {
+		info := GetInfo([]string{})
+		if info.Ok {
 			t.Fatal("not a scp")
 		}
 	})
 
 	t.Run("exec is not scp", func(t *testing.T) {
-		isScp, _, _ := details([]string{"not-scp"})
-		if isScp {
+		info := GetInfo([]string{"not-scp"})
+		if info.Ok {
 			t.Fatal("not a scp")
 		}
 	})
 
 	t.Run("scp no recursive", func(t *testing.T) {
-		isScp, path, recurse := details([]string{"scp", "-f", "file"})
-		if !isScp {
+		info := GetInfo([]string{"scp", "-f", "file"})
+		if !info.Ok {
 			t.Fatal("is a scp")
 		}
-		if recurse {
+		if info.Recursive {
 			t.Fatal("is not recursive")
 		}
-		if path != "file" {
-			t.Fatalf("path should have been 'file', was '%s'", path)
+		if info.Path != "file" {
+			t.Fatalf("path should have been 'file', was '%s'", info.Path)
 		}
 	})
 
 	t.Run("scp recursive", func(t *testing.T) {
-		isScp, path, recurse := details([]string{"scp", "-r", "--some-ignored-flag", "-f", "file", "ignored-arg"})
-		if !isScp {
+		info := GetInfo([]string{"scp", "-r", "--some-ignored-flag", "-f", "file", "ignored-arg"})
+		if !info.Ok {
 			t.Fatal("is a scp")
 		}
-		if !recurse {
+		if !info.Recursive {
 			t.Fatal("is recursive")
 		}
-		if path != "file" {
-			t.Fatalf("path should have been 'file', was '%s'", path)
+		if info.Path != "file" {
+			t.Fatalf("path should have been 'file', was '%s'", info.Path)
 		}
 	})
 }
@@ -102,7 +100,7 @@ func TestNoDirRootEntry(t *testing.T) {
 		Children: []Entry{},
 		Name:     "dir1",
 		Filepath: "dir1",
-		Mode:     "0755",
+		Mode:     0755,
 		Mtime:    f1m,
 		Atime:    f1m,
 	}
@@ -110,7 +108,7 @@ func TestNoDirRootEntry(t *testing.T) {
 	dir.Append(&FileEntry{
 		Name:     "f2",
 		Filepath: "f2",
-		Mode:     "0600",
+		Mode:     0600,
 		Mtime:    f1a,
 		Atime:    f1a,
 		Size:     int64(f2.Len()),
@@ -120,7 +118,7 @@ func TestNoDirRootEntry(t *testing.T) {
 	root.Append(&FileEntry{
 		Name:     "f1",
 		Filepath: "f1",
-		Mode:     "0644",
+		Mode:     0644,
 		Mtime:    f1m,
 		Atime:    f1a,
 		Size:     int64(f1.Len()),
