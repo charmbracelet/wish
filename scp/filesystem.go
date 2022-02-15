@@ -1,7 +1,6 @@
 package scp
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"io/fs"
@@ -32,11 +31,11 @@ func (h *fileSystemHandler) prefixed(path string) string {
 	return filepath.Join(h.root, path)
 }
 
-func (h *fileSystemHandler) WalkDir(_ context.Context, _ ssh.PublicKey, path string, fn fs.WalkDirFunc) error {
+func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
 	return filepath.WalkDir(filepath.Join(h.root, path), fn)
 }
 
-func (h *fileSystemHandler) NewDirEntry(_ context.Context, _ ssh.PublicKey, name string) (*DirEntry, error) {
+func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, error) {
 	path := h.prefixed(name)
 	info, err := os.Stat(path)
 	if err != nil {
@@ -52,7 +51,7 @@ func (h *fileSystemHandler) NewDirEntry(_ context.Context, _ ssh.PublicKey, name
 	}, nil
 }
 
-func (h *fileSystemHandler) NewFileEntry(_ context.Context, _ ssh.PublicKey, name string) (*FileEntry, func() error, error) {
+func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry, func() error, error) {
 	path := h.prefixed(name)
 	info, err := os.Stat(path)
 	if err != nil {
@@ -73,14 +72,14 @@ func (h *fileSystemHandler) NewFileEntry(_ context.Context, _ ssh.PublicKey, nam
 	}, f.Close, nil
 }
 
-func (h *fileSystemHandler) Mkdir(_ context.Context, _ ssh.PublicKey, entry *DirEntry) error {
+func (h *fileSystemHandler) Mkdir(_ ssh.Session, entry *DirEntry) error {
 	if err := os.Mkdir(h.prefixed(entry.Filepath), entry.Mode); err != nil {
 		return fmt.Errorf("failed to create dir: %q: %w", entry.Filepath, err)
 	}
 	return nil
 }
 
-func (h *fileSystemHandler) Write(_ context.Context, _ ssh.PublicKey, entry *FileEntry) (int, error) {
+func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int, error) {
 	f, err := os.OpenFile(h.prefixed(entry.Filepath), os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)
