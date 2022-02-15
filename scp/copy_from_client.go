@@ -16,9 +16,9 @@ import (
 )
 
 var (
-	reTimestamp = regexp.MustCompile("^T(\\d{10}) 0 (\\d{10}) 0$")
-	reNewFolder = regexp.MustCompile("^D(\\d{4}) 0 (.*)$")
-	reNewFile   = regexp.MustCompile("^C(\\d{4}) (\\d+) (.*)$")
+	reTimestamp = regexp.MustCompile(`^T(\d{10}) 0 (\d{10}) 0$`)
+	reNewFolder = regexp.MustCompile(`^D(\d{4}) 0 (.*)$`)
+	reNewFile   = regexp.MustCompile(`^C(\d{4}) (\d+) (.*)$`)
 )
 
 type parseError struct {
@@ -83,7 +83,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if err != nil {
 				return fmt.Errorf("failed to write file: %q: %w", name, err)
 			}
-			if int64(written) != size {
+			if written != size {
 				return fmt.Errorf("failed to write the file: %q: written %d out of %d bytes", name, written, size)
 			}
 
