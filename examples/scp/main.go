@@ -1,7 +1,6 @@
 package main
 
-// An example Bubble Tea server. This will put an ssh session into alt screen
-// and continually print up to date terminal information.
+// An example SCP server. This will serve files from and to ./examples/scp/testdata.
 
 import (
 	"context"
