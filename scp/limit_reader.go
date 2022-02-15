@@ -2,10 +2,11 @@ package scp
 
 import (
 	"io"
+	"log"
 	"sync"
 )
 
-func newLimitReader(r io.Reader, limit int64) io.Reader {
+func newLimitReader(r io.Reader, limit int) io.Reader {
 	return &limitReader{
 		r:    r,
 		left: limit,
@@ -16,7 +17,7 @@ type limitReader struct {
 	r io.Reader
 
 	lock sync.Mutex
-	left int64
+	left int
 }
 
 func (r *limitReader) Read(b []byte) (int, error) {
@@ -26,10 +27,11 @@ func (r *limitReader) Read(b []byte) (int, error) {
 	if r.left <= 0 {
 		return 0, io.EOF
 	}
-	if int64(len(b)) > r.left {
+	if len(b) > r.left {
 		b = b[0:r.left]
 	}
 	n, err := r.r.Read(b)
-	r.left -= int64(n)
+	r.left -= n
+	log.Println("EOF AQUI??????", err)
 	return n, err
 }

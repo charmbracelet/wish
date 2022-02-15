@@ -3,6 +3,7 @@ package scp
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -105,14 +106,13 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			// ignore for now
 			// accepts the header
 			s.Write(NULL)
+			continue
 		}
 
 		if matches := reNewFile.FindAllStringSubmatch(string(line), 3); matches != nil {
 			if len(matches) != 1 || len(matches[0]) != 4 {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
-
-			name := matches[0][3]
 
 			mode, err := strconv.ParseUint(matches[0][1], 8, 32)
 			if err != nil {
@@ -123,18 +123,23 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if err != nil {
 				return fmt.Errorf("cannot parse: %q", string(line))
 			}
+			name := matches[0][3]
 
 			// accepts the header
 			s.Write(NULL)
 
-			if _, err := handler.Write(s, &FileEntry{
+			written, err := handler.Write(s, &FileEntry{
 				Name:     name,
 				Filepath: filepath.Join(path, name),
 				Mode:     fs.FileMode(mode),
 				Size:     size,
-				Reader:   newLimitReader(s, size),
-			}); err != nil {
+				Reader:   newLimitReader(r, int(size)),
+			})
+			if err != nil {
 				return fmt.Errorf("failed to write file: %q: %w", name, err)
+			}
+			if int64(written) != size {
+				return fmt.Errorf("failed to write the file: %q: written %d out of %d bytes", name, written, size)
 			}
 
 			// read the trailing nil char
@@ -175,6 +180,10 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 
 			// says 'hey im done'
 			s.Write(NULL)
+			continue
+		}
+
+		if bytes.Equal(line, NULL) {
 			continue
 		}
 
@@ -430,8 +439,9 @@ func GetInfo(cmd []string) Info {
 }
 
 func errHandler(s ssh.Session, err error) {
-	fmt.Fprintln(s.Stderr(), err)
-	s.Exit(1)
+	_, _ = fmt.Fprintln(s.Stderr(), err)
+	_ = s.Exit(1)
+	_ = s.Close()
 }
 
 func octalPerms(info fs.FileMode) string {

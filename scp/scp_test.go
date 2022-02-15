@@ -40,7 +40,7 @@ func TestGetRootEntry(t *testing.T) {
 
 	t.Run("folder", func(t *testing.T) {
 		is := is.New(t)
-		os.Mkdir(filepath.Join(path, "folder"), 0755)
+		os.Mkdir(filepath.Join(path, "folder"), 0o755)
 
 		entry, err := getRootEntry(nil, handler, "folder")
 		is.NoErr(err)
@@ -103,13 +103,13 @@ func TestNoDirRootEntry(t *testing.T) {
 		Children: []Entry{},
 		Name:     "dir1",
 		Filepath: "dir1",
-		Mode:     0755,
+		Mode:     0o755,
 	}
 
 	dir.Append(&FileEntry{
 		Name:     "f2",
 		Filepath: "f2",
-		Mode:     0600,
+		Mode:     0o600,
 		Size:     int64(f2.Len()),
 		Reader:   &f2,
 	})
@@ -117,7 +117,7 @@ func TestNoDirRootEntry(t *testing.T) {
 	root.Append(&FileEntry{
 		Name:     "f1",
 		Filepath: "f1",
-		Mode:     0644,
+		Mode:     0o644,
 		Size:     int64(f1.Len()),
 		Reader:   &f1,
 	})

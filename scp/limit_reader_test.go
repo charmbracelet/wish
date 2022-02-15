@@ -17,6 +17,7 @@ func TestLimitedReader(t *testing.T) {
 
 		bts, err := io.ReadAll(r)
 		is.NoErr(err)
+		t.Logf("AQUI %q", string(bts))
 		is.Equal("writing", string(bts))
 	})
 
@@ -24,7 +25,7 @@ func TestLimitedReader(t *testing.T) {
 		is := is.New(t)
 		var b bytes.Buffer
 		b.WriteString("some text")
-		r := newLimitReader(&b, int64(b.Len()))
+		r := newLimitReader(&b, b.Len())
 
 		bts, err := io.ReadAll(r)
 		is.NoErr(err)
@@ -35,7 +36,7 @@ func TestLimitedReader(t *testing.T) {
 		is := is.New(t)
 		var b bytes.Buffer
 		b.WriteString("another text")
-		r := newLimitReader(&b, int64(b.Len()+10))
+		r := newLimitReader(&b, b.Len()+10)
 
 		bts, err := io.ReadAll(r)
 		is.NoErr(err)
