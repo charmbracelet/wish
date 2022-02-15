@@ -45,10 +45,8 @@ type Handler interface {
 	CopyToClientHandler
 }
 
-func SimpleMiddleware(handler Handler) wish.Middleware {
-	return Middleware(handler, handler)
-}
-
+// Middleware provides a wish middleware using the given CopyToClientHandler
+// and CopyFromClientHandler.
 func Middleware(rh CopyToClientHandler, wh CopyFromClientHandler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
