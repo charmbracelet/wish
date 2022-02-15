@@ -6,10 +6,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/charmbracelet/wish/testsession"
+	"github.com/gliderlabs/ssh"
 	"github.com/matryer/is"
+	gossh "golang.org/x/crypto/ssh"
 )
-
-var update = os.Getenv("UPDATE") != ""
 
 func TestGetRootEntry(t *testing.T) {
 	path := t.TempDir()
@@ -67,6 +68,7 @@ func TestGetInfo(t *testing.T) {
 		is.True(info.Ok)
 		is.Equal(info.Recursive, false)
 		is.Equal("file", info.Path)
+		is.Equal(info.Op, OpCopyToClient)
 	})
 
 	t.Run("scp recursive", func(t *testing.T) {
@@ -75,15 +77,21 @@ func TestGetInfo(t *testing.T) {
 		is.True(info.Ok)
 		is.True(info.Recursive)
 		is.Equal("file", info.Path)
+		is.Equal(info.Op, OpCopyToClient)
+	})
+
+	t.Run("scp op copy from client", func(t *testing.T) {
+		is := is.New(t)
+		info := GetInfo([]string{"scp", "-t", "file"})
+		is.True(info.Ok)
+		is.Equal(info.Op, OpCopyFromClient)
+		is.Equal("file", info.Path)
 	})
 }
 
 func TestNoDirRootEntry(t *testing.T) {
 	is := is.New(t)
 	root := NoDirRootEntry{}
-
-	var f1m int64 = 1257894000
-	var f1a int64 = 1257894400
 
 	var f1 bytes.Buffer
 	f1.WriteString("hello from file f1\n")
@@ -96,16 +104,12 @@ func TestNoDirRootEntry(t *testing.T) {
 		Name:     "dir1",
 		Filepath: "dir1",
 		Mode:     0755,
-		Mtime:    f1m,
-		Atime:    f1m,
 	}
 
 	dir.Append(&FileEntry{
 		Name:     "f2",
 		Filepath: "f2",
 		Mode:     0600,
-		Mtime:    f1a,
-		Atime:    f1a,
 		Size:     int64(f2.Len()),
 		Reader:   &f2,
 	})
@@ -114,8 +118,6 @@ func TestNoDirRootEntry(t *testing.T) {
 		Name:     "f1",
 		Filepath: "f1",
 		Mode:     0644,
-		Mtime:    f1m,
-		Atime:    f1a,
 		Size:     int64(f1.Len()),
 		Reader:   &f1,
 	})
@@ -125,12 +127,30 @@ func TestNoDirRootEntry(t *testing.T) {
 	var out bytes.Buffer
 	is.NoErr(root.Write(&out))
 
-	path := filepath.Join("./testdata", t.Name()+".test")
-	if update {
-		is.NoErr(os.WriteFile(path, out.Bytes(), 0644))
+	requireEqualGolden(t, out.Bytes())
+}
+
+func setup(tb testing.TB, rh CopyToClientHandler, wh CopyFromClientHandler) *gossh.Session {
+	tb.Helper()
+	return testsession.New(tb, &ssh.Server{
+		Handler: Middleware(rh, wh)(func(s ssh.Session) {
+			s.Exit(0)
+			s.Close()
+		}),
+	}, nil)
+}
+
+func requireEqualGolden(tb testing.TB, out []byte) {
+	tb.Helper()
+	is := is.New(tb)
+
+	golden := "testdata/" + tb.Name() + ".test"
+	if os.Getenv("UPDATE") != "" {
+		is.NoErr(os.MkdirAll(filepath.Dir(golden), 0o755))
+		is.NoErr(os.WriteFile(golden, out, 0o655))
 	}
 
-	bts, err := os.ReadFile(path)
+	gbts, err := os.ReadFile(golden)
 	is.NoErr(err)
-	is.Equal(string(bts), out.String())
+	is.Equal(string(gbts), string(out))
 }

@@ -29,8 +29,6 @@ func (h *fsHandler) NewDirEntry(_ ssh.Session, path string) (*DirEntry, error) {
 		Name:     info.Name(),
 		Filepath: path,
 		Mode:     info.Mode(),
-		Mtime:    info.ModTime().Unix(),
-		Atime:    info.ModTime().Unix(),
 	}, nil
 }
 
@@ -47,8 +45,6 @@ func (h *fsHandler) NewFileEntry(_ ssh.Session, path string) (*FileEntry, func()
 		Name:     info.Name(),
 		Filepath: path,
 		Mode:     info.Mode(),
-		Mtime:    info.ModTime().Unix(),
-		Atime:    info.ModTime().Unix(),
 		Size:     info.Size(),
 		Reader:   f,
 	}, f.Close, nil

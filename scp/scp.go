@@ -88,10 +88,8 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 	s.Write(NULL)
 
 	var (
-		path        = info.Path
-		mtime int64 = 0
-		atime int64 = 0
-		r           = bufio.NewReader(s)
+		path = info.Path
+		r    = bufio.NewReader(s)
 	)
 
 	for {
@@ -104,18 +102,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 		}
 
 		if matches := reTimestamp.FindAllStringSubmatch(string(line), 2); matches != nil {
-			if len(matches) != 1 || len(matches[0]) != 3 {
-				return fmt.Errorf("cannot parse: %q", string(line))
-			}
-			mtime, err = strconv.ParseInt(matches[0][1], 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to read line: %w", err)
-			}
-			atime, err = strconv.ParseInt(matches[0][2], 10, 64)
-			if err != nil {
-				return fmt.Errorf("failed to read line: %w", err)
-			}
-
+			// ignore for now
 			// accepts the header
 			s.Write(NULL)
 		}
@@ -144,8 +131,6 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 				Name:     name,
 				Filepath: filepath.Join(path, name),
 				Mode:     fs.FileMode(mode),
-				Mtime:    mtime,
-				Atime:    atime,
 				Size:     size,
 				Reader:   newLimitReader(s, size),
 			}); err != nil {
@@ -157,10 +142,6 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 
 			// says 'hey im done'
 			s.Write(NULL)
-
-			mtime = 0
-			atime = 0
-
 			continue
 		}
 
@@ -180,18 +161,12 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 				Name:     name,
 				Filepath: path,
 				Mode:     fs.FileMode(mode),
-				Mtime:    mtime,
-				Atime:    atime,
 			}); err != nil {
 				return fmt.Errorf("failed to create dir: %q: %w", name, err)
 			}
 
 			// says 'hey im done'
 			s.Write(NULL)
-
-			mtime = 0
-			atime = 0
-
 			continue
 		}
 
@@ -291,8 +266,6 @@ type FileEntry struct {
 	Name     string
 	Filepath string
 	Mode     fs.FileMode
-	Mtime    int64
-	Atime    int64
 	Size     int64
 	Reader   io.Reader
 }
@@ -306,10 +279,9 @@ func (e *FileEntry) Write(w io.Writer) error {
 		return fmt.Errorf("failed to read file: %q: %w", e.Filepath, err)
 	}
 	for _, bts := range [][]byte{
-		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
 		[]byte(fmt.Sprintf("C%s %d %s\n", octalPerms(e.Mode), e.Size, e.Name)),
 		content,
-		{'\x00'},
+		NULL,
 	} {
 		if _, err := w.Write(bts); err != nil {
 			return fmt.Errorf("failed to write file: %q: %w", e.Filepath, err)
@@ -362,8 +334,6 @@ type DirEntry struct {
 	Name     string
 	Filepath string
 	Mode     fs.FileMode
-	Mtime    int64
-	Atime    int64
 }
 
 func (e *DirEntry) path() string { return e.Filepath }
@@ -372,7 +342,6 @@ func (e *DirEntry) path() string { return e.Filepath }
 // dir closing to the given writer.
 func (e *DirEntry) Write(w io.Writer) error {
 	for _, bts := range [][]byte{
-		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
 		[]byte(fmt.Sprintf("D%s 0 %s\n", octalPerms(e.Mode), e.Name)),
 	} {
 		if _, err := w.Write(bts); err != nil {

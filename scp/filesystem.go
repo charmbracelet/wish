@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,8 +47,6 @@ func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, 
 		Name:     info.Name(),
 		Filepath: path,
 		Mode:     info.Mode(),
-		Mtime:    info.ModTime().Unix(),
-		Atime:    info.ModTime().Unix(),
 	}, nil
 }
 
@@ -65,8 +64,6 @@ func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry
 		Name:     info.Name(),
 		Filepath: path,
 		Mode:     info.Mode(),
-		Mtime:    info.ModTime().Unix(),
-		Atime:    info.ModTime().Unix(),
 		Size:     info.Size(),
 		Reader:   f,
 	}, f.Close, nil
@@ -80,6 +77,7 @@ func (h *fileSystemHandler) Mkdir(_ ssh.Session, entry *DirEntry) error {
 }
 
 func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int, error) {
+	log.Println("writing", h.prefixed(entry.Filepath))
 	f, err := os.OpenFile(h.prefixed(entry.Filepath), os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)
