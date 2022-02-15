@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,12 +11,11 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-type fileSystemHandler struct {
-	root string
-}
+type fileSystemHandler struct{ root string }
 
 var _ Handler = &fileSystemHandler{}
 
+// NewFileSystemHandler return a Handler based on the given dir.
 func NewFileSystemHandler(root string) Handler {
 	return &fileSystemHandler{
 		root: filepath.Clean(root),
@@ -76,8 +74,7 @@ func (h *fileSystemHandler) Mkdir(_ ssh.Session, entry *DirEntry) error {
 	return nil
 }
 
-func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int, error) {
-	log.Println("writing", h.prefixed(entry.Filepath))
+func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error) {
 	f, err := os.OpenFile(h.prefixed(entry.Filepath), os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)
@@ -86,5 +83,5 @@ func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int, error) 
 	if err != nil {
 		return 0, fmt.Errorf("failed to write file: %q: %w", entry.Filepath, err)
 	}
-	return int(written), nil
+	return written, nil
 }

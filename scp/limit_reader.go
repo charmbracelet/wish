@@ -2,7 +2,6 @@ package scp
 
 import (
 	"io"
-	"log"
 	"sync"
 )
 
@@ -32,6 +31,5 @@ func (r *limitReader) Read(b []byte) (int, error) {
 	}
 	n, err := r.r.Read(b)
 	r.left -= n
-	log.Println("EOF AQUI??????", err)
 	return n, err
 }

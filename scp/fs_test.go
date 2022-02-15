@@ -22,6 +22,17 @@ func TestFS(t *testing.T) {
 		requireEqualGolden(t, bts)
 	})
 
+	t.Run("copy to client file that does not exist", func(t *testing.T) {
+		is := is.New(t)
+
+		dir := t.TempDir()
+		h := NewFSReadHandler(os.DirFS(dir))
+
+		session := setup(t, h, nil)
+		_, err := session.CombinedOutput("scp -f a.txt")
+		is.True(err != nil)
+	})
+
 	t.Run("recursive copy to client", func(t *testing.T) {
 		is := is.New(t)
 
@@ -35,5 +46,16 @@ func TestFS(t *testing.T) {
 		bts, err := session.CombinedOutput("scp -r -f a")
 		is.NoErr(err)
 		requireEqualGolden(t, bts)
+	})
+
+	t.Run("recursive copy non existent folder copy", func(t *testing.T) {
+		is := is.New(t)
+
+		dir := t.TempDir()
+		h := NewFSReadHandler(os.DirFS(dir))
+
+		session := setup(t, h, nil)
+		_, err := session.CombinedOutput("scp -r -f a")
+		is.True(err != nil)
 	})
 }

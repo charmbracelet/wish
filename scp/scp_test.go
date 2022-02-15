@@ -130,6 +130,23 @@ func TestNoDirRootEntry(t *testing.T) {
 	requireEqualGolden(t, out.Bytes())
 }
 
+func TestInvalidOps(t *testing.T) {
+	t.Run("not scp", func(t *testing.T) {
+		_, err := setup(t, nil, nil).CombinedOutput("not-scp ign")
+		is.New(t).NoErr(err)
+	})
+
+	t.Run("copy to client", func(t *testing.T) {
+		_, err := setup(t, nil, nil).CombinedOutput("scp -t .")
+		is.New(t).True(err != nil)
+	})
+
+	t.Run("copy from client", func(t *testing.T) {
+		_, err := setup(t, nil, nil).CombinedOutput("scp -f .")
+		is.New(t).True(err != nil)
+	})
+}
+
 func setup(tb testing.TB, rh CopyToClientHandler, wh CopyFromClientHandler) *gossh.Session {
 	tb.Helper()
 	return testsession.New(tb, &ssh.Server{

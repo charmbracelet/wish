@@ -11,6 +11,8 @@ type fsHandler struct{ fsys fs.FS }
 
 var _ CopyToClientHandler = &fsHandler{}
 
+// NewFSReadHandler returns a read-only CopyToClientHandler that accepts any
+// fs.FS as input.
 func NewFSReadHandler(fsys fs.FS) CopyToClientHandler {
 	return &fsHandler{fsys: fsys}
 }

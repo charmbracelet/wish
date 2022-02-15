@@ -2,15 +2,10 @@
 package scp
 
 import (
-	"bufio"
-	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -18,17 +13,33 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
+// CopyToClientHandler is a handler that can be implemented to handle files
+// being copied from the server to the client.
 type CopyToClientHandler interface {
+	// WalkDir must be implemented if you want to allow recursive copies.
 	WalkDir(ssh.Session, string, fs.WalkDirFunc) error
+
+	// NewDirEntry should provide a *DirEntry for the given path.
 	NewDirEntry(ssh.Session, string) (*DirEntry, error)
+
+	// NewFileEntry should provide a *FileEntry for the given path.
+	// Users may also provide a closing function.
 	NewFileEntry(ssh.Session, string) (*FileEntry, func() error, error)
 }
 
+// CopyFromClientHandler is a handler that can be implemented to handle files
+// being copied from the client to the server.
 type CopyFromClientHandler interface {
+	// Mkdir should created the given dir.
+	// Note that this usually shouldn't use os.MkdirAll and the like.
 	Mkdir(ssh.Session, *DirEntry) error
-	Write(ssh.Session, *FileEntry) (int, error)
+
+	// Write should write the given file.
+	Write(ssh.Session, *FileEntry) (int64, error)
 }
 
+// Handler is a interface that can be implemented to handle both SCP
+// directions.
 type Handler interface {
 	CopyFromClientHandler
 	CopyToClientHandler
@@ -37,8 +48,6 @@ type Handler interface {
 func SimpleMiddleware(handler Handler) wish.Middleware {
 	return Middleware(handler, handler)
 }
-
-var ErrNotSupportedOp = fmt.Errorf("operation is not supported")
 
 func Middleware(rh CopyToClientHandler, wh CopyFromClientHandler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
@@ -53,18 +62,16 @@ func Middleware(rh CopyToClientHandler, wh CopyFromClientHandler) wish.Middlewar
 			switch info.Op {
 			case OpCopyToClient:
 				if rh == nil {
-					err = fmt.Errorf("copy to client: %w", ErrNotSupportedOp)
+					err = fmt.Errorf("no handler provided for scp -f")
 					break
 				}
 				err = copyToClient(s, info, rh)
 			case OpCopyFromClient:
 				if wh == nil {
-					err = fmt.Errorf("copy from client: %w", ErrNotSupportedOp)
+					err = fmt.Errorf("no handler provided for scp -t")
 					break
 				}
 				err = copyFromClient(s, info, wh)
-			default:
-				err = fmt.Errorf("invalid operation")
 			}
 			if err != nil {
 				errHandler(s, err)
@@ -76,196 +83,24 @@ func Middleware(rh CopyToClientHandler, wh CopyFromClientHandler) wish.Middlewar
 	}
 }
 
-var (
-	reTimestamp = regexp.MustCompile("^T(\\d{10}) 0 (\\d{10}) 0$")
-	reNewFolder = regexp.MustCompile("^D(\\d{4}) 0 (.*)$")
-	reNewFile   = regexp.MustCompile("^C(\\d{4}) (\\d+) (.*)$")
-)
-
+// NULL is an array with a single NULL byte.
 var NULL = []byte{'\x00'}
-
-func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) error {
-	// accepts the request
-	s.Write(NULL)
-
-	var (
-		path = info.Path
-		r    = bufio.NewReader(s)
-	)
-
-	for {
-		line, _, err := r.ReadLine()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
-			return fmt.Errorf("failed to read line: %w", err)
-		}
-
-		if matches := reTimestamp.FindAllStringSubmatch(string(line), 2); matches != nil {
-			// ignore for now
-			// accepts the header
-			s.Write(NULL)
-			continue
-		}
-
-		if matches := reNewFile.FindAllStringSubmatch(string(line), 3); matches != nil {
-			if len(matches) != 1 || len(matches[0]) != 4 {
-				return fmt.Errorf("cannot parse: %q", string(line))
-			}
-
-			mode, err := strconv.ParseUint(matches[0][1], 8, 32)
-			if err != nil {
-				return fmt.Errorf("cannot parse: %q", string(line))
-			}
-
-			size, err := strconv.ParseInt(matches[0][2], 10, 64)
-			if err != nil {
-				return fmt.Errorf("cannot parse: %q", string(line))
-			}
-			name := matches[0][3]
-
-			// accepts the header
-			s.Write(NULL)
-
-			written, err := handler.Write(s, &FileEntry{
-				Name:     name,
-				Filepath: filepath.Join(path, name),
-				Mode:     fs.FileMode(mode),
-				Size:     size,
-				Reader:   newLimitReader(r, int(size)),
-			})
-			if err != nil {
-				return fmt.Errorf("failed to write file: %q: %w", name, err)
-			}
-			if int64(written) != size {
-				return fmt.Errorf("failed to write the file: %q: written %d out of %d bytes", name, written, size)
-			}
-
-			// read the trailing nil char
-			_, _ = r.ReadByte() // TODO: check if it is indeed a NULL?
-
-			// says 'hey im done'
-			s.Write(NULL)
-			continue
-		}
-
-		if matches := reNewFolder.FindAllStringSubmatch(string(line), 2); matches != nil {
-			if len(matches) != 1 || len(matches[0]) != 3 {
-				return fmt.Errorf("cannot parse: %q", string(line))
-			}
-
-			mode, err := strconv.ParseUint(matches[0][1], 8, 32)
-			if err != nil {
-				return fmt.Errorf("cannot parse: %q", string(line))
-			}
-			name := matches[0][2]
-
-			path = filepath.Join(path, name)
-			if err := handler.Mkdir(s, &DirEntry{
-				Name:     name,
-				Filepath: path,
-				Mode:     fs.FileMode(mode),
-			}); err != nil {
-				return fmt.Errorf("failed to create dir: %q: %w", name, err)
-			}
-
-			// says 'hey im done'
-			s.Write(NULL)
-			continue
-		}
-
-		if string(line) == "E" {
-			path = filepath.Dir(path)
-
-			// says 'hey im done'
-			s.Write(NULL)
-			continue
-		}
-
-		if bytes.Equal(line, NULL) {
-			continue
-		}
-
-		return fmt.Errorf("unhandled input: %q", string(line))
-	}
-
-	s.Write(NULL)
-	return nil
-}
-
-func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
-	if !info.Recursive {
-		entry, closer, err := handler.NewFileEntry(s, info.Path)
-		if err != nil {
-			return err
-		}
-		if closer != nil {
-			defer closer()
-		}
-		if err := entry.Write(s); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	rootEntry, err := getRootEntry(s, handler, info.Path)
-	if err != nil {
-		return err
-	}
-
-	var closers []func() error
-	defer func() {
-		for _, closer := range closers {
-			if err := closer(); err != nil {
-				log.Println("failed to close:", err)
-			}
-		}
-	}()
-
-	if err := handler.WalkDir(s, info.Path, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if path == info.Path {
-			return nil
-		}
-
-		if d.IsDir() {
-			entry, err := handler.NewDirEntry(s, path)
-			if err != nil {
-				return err
-			}
-			rootEntry.Append(entry)
-		} else {
-			entry, closer, err := handler.NewFileEntry(s, path)
-			if err != nil {
-				return err
-			}
-			closers = append(closers, closer)
-			rootEntry.Append(entry)
-		}
-
-		return nil
-	}); err != nil {
-		return err
-	}
-	if err := rootEntry.Write(s); err != nil {
-		return err
-	}
-	return nil
-}
 
 // Entry defines something that knows how to write itself and its path.
 type Entry interface {
+	// Write the current entry in SCP format.
 	Write(io.Writer) error
+
 	path() string
 }
 
 // RootEntry defines a special kind of Entry, which can contain
 // children.
 type RootEntry interface {
+	// Write the current entry in SCP format.
 	Write(io.Writer) error
+
+	// Append another entry to the current entry.
 	Append(entry Entry)
 }
 
@@ -401,20 +236,35 @@ func getRootEntry(s ssh.Session, handler CopyToClientHandler, root string) (Root
 	return handler.NewDirEntry(s, root)
 }
 
+// Op defines which kind of SCP Operation is going on.
 type Op byte
 
 const (
-	OpCopyToClient   Op = 'f'
+	// OpCopyToClient is when a file is being copied from the server to the client.
+	// Example: scp foo.bar:main.go .
+	OpCopyToClient Op = 'f'
+
+	// OpCopyFromClient is when a file is being copied from the client into the server.
+	// Example: scp main.go foo.bar:/tmp
 	OpCopyFromClient Op = 't'
 )
 
+// Info provides some information about the current SCP Operation.
 type Info struct {
-	Ok        bool
+	// Ok is true if the current session is a SCP.
+	Ok bool
+
+	// Recursice is true if its a recursive SCP.
 	Recursive bool
-	Path      string
-	Op        Op
+
+	// Path is the server path of the scp operation.
+	Path string
+
+	// Op is the SCP operation kind.
+	Op Op
 }
 
+// GetInfo return information about the given command.
 func GetInfo(cmd []string) Info {
 	info := Info{}
 	if len(cmd) == 0 || cmd[0] != "scp" {
