@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -30,7 +31,7 @@ func (e parseError) Error() string {
 
 func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) error {
 	// accepts the request
-	s.Write(NULL)
+	_, _ = s.Write(NULL)
 
 	var (
 		path = info.Path
@@ -49,7 +50,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 		if matches := reTimestamp.FindAllStringSubmatch(string(line), 2); matches != nil {
 			// ignore for now
 			// accepts the header
-			s.Write(NULL)
+			_, _ = s.Write(NULL)
 			continue
 		}
 
@@ -70,7 +71,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			name := matches[0][3]
 
 			// accepts the header
-			s.Write(NULL)
+			_, _ = s.Write(NULL)
 
 			written, err := handler.Write(s, &FileEntry{
 				Name:     name,
@@ -90,7 +91,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			_, _ = r.ReadByte() // TODO: check if it is indeed a NULL?
 
 			// says 'hey im done'
-			s.Write(NULL)
+			_, _ = s.Write(NULL)
 			continue
 		}
 
@@ -115,7 +116,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			}
 
 			// says 'hey im done'
-			s.Write(NULL)
+			_, _ = s.Write(NULL)
 			continue
 		}
 
@@ -123,17 +124,18 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			path = filepath.Dir(path)
 
 			// says 'hey im done'
-			s.Write(NULL)
+			_, _ = s.Write(NULL)
 			continue
 		}
 
 		if bytes.Equal(line, NULL) {
+			log.Println("dangling NULL byte ignored")
 			continue
 		}
 
 		return fmt.Errorf("unhandled input: %q", string(line))
 	}
 
-	s.Write(NULL)
+	_, _ = s.Write(NULL)
 	return nil
 }

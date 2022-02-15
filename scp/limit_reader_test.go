@@ -17,7 +17,6 @@ func TestLimitedReader(t *testing.T) {
 
 		bts, err := io.ReadAll(r)
 		is.NoErr(err)
-		t.Logf("AQUI %q", string(bts))
 		is.Equal("writing", string(bts))
 	})
 

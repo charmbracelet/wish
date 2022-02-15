@@ -13,9 +13,11 @@ func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 		if err != nil {
 			return err
 		}
-		if closer != nil {
-			defer closer()
-		}
+		defer func() {
+			if closer != nil {
+				_ = closer()
+			}
+		}()
 		if err := entry.Write(s); err != nil {
 			return err
 		}
