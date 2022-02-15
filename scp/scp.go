@@ -3,7 +3,6 @@ package scp
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -89,7 +88,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 	s.Write(NULL)
 
 	var (
-		path        = "."
+		path        = info.Path
 		mtime int64 = 0
 		atime int64 = 0
 		r           = bufio.NewReader(s)
@@ -141,11 +140,6 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			// accepts the header
 			s.Write(NULL)
 
-			contents := make([]byte, size)
-			if _, err := r.Read(contents); err != nil {
-				return fmt.Errorf("cannot read %q: %w", name, err)
-			}
-
 			if _, err := handler.Write(s, &FileEntry{
 				Name:     name,
 				Filepath: filepath.Join(path, name),
@@ -153,7 +147,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 				Mtime:    mtime,
 				Atime:    atime,
 				Size:     size,
-				Reader:   bytes.NewReader(contents), // TODO: write some sort of "limited reader" and use stdin instead of loading the file to memory and creating a reader from its contents.
+				Reader:   newLimitReader(s, size),
 			}); err != nil {
 				return fmt.Errorf("failed to write file: %q: %w", name, err)
 			}

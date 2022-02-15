@@ -20,11 +20,12 @@ const host = "localhost"
 const port = 23234
 
 func main() {
+	handler := scp.NewFileSystemHandler("./examples/scp/testdata")
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
-			scp.Middleware(scp.NewFileSystemHandler("./examples/scp/testdata")),
+			scp.Middleware(handler, handler),
 		),
 	)
 	if err != nil {
