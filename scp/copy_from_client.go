@@ -34,8 +34,10 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 	_, _ = s.Write(NULL)
 
 	var (
-		path = info.Path
-		r    = bufio.NewReader(s)
+		path        = info.Path
+		r           = bufio.NewReader(s)
+		mtime int64 = 0
+		atime int64 = 0
 	)
 
 	for {
@@ -48,7 +50,15 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 		}
 
 		if matches := reTimestamp.FindAllStringSubmatch(string(line), 2); matches != nil {
-			// ignore for now
+			mtime, err = strconv.ParseInt(matches[0][1], 10, 64)
+			if err != nil {
+				return parseError{string(line)}
+			}
+			atime, err = strconv.ParseInt(matches[0][2], 10, 64)
+			if err != nil {
+				return parseError{string(line)}
+			}
+
 			// accepts the header
 			_, _ = s.Write(NULL)
 			continue
@@ -78,6 +88,8 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 				Filepath: filepath.Join(path, name),
 				Mode:     fs.FileMode(mode),
 				Size:     size,
+				Mtime:    mtime,
+				Atime:    atime,
 				Reader:   newLimitReader(r, int(size)),
 			})
 			if err != nil {
@@ -90,6 +102,8 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			// read the trailing nil char
 			_, _ = r.ReadByte() // TODO: check if it is indeed a NULL?
 
+			mtime = 0
+			atime = 0
 			// says 'hey im done'
 			_, _ = s.Write(NULL)
 			continue
@@ -111,10 +125,14 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 				Name:     name,
 				Filepath: path,
 				Mode:     fs.FileMode(mode),
+				Mtime:    mtime,
+				Atime:    atime,
 			}); err != nil {
 				return fmt.Errorf("failed to create dir: %q: %w", name, err)
 			}
 
+			mtime = 0
+			atime = 0
 			// says 'hey im done'
 			_, _ = s.Write(NULL)
 			continue

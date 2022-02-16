@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/gliderlabs/ssh"
 )
@@ -20,6 +22,21 @@ func NewFileSystemHandler(root string) Handler {
 	return &fileSystemHandler{
 		root: filepath.Clean(root),
 	}
+}
+
+func (h *fileSystemHandler) chtimes(path string, mtime, atime int64) error {
+	if mtime == 0 || atime == 0 {
+		return nil
+	}
+	log.Printf("setting chtimes for %q: mtime=%d atime=%d", path, mtime, atime)
+	if err := os.Chtimes(
+		h.prefixed(path),
+		time.Unix(atime, 0),
+		time.Unix(mtime, 0),
+	); err != nil {
+		return fmt.Errorf("failed to chtimes: %q: %w", path, err)
+	}
+	return nil
 }
 
 func (h *fileSystemHandler) prefixed(path string) string {
@@ -45,6 +62,8 @@ func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, 
 		Name:     info.Name(),
 		Filepath: path,
 		Mode:     info.Mode(),
+		Mtime:    info.ModTime().Unix(),
+		Atime:    info.ModTime().Unix(),
 	}, nil
 }
 
@@ -63,6 +82,8 @@ func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry
 		Filepath: path,
 		Mode:     info.Mode(),
 		Size:     info.Size(),
+		Mtime:    info.ModTime().Unix(),
+		Atime:    info.ModTime().Unix(),
 		Reader:   f,
 	}, f.Close, nil
 }
@@ -71,7 +92,7 @@ func (h *fileSystemHandler) Mkdir(_ ssh.Session, entry *DirEntry) error {
 	if err := os.Mkdir(h.prefixed(entry.Filepath), entry.Mode); err != nil {
 		return fmt.Errorf("failed to create dir: %q: %w", entry.Filepath, err)
 	}
-	return nil
+	return h.chtimes(entry.Filepath, entry.Mtime, entry.Atime)
 }
 
 func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error) {
@@ -83,5 +104,5 @@ func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error
 	if err != nil {
 		return 0, fmt.Errorf("failed to write file: %q: %w", entry.Filepath, err)
 	}
-	return written, nil
+	return written, h.chtimes(entry.Filepath, entry.Mtime, entry.Atime)
 }

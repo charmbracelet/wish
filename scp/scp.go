@@ -110,6 +110,8 @@ type FileEntry struct {
 	Mode     fs.FileMode
 	Size     int64
 	Reader   io.Reader
+	Atime    int64
+	Mtime    int64
 }
 
 func (e *FileEntry) path() string { return e.Filepath }
@@ -121,6 +123,7 @@ func (e *FileEntry) Write(w io.Writer) error {
 		return fmt.Errorf("failed to read file: %q: %w", e.Filepath, err)
 	}
 	for _, bts := range [][]byte{
+		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
 		[]byte(fmt.Sprintf("C%s %d %s\n", octalPerms(e.Mode), e.Size, e.Name)),
 		content,
 		NULL,
@@ -176,6 +179,8 @@ type DirEntry struct {
 	Name     string
 	Filepath string
 	Mode     fs.FileMode
+	Atime    int64
+	Mtime    int64
 }
 
 func (e *DirEntry) path() string { return e.Filepath }
@@ -184,6 +189,7 @@ func (e *DirEntry) path() string { return e.Filepath }
 // dir closing to the given writer.
 func (e *DirEntry) Write(w io.Writer) error {
 	for _, bts := range [][]byte{
+		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
 		[]byte(fmt.Sprintf("D%s 0 %s\n", octalPerms(e.Mode), e.Name)),
 	} {
 		if _, err := w.Write(bts); err != nil {
