@@ -1,1 +1,1 @@
-scp/testdata/*/*.test text
+scp/testdata/**/*.test text
