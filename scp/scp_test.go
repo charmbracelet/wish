@@ -161,6 +161,7 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	tb.Helper()
 	is := is.New(tb)
 
+	out = bytes.ReplaceAll(out, NULL, []byte("<NULL>"))
 	golden := "testdata/" + tb.Name() + ".test"
 	if os.Getenv("UPDATE") != "" {
 		is.NoErr(os.MkdirAll(filepath.Dir(golden), 0o755))
@@ -169,5 +170,7 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 
 	gbts, err := os.ReadFile(golden)
 	is.NoErr(err)
+
+	gbts = bytes.ReplaceAll(gbts, NULL, []byte("<NULL>"))
 	is.Equal(string(gbts), string(out))
 }

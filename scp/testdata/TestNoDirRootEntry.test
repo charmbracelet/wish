@@ -1,0 +1,10 @@
+T0 0 0 0
+C0644 19 f1
+hello from file f1
+<NULL>T0 0 0 0
+D0755 0 dir1
+T0 0 0 0
+C0600 42 f2
+hello from file f2
+with multiple lines :)
+<NULL>E
