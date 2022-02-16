@@ -34,10 +34,10 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 	_, _ = s.Write(NULL)
 
 	var (
-		path        = info.Path
-		r           = bufio.NewReader(s)
-		mtime int64 = 0
-		atime int64 = 0
+		path  = info.Path
+		r     = bufio.NewReader(s)
+		mtime int64
+		atime int64
 	)
 
 	for {
