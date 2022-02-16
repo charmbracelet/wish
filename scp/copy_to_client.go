@@ -7,9 +7,9 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
-	if !info.Recursive {
-		entry, closer, err := handler.NewFileEntry(s, info.Path)
+func copyFilesToClient(s ssh.Session, handler CopyToClientHandler, paths []string) error {
+	for _, path := range paths {
+		entry, closer, err := handler.NewFileEntry(s, path)
 		if err != nil {
 			return err
 		}
@@ -21,7 +21,18 @@ func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 		if err := entry.Write(s); err != nil {
 			return err
 		}
-		return nil
+	}
+	return nil
+}
+
+func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
+	paths, err := handler.Glob(s, info.Path)
+	if err != nil {
+		return err
+	}
+
+	if !info.Recursive {
+		return copyFilesToClient(s, handler, paths)
 	}
 
 	rootEntry, err := getRootEntry(s, handler, info.Path)
