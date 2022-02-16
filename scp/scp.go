@@ -118,19 +118,21 @@ func (e *FileEntry) path() string { return e.Filepath }
 
 // Write a file to the given writer.
 func (e *FileEntry) Write(w io.Writer) error {
-	content, err := io.ReadAll(e.Reader)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %q: %w", e.Filepath, err)
-	}
-	for _, bts := range [][]byte{
-		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
-		[]byte(fmt.Sprintf("C%s %d %s\n", octalPerms(e.Mode), e.Size, e.Name)),
-		content,
-		NULL,
-	} {
-		if _, err := w.Write(bts); err != nil {
+	if e.Mtime > 0 && e.Atime > 0 {
+		if _, err := fmt.Fprintf(w, "T%d 0 %d 0\n", e.Mtime, e.Atime); err != nil {
 			return fmt.Errorf("failed to write file: %q: %w", e.Filepath, err)
 		}
+	}
+	if _, err := fmt.Fprintf(w, "C%s %d %s\n", octalPerms(e.Mode), e.Size, e.Name); err != nil {
+		return fmt.Errorf("failed to write file: %q: %w", e.Filepath, err)
+	}
+
+	if _, err := io.Copy(w, e.Reader); err != nil {
+		return fmt.Errorf("failed to read file: %q: %w", e.Filepath, err)
+	}
+
+	if _, err := w.Write(NULL); err != nil {
+		return fmt.Errorf("failed to write file: %q: %w", e.Filepath, err)
 	}
 	return nil
 }
@@ -188,13 +190,13 @@ func (e *DirEntry) path() string { return e.Filepath }
 // Write the current dir entry, all its contents (recursively), and the
 // dir closing to the given writer.
 func (e *DirEntry) Write(w io.Writer) error {
-	for _, bts := range [][]byte{
-		[]byte(fmt.Sprintf("T%d 0 %d 0\n", e.Mtime, e.Atime)),
-		[]byte(fmt.Sprintf("D%s 0 %s\n", octalPerms(e.Mode), e.Name)),
-	} {
-		if _, err := w.Write(bts); err != nil {
+	if e.Mtime > 0 && e.Atime > 0 {
+		if _, err := fmt.Fprintf(w, "T%d 0 %d 0\n", e.Mtime, e.Atime); err != nil {
 			return fmt.Errorf("failed to write dir: %q: %w", e.Filepath, err)
 		}
+	}
+	if _, err := fmt.Fprintf(w, "D%s 0 %s\n", octalPerms(e.Mode), e.Name); err != nil {
+		return fmt.Errorf("failed to write dir: %q: %w", e.Filepath, err)
 	}
 
 	for _, child := range e.Children {
@@ -203,7 +205,7 @@ func (e *DirEntry) Write(w io.Writer) error {
 		}
 	}
 
-	if _, err := w.Write([]byte{'E', '\n'}); err != nil {
+	if _, err := fmt.Fprint(w, "E\n"); err != nil {
 		return fmt.Errorf("failed to write dir: %q: %w", e.Filepath, err)
 	}
 	return nil
