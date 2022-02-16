@@ -247,11 +247,9 @@ type Op byte
 
 const (
 	// OpCopyToClient is when a file is being copied from the server to the client.
-	// Example: scp foo.bar:main.go .
 	OpCopyToClient Op = 'f'
 
 	// OpCopyFromClient is when a file is being copied from the client into the server.
-	// Example: scp main.go foo.bar:/tmp
 	OpCopyFromClient Op = 't'
 )
 
