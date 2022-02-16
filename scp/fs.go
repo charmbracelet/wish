@@ -17,6 +17,10 @@ func NewFSReadHandler(fsys fs.FS) CopyToClientHandler {
 	return &fsHandler{fsys: fsys}
 }
 
+func (h *fsHandler) Glob(_ ssh.Session, s string) ([]string, error) {
+	return fs.Glob(h.fsys, s)
+}
+
 func (h *fsHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
 	return fs.WalkDir(h.fsys, path, fn)
 }

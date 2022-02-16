@@ -16,6 +16,11 @@ import (
 // CopyToClientHandler is a handler that can be implemented to handle files
 // being copied from the server to the client.
 type CopyToClientHandler interface {
+	// Glob should be implemented if you want to provide server-side globbing
+	// support.
+	// A minimal implementation to disable it ist to return `[]string{s}, nil`.
+	Glob(ssh.Session, string) ([]string, error)
+
 	// WalkDir must be implemented if you want to allow recursive copies.
 	WalkDir(ssh.Session, string, fs.WalkDirFunc) error
 
@@ -232,14 +237,6 @@ func (e *DirEntry) Append(entry Entry) {
 	}
 
 	e.Children = append(e.Children, entry)
-}
-
-func getRootEntry(s ssh.Session, handler CopyToClientHandler, root string) (RootEntry, error) {
-	if root == "/" || root == "." {
-		return &NoDirRootEntry{}, nil
-	}
-
-	return handler.NewDirEntry(s, root)
 }
 
 // Op defines which kind of SCP Operation is going on.

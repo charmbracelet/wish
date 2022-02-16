@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +27,6 @@ func (h *fileSystemHandler) chtimes(path string, mtime, atime int64) error {
 	if mtime == 0 || atime == 0 {
 		return nil
 	}
-	log.Printf("setting chtimes for %q: mtime=%d atime=%d", path, mtime, atime)
 	if err := os.Chtimes(
 		h.prefixed(path),
 		time.Unix(atime, 0),
@@ -45,6 +43,10 @@ func (h *fileSystemHandler) prefixed(path string) string {
 		return path
 	}
 	return filepath.Join(h.root, path)
+}
+
+func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
+	return filepath.Glob(s)
 }
 
 func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {

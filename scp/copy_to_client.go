@@ -65,8 +65,14 @@ func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 	}); err != nil {
 		return err
 	}
-	if err := rootEntry.Write(s); err != nil {
-		return err
+
+	return rootEntry.Write(s)
+}
+
+func getRootEntry(s ssh.Session, handler CopyToClientHandler, root string) (RootEntry, error) {
+	if root == "/" || root == "." {
+		return &NoDirRootEntry{}, nil
 	}
-	return nil
+
+	return handler.NewDirEntry(s, root)
 }
