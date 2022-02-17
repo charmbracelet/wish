@@ -2,10 +2,12 @@ package scp
 
 import (
 	"bytes"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	"github.com/matryer/is"
@@ -21,12 +23,26 @@ func TestFilesystem(t *testing.T) {
 
 			dir := t.TempDir()
 			h := NewFileSystemHandler(dir)
-			path := filepath.Join(dir, "a.txt")
-			is.NoErr(os.WriteFile(path, []byte("a text file"), 0o644))
-			is.NoErr(os.Chtimes(path, atime, mtime))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o644))
+			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
 			bts, err := session.CombinedOutput("scp -f a.txt")
+			is.NoErr(err)
+			requireEqualGolden(t, bts)
+		})
+
+		t.Run("glob", func(t *testing.T) {
+			is := is.New(t)
+
+			dir := t.TempDir()
+			h := NewFileSystemHandler(dir)
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o644))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "b.txt"), []byte("another text file"), 0o644))
+			chtimesTree(t, dir, atime, mtime)
+
+			session := setup(t, h, nil)
+			bts, err := session.CombinedOutput("scp -f *.txt")
 			is.NoErr(err)
 			requireEqualGolden(t, bts)
 		})
@@ -51,16 +67,29 @@ func TestFilesystem(t *testing.T) {
 			is.NoErr(os.MkdirAll(filepath.Join(dir, "a/b/c/d/e"), 0o755))
 			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o644))
 			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
-
-			filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-				is.NoErr(os.Chtimes(path, atime, mtime))
-				return nil
-			})
+			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
 			bts, err := session.CombinedOutput("scp -r -f a")
-			is.NoErr(err)
 			requireEqualGolden(t, bts)
+			is.NoErr(err)
+		})
+
+		t.Run("recursive glob", func(t *testing.T) {
+			is := is.New(t)
+
+			dir := t.TempDir()
+			h := NewFileSystemHandler(dir)
+
+			is.NoErr(os.MkdirAll(filepath.Join(dir, "a/b/c/d/e"), 0o755))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o644))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
+			chtimesTree(t, dir, atime, mtime)
+
+			session := setup(t, h, nil)
+			bts, err := session.CombinedOutput("scp -r -f a/*")
+			requireEqualGolden(t, bts)
+			is.NoErr(err)
 		})
 
 		t.Run("recursive invalid file", func(t *testing.T) {
@@ -140,4 +169,89 @@ func TestFilesystem(t *testing.T) {
 		})
 	})
 
+	t.Run("errors", func(t *testing.T) {
+		t.Run("chtimes", func(t *testing.T) {
+			h := &fileSystemHandler{t.TempDir()}
+			is.New(t).True(h.chtimes("nope", 1212212, 323232) != nil) // should err
+		})
+
+		t.Run("glob", func(t *testing.T) {
+			t.Run("invalid glob", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				matches, err := h.Glob(nil, "[asda")
+				is.True(err != nil) // should err
+				is.Equal([]string{}, matches)
+			})
+		})
+
+		t.Run("NewDirEntry", func(t *testing.T) {
+			t.Run("do not exist", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				_, err := h.NewDirEntry(nil, "foo")
+				is.True(err != nil) // should err
+			})
+		})
+
+		t.Run("NewFileEntry", func(t *testing.T) {
+			t.Run("do not exist", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				_, _, err := h.NewFileEntry(nil, "foo")
+				is.True(err != nil) // should err
+			})
+		})
+
+		t.Run("Mkdir", func(t *testing.T) {
+			t.Run("parent do not exist", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				err := h.Mkdir(nil, &DirEntry{
+					Name:     "foo",
+					Filepath: "foo/bar/baz",
+					Mode:     0755,
+				})
+				is.True(err != nil) // should err
+			})
+		})
+
+		t.Run("Write", func(t *testing.T) {
+			t.Run("parent do not exist", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				_, err := h.Write(nil, &FileEntry{
+					Name:     "foo.txt",
+					Filepath: "baz/foo.txt",
+					Mode:     0644,
+					Size:     10,
+				})
+				is.True(err != nil) // should err
+			})
+
+			t.Run("reader fails", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				_, err := h.Write(nil, &FileEntry{
+					Name:     "foo.txt",
+					Filepath: "foo.txt",
+					Mode:     0644,
+					Size:     10,
+					Reader:   iotest.ErrReader(fmt.Errorf("fake err")),
+				})
+				is.True(err != nil) // should err
+			})
+		})
+
+	})
+
+}
+
+func chtimesTree(tb testing.TB, dir string, atime, mtime time.Time) {
+	is := is.New(tb)
+
+	filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		is.NoErr(os.Chtimes(path, atime, mtime))
+		return nil
+	})
 }
