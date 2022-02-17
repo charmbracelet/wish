@@ -144,7 +144,6 @@ func TestFilesystem(t *testing.T) {
 			in.Write(NULL)
 			in.WriteString("E\n")
 			in.WriteString("E\n")
-			in.Write(NULL)
 
 			session := setup(t, nil, h)
 			session.Stdin = &in

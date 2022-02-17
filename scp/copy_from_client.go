@@ -2,12 +2,10 @@ package scp
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -143,11 +141,6 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 
 			// says 'hey im done'
 			_, _ = s.Write(NULL)
-			continue
-		}
-
-		if bytes.Equal(line, NULL) {
-			log.Println("dangling NULL byte ignored")
 			continue
 		}
 
