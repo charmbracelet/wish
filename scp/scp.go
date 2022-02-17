@@ -18,7 +18,11 @@ import (
 type CopyToClientHandler interface {
 	// Glob should be implemented if you want to provide server-side globbing
 	// support.
+	//
 	// A minimal implementation to disable it ist to return `[]string{s}, nil`.
+	//
+	// Note: if your other functions expect a relative path, make sure that
+	// your Glob implementation returns relative paths as well.
 	Glob(ssh.Session, string) ([]string, error)
 
 	// WalkDir must be implemented if you want to allow recursive copies.
@@ -97,9 +101,9 @@ type Entry interface {
 	path() string
 }
 
-// RootEntry defines a special kind of Entry, which can contain
+// AppendableEntry defines a special kind of Entry, which can contain
 // children.
-type RootEntry interface {
+type AppendableEntry interface {
 	// Write the current entry in SCP format.
 	Write(io.Writer) error
 
@@ -142,12 +146,12 @@ func (e *FileEntry) Write(w io.Writer) error {
 	return nil
 }
 
-// NoDirRootEntry is a root entry that can only has children.
-type NoDirRootEntry []Entry
+// RootEntry is a root entry that can only have children.
+type RootEntry []Entry
 
 // Appennd the given entry to a child directory, or the the itself if
 // none matches.
-func (e *NoDirRootEntry) Append(entry Entry) {
+func (e *RootEntry) Append(entry Entry) {
 	parent := filepath.Dir(entry.path())
 
 	for _, child := range *e {
@@ -170,7 +174,7 @@ func (e *NoDirRootEntry) Append(entry Entry) {
 }
 
 // Write recursively writes all the children to the given writer.
-func (e *NoDirRootEntry) Write(w io.Writer) error {
+func (e *RootEntry) Write(w io.Writer) error {
 	for _, child := range *e {
 		if err := child.Write(w); err != nil {
 			return err

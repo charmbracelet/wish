@@ -2,10 +2,12 @@ package scp
 
 import (
 	"bytes"
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
+	"testing/iotest"
 	"time"
 
 	"github.com/matryer/is"
@@ -165,6 +167,82 @@ func TestFilesystem(t *testing.T) {
 			is.NoErr(err)
 			is.Equal(stat.ModTime().Unix(), mtime)
 		})
+	})
+
+	t.Run("errors", func(t *testing.T) {
+		t.Run("chtimes", func(t *testing.T) {
+			h := &fileSystemHandler{t.TempDir()}
+			is.New(t).True(h.chtimes("nope", 1212212, 323232) != nil) // should err
+		})
+
+		t.Run("glob", func(t *testing.T) {
+			t.Run("invalid glob", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				matches, err := h.Glob(nil, "[asda")
+				is.True(err != nil) // should err
+				is.Equal([]string{}, matches)
+			})
+		})
+
+		t.Run("NewDirEntry", func(t *testing.T) {
+			t.Run("do not exist", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				_, err := h.NewDirEntry(nil, "foo")
+				is.True(err != nil) // should err
+			})
+		})
+
+		t.Run("NewFileEntry", func(t *testing.T) {
+			t.Run("do not exist", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				_, _, err := h.NewFileEntry(nil, "foo")
+				is.True(err != nil) // should err
+			})
+		})
+
+		t.Run("Mkdir", func(t *testing.T) {
+			t.Run("parent do not exist", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				err := h.Mkdir(nil, &DirEntry{
+					Name:     "foo",
+					Filepath: "foo/bar/baz",
+					Mode:     0755,
+				})
+				is.True(err != nil) // should err
+			})
+		})
+
+		t.Run("Write", func(t *testing.T) {
+			t.Run("parent do not exist", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				_, err := h.Write(nil, &FileEntry{
+					Name:     "foo.txt",
+					Filepath: "baz/foo.txt",
+					Mode:     0644,
+					Size:     10,
+				})
+				is.True(err != nil) // should err
+			})
+
+			t.Run("reader fails", func(t *testing.T) {
+				is := is.New(t)
+				h := &fileSystemHandler{t.TempDir()}
+				_, err := h.Write(nil, &FileEntry{
+					Name:     "foo.txt",
+					Filepath: "foo.txt",
+					Mode:     0644,
+					Size:     10,
+					Reader:   iotest.ErrReader(fmt.Errorf("fake err")),
+				})
+				is.True(err != nil) // should err
+			})
+		})
+
 	})
 
 }

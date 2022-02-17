@@ -46,11 +46,22 @@ func (h *fileSystemHandler) prefixed(path string) string {
 }
 
 func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
-	return filepath.Glob(s)
+	matches, err := filepath.Glob(h.prefixed(s))
+	if err != nil {
+		return []string{}, err
+	}
+
+	for i, match := range matches {
+		matches[i], err = filepath.Rel(h.root, match)
+		if err != nil {
+			return []string{}, err
+		}
+	}
+	return matches, nil
 }
 
 func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
-	return filepath.WalkDir(filepath.Join(h.root, path), fn)
+	return filepath.WalkDir(h.prefixed(path), fn)
 }
 
 func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, error) {

@@ -12,43 +12,6 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func TestGetRootEntry(t *testing.T) {
-	path := t.TempDir()
-	handler := NewFileSystemHandler(path)
-
-	t.Run("/", func(t *testing.T) {
-		is := is.New(t)
-		entry, err := getRootEntry(nil, handler, "/")
-		is.NoErr(err)
-		_, ok := entry.(*NoDirRootEntry)
-		is.True(ok)
-	})
-
-	t.Run(".", func(t *testing.T) {
-		is := is.New(t)
-		entry, err := getRootEntry(nil, handler, ".")
-		is.NoErr(err)
-		_, ok := entry.(*NoDirRootEntry)
-		is.True(ok)
-	})
-
-	t.Run("unknown folder", func(t *testing.T) {
-		is := is.New(t)
-		_, err := getRootEntry(nil, handler, "nope")
-		is.True(err != nil)
-	})
-
-	t.Run("folder", func(t *testing.T) {
-		is := is.New(t)
-		os.Mkdir(filepath.Join(path, "folder"), 0o755)
-
-		entry, err := getRootEntry(nil, handler, "folder")
-		is.NoErr(err)
-		_, ok := entry.(*DirEntry)
-		is.True(ok)
-	})
-}
-
 func TestGetInfo(t *testing.T) {
 	t.Run("no exec", func(t *testing.T) {
 		is := is.New(t)
@@ -91,7 +54,7 @@ func TestGetInfo(t *testing.T) {
 
 func TestNoDirRootEntry(t *testing.T) {
 	is := is.New(t)
-	root := NoDirRootEntry{}
+	root := RootEntry{}
 
 	var f1 bytes.Buffer
 	f1.WriteString("hello from file f1\n")
