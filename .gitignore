@@ -6,5 +6,6 @@ examples/bubbletea/.ssh
 examples/git/git
 examples/git/.ssh
 examples/git/.repos
+!examples/scp
 .repos
 .ssh
