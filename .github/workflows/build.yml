@@ -25,6 +25,5 @@ jobs:
         run: go test -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt ./... -timeout 5m
 
       - uses: codecov/codecov-action@v2
-        if: matrix.go-version == "^1"
         with:
           file: ./coverage.txt
