@@ -9,6 +9,7 @@
     <a href="https://pkg.go.dev/github.com/charmbracelet/wish?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="GoDoc"></a>
     <a href="https://github.com/charmbracelet/wish/actions"><img src="https://github.com/charmbracelet/wish/workflows/Build/badge.svg" alt="Build Status"></a>
     <a href="https://codecov.io/gh/charmbracelet/wish"><img alt="Codecov branch" src="https://img.shields.io/codecov/c/github/charmbracelet/wish/main.svg"></a>
+    <a href="https://goreportcard.com/report/github.com/charmbracelet/wish"><img alt="Go Report Card" src="https://goreportcard.com/badge/github.com/charmbracelet/wish"></a>
 </p>
 
 
