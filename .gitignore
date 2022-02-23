@@ -9,3 +9,4 @@ examples/git/.repos
 !examples/scp
 .repos
 .ssh
+coverage.txt

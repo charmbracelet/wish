@@ -22,4 +22,8 @@ jobs:
         run: go build -v ./...
 
       - name: Test
-        run: go test -v ./...
+        run: go test -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt ./... -timeout 5m
+
+      - uses: codecov/codecov-action@v2
+        with:
+          file: ./coverage.txt
