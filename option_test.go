@@ -68,6 +68,10 @@ func TestWithAuthorizedKeys(t *testing.T) {
 	})
 }
 
+func TestWithTrustedUserCAKeys(t *testing.T) {
+	t.Skip("TODO: find a way to test this")
+}
+
 func requireEqual(tb testing.TB, a, b interface{}) {
 	tb.Helper()
 	if a != b {
