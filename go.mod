@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/gliderlabs/ssh v0.3.3
 	github.com/go-git/go-git/v5 v5.4.2
+	github.com/golang/mock v1.6.0
 	github.com/matryer/is v1.4.0
 	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739
 	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70
