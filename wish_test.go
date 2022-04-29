@@ -3,12 +3,13 @@ package wish
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/charmbracelet/wish/mocks"
-	"github.com/golang/mock/gomock"
+	"github.com/charmbracelet/wish/testsession"
+	"github.com/gliderlabs/ssh"
 )
 
 func TestNewServer(t *testing.T) {
@@ -29,27 +30,35 @@ func TestNewServerWithOptions(t *testing.T) {
 }
 
 func TestError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	t.Cleanup(ctrl.Finish)
-
-	s := mocks.NewMockSession(ctrl)
-	var w bytes.Buffer
-	s.EXPECT().Stderr().Return(&w)
-
-	Error(s, fmt.Errorf("foo"))
-	requireEqual(t, "foo\n", w.String())
+	eerr := errors.New("foo err")
+	sess := testsession.New(t, &ssh.Server{
+		Handler: func(s ssh.Session) {
+			Error(s, eerr)
+		},
+	}, nil)
+	var out bytes.Buffer
+	sess.Stderr = &out
+	if err := sess.Run(""); err != nil {
+		t.Errorf("expected no error, got %s", err)
+	}
+	if s := strings.TrimSpace(out.String()); s != eerr.Error() {
+		t.Errorf("expected %s, got %s", s, eerr)
+	}
 }
 
 func TestFatal(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	t.Cleanup(ctrl.Finish)
-
-	s := mocks.NewMockSession(ctrl)
-	var w bytes.Buffer
-	s.EXPECT().Stderr().Return(&w)
-	s.EXPECT().Exit(gomock.Eq(1))
-	s.EXPECT().Close()
-
-	Fatal(s, fmt.Errorf("foo"))
-	requireEqual(t, "foo\n", w.String())
+	err := errors.New("foo err")
+	sess := testsession.New(t, &ssh.Server{
+		Handler: func(s ssh.Session) {
+			Fatal(s, err)
+		},
+	}, nil)
+	var out bytes.Buffer
+	sess.Stderr = &out
+	if err := sess.Run(""); err == nil {
+		t.Error("expected an error, got nil")
+	}
+	if s := strings.TrimSpace(out.String()); s != err.Error() {
+		t.Errorf("expected %s, got %s", s, err)
+	}
 }
