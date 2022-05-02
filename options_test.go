@@ -1,6 +1,7 @@
 package wish
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
@@ -76,7 +77,8 @@ func TestWithTrustedUserCAKeys(t *testing.T) {
 	setup := func(tb testing.TB, certPath string) (*ssh.Server, *gossh.ClientConfig) {
 		s := &ssh.Server{
 			Handler: func(s ssh.Session) {
-				fmt.Fprintln(s, "hello")
+				cert, ok := s.PublicKey().(*gossh.Certificate)
+				fmt.Fprintf(s, "cert? %v - principals: %v - type: %v", ok, cert.ValidPrincipals, cert.CertType)
 			},
 		}
 		requireNoError(t, WithTrustedUserCAKeys("testdata/ca.pub")(s))
@@ -106,7 +108,11 @@ func TestWithTrustedUserCAKeys(t *testing.T) {
 
 	t.Run("valid", func(t *testing.T) {
 		s, cc := setup(t, "testdata/valid-cert.pub")
-		requireNoError(t, testsession.New(t, s, cc).Run(""))
+		sess := testsession.New(t, s, cc)
+		var b bytes.Buffer
+		sess.Stdout = &b
+		requireNoError(t, sess.Run(""))
+		requireEqual(t, "cert? true - principals: [foo] - type: 1", b.String())
 	})
 
 	t.Run("expired", func(t *testing.T) {
