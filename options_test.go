@@ -115,6 +115,13 @@ func TestWithTrustedUserCAKeys(t *testing.T) {
 		requireEqual(t, "cert? true - principals: [foo] - type: 1", b.String())
 	})
 
+	t.Run("valid wrong principal", func(t *testing.T) {
+		s, cc := setup(t, "testdata/valid-cert.pub")
+		cc.User = "not-foo"
+		_, err := testsession.NewClientSession(t, testsession.Listen(t, s), cc)
+		requireAuthError(t, err)
+	})
+
 	t.Run("expired", func(t *testing.T) {
 		s, cc := setup(t, "testdata/expired-cert.pub")
 		_, err := testsession.NewClientSession(t, testsession.Listen(t, s), cc)
