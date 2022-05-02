@@ -96,6 +96,14 @@ func TestWithTrustedUserCAKeys(t *testing.T) {
 			},
 		}
 	}
+
+	t.Run("invalid ca key", func(t *testing.T) {
+		s := &ssh.Server{}
+		if err := WithTrustedUserCAKeys("testdata/invalid-path")(s); err == nil {
+			t.Fatal("expedted an error, got nil")
+		}
+	})
+
 	t.Run("valid", func(t *testing.T) {
 		s, cc := setup(t, "testdata/valid-cert.pub")
 		requireNoError(t, testsession.New(t, s, cc).Run(""))
