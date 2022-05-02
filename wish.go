@@ -1,6 +1,8 @@
 package wish
 
 import (
+	"fmt"
+
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
 )
@@ -23,14 +25,26 @@ func NewServer(ops ...ssh.Option) (*ssh.Server, error) {
 		}
 	}
 	if len(s.HostSigners) == 0 {
-		k, err := keygen.New("", "", nil, keygen.Ed25519)
+		k, err := keygen.New("", nil, keygen.Ed25519)
 		if err != nil {
 			return nil, err
 		}
-		err = s.SetOption(WithHostKeyPEM(k.PrivateKeyPEM))
+		err = s.SetOption(WithHostKeyPEM(k.PrivateKeyPEM()))
 		if err != nil {
 			return nil, err
 		}
 	}
 	return s, nil
+}
+
+// Fatal takes prints the given error to the given session's STDERR and exits 1.
+func Fatal(s ssh.Session, err error) {
+	Error(s, err)
+	_ = s.Exit(1)
+	_ = s.Close()
+}
+
+// Error prints the given error the the session's STDERR.
+func Error(s ssh.Session, err error) {
+	_, _ = fmt.Fprintln(s.Stderr(), err)
 }

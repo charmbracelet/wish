@@ -81,7 +81,7 @@ func Middleware(rh CopyToClientHandler, wh CopyFromClientHandler) wish.Middlewar
 				err = copyFromClient(s, info, wh)
 			}
 			if err != nil {
-				errHandler(s, err)
+				wish.Fatal(s, err)
 				return
 			}
 
@@ -291,12 +291,6 @@ func GetInfo(cmd []string) Info {
 
 	info.Ok = true
 	return info
-}
-
-func errHandler(s ssh.Session, err error) {
-	_, _ = fmt.Fprintln(s.Stderr(), err)
-	_ = s.Exit(1)
-	_ = s.Close()
 }
 
 func octalPerms(info fs.FileMode) string {

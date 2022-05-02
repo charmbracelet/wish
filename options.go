@@ -52,7 +52,7 @@ func WithHostKeyPath(path string) ssh.Option {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		dir, f := filepath.Split(path)
 		n := strings.TrimSuffix(f, "_ed25519")
-		_, err := keygen.NewWithWrite(dir, n, nil, keygen.Ed25519)
+		_, err := keygen.NewWithWrite(filepath.Join(dir, n), nil, keygen.Ed25519)
 		if err != nil {
 			return func(*ssh.Server) error {
 				return err
