@@ -2,6 +2,7 @@ package wish
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 // WithAddress returns an ssh.Option that sets the address to listen on.
@@ -80,6 +82,49 @@ func WithAuthorizedKeys(path string) ssh.Option {
 				}
 			}
 			return false
+		})(s)
+	}
+}
+
+// WithTrustedUserCAKeys authorize certificates that are signed with the given
+// Certificate Authority public key, and are valid.
+// Analogous to the TrustedUserCAKeys OpenSSH option.
+func WithTrustedUserCAKeys(path string) ssh.Option {
+	return func(s *ssh.Server) error {
+		cas, err := parseAuthorizedKeys(path)
+		if err != nil {
+			return err
+		}
+
+		return WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+			cert, ok := key.(*gossh.Certificate)
+			if !ok {
+				// not a certificate...
+				return false
+			}
+
+			checker := &gossh.CertChecker{
+				IsUserAuthority: func(auth gossh.PublicKey) bool {
+					for _, ca := range cas {
+						if bytes.Equal(auth.Marshal(), ca.Marshal()) {
+							// its a cert signed by one of the CAs
+							return true
+						}
+					}
+					// it is a cert, but signed by another CA
+					return false
+				},
+			}
+
+			if !checker.IsUserAuthority(cert.SignatureKey) {
+				return false
+			}
+
+			if err := checker.CheckCert(ctx.User(), cert); err != nil {
+				return false
+			}
+
+			return true
 		})(s)
 	}
 }

@@ -15,6 +15,16 @@ import (
 // It automatically closes everything afterwards.
 func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) *gossh.Session {
 	tb.Helper()
+	sess, err := NewClientSession(tb, Listen(tb, srv), cfg)
+	if err != nil {
+		tb.Fatal(err)
+	}
+	return sess
+}
+
+// Listen starts a test server.
+func Listen(tb testing.TB, srv *ssh.Server) string {
+	tb.Helper()
 	l := newLocalListener(tb)
 	go func() {
 		if err := srv.Serve(l); err != nil && err != ssh.ErrServerClosed {
@@ -22,9 +32,9 @@ func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) *gossh.Session
 		}
 	}()
 	tb.Cleanup(func() {
-		srv.Close() // nolint: errcheck
+		_ = srv.Close()
 	})
-	return newClientSession(tb, l.Addr().String(), cfg)
+	return l.Addr().String()
 }
 
 func newLocalListener(tb testing.TB) net.Listener {
@@ -38,7 +48,8 @@ func newLocalListener(tb testing.TB) net.Listener {
 	return l
 }
 
-func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) *gossh.Session {
+// NewClientSession creates a new client session to the given address.
+func NewClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) (*gossh.Session, error) {
 	tb.Helper()
 	if config == nil {
 		config = &gossh.ClientConfig{
@@ -53,15 +64,15 @@ func newClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) *g
 	}
 	client, err := gossh.Dial("tcp", addr, config)
 	if err != nil {
-		tb.Fatal(err)
+		return nil, err
 	}
 	session, err := client.NewSession()
 	if err != nil {
-		tb.Fatal(err)
+		return nil, err
 	}
 	tb.Cleanup(func() {
-		session.Close() // nolint: errcheck
-		client.Close()  // nolint: errcheck
+		_ = session.Close()
+		_ = client.Close()
 	})
-	return session
+	return session, nil
 }
