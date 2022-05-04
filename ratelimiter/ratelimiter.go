@@ -14,26 +14,15 @@ import (
 // ErrRateLimitExceeded happens when the connection was denied due to the rate limit being exceeded.
 var ErrRateLimitExceeded = errors.New("rate limit exceeded, please try again later")
 
-// KeyFn defines how the rate limit key should be composed.
-type KeyFn func(s ssh.Session) string
-
-// NewLimiterFn should construct a new rate limiter instance.
-type NewLimiterFn func() *rate.Limiter
-
-// DefaultKeyFn is the default rate limiter key implementation.
-func DefaultKeyFn(s ssh.Session) string {
-	return s.RemoteAddr().String()
+type RateLimiter interface {
+	Allow(s ssh.Session) error
 }
 
 // Middleware provides a new rate limiting Middleware.
-func Middleware(
-	limiterFn NewLimiterFn,
-	keyFn KeyFn,
-) wish.Middleware {
-	limiters := newLimiters(limiterFn)
+func Middleware(limiter RateLimiter) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			if err := limiters.Allow(keyFn(s)); err != nil {
+			if err := limiter.Allow(s); err != nil {
 				wish.Fatal(s, err)
 				return
 			}
@@ -43,26 +32,33 @@ func Middleware(
 	}
 }
 
-type limiters struct {
-	mut   sync.Mutex
-	rates map[string]*rate.Limiter
-	fn    NewLimiterFn
-}
-
-func newLimiters(fn NewLimiterFn) *limiters {
+// NewRateLimiter returns a new RateLimiter that allows events up to rate r
+// and permits bursts of at most b tokens.
+// It creates one in-memory map of rate.Limiter for each remote address.
+func NewRateLimiter(r rate.Limit, b int) RateLimiter {
 	return &limiters{
 		rates: map[string]*rate.Limiter{},
-		fn:    fn,
+		r:     r,
+		b:     b,
 	}
 }
 
-func (r *limiters) Allow(key string) error {
+type limiters struct {
+	mut   sync.Mutex
+	rates map[string]*rate.Limiter
+	r     rate.Limit
+	b     int
+}
+
+func (r *limiters) Allow(s ssh.Session) error {
 	r.mut.Lock()
 	defer r.mut.Unlock()
 
+	key := s.RemoteAddr().String()
+
 	limiter, ok := r.rates[key]
 	if !ok {
-		limiter = r.fn()
+		limiter = rate.NewLimiter(r.r, r.b)
 	}
 	allowed := limiter.Allow()
 	r.rates[key] = limiter
