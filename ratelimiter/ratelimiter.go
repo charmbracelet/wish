@@ -4,10 +4,11 @@ package ratelimiter
 import (
 	"errors"
 	"log"
-	"sync"
+	"net"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
+	"github.com/golang/groupcache/lru"
 	"golang.org/x/time/rate"
 )
 
@@ -32,40 +33,48 @@ func Middleware(limiter RateLimiter) wish.Middleware {
 	}
 }
 
-// NewRateLimiter returns a new RateLimiter that allows events up to rate r
-// and permits bursts of at most b tokens.
-// It creates one in-memory map of rate.Limiter for each remote address.
-func NewRateLimiter(r rate.Limit, b int) RateLimiter {
+// NewRateLimiter returns a new RateLimiter that allows events up to rate rate,
+// permits bursts of at most burst tokens and keeps a cache of maxEntries
+// limiters.
+//
+// Internally, it creates a LRU Cache of *rate.Limiter, in which the key is
+// the remote IP address.
+func NewRateLimiter(r rate.Limit, burst int, maxEntries int) RateLimiter {
 	return &limiters{
-		rates: map[string]*rate.Limiter{},
-		r:     r,
-		b:     b,
+		rate:  r,
+		burst: burst,
+		cache: lru.New(maxEntries),
 	}
 }
 
 type limiters struct {
-	mut   sync.Mutex
-	rates map[string]*rate.Limiter
-	r     rate.Limit
-	b     int
+	cache *lru.Cache
+	rate  rate.Limit
+	burst int
 }
 
 func (r *limiters) Allow(s ssh.Session) error {
-	r.mut.Lock()
-	defer r.mut.Unlock()
-
-	key := s.RemoteAddr().String()
-
-	limiter, ok := r.rates[key]
-	if !ok {
-		limiter = rate.NewLimiter(r.r, r.b)
+	var key string
+	switch addr := s.RemoteAddr().(type) {
+	case *net.TCPAddr:
+		key = addr.IP.String()
+	default:
+		key = addr.String()
 	}
-	allowed := limiter.Allow()
-	r.rates[key] = limiter
+
+	var allowed bool
+	limiter, ok := r.cache.Get(key)
+	if ok {
+		allowed = limiter.(*rate.Limiter).Allow()
+	} else {
+		limiter := rate.NewLimiter(r.rate, r.burst)
+		allowed = limiter.Allow()
+		r.cache.Add(key, limiter)
+	}
+
 	log.Printf("rate limiter key: %q, allowed? %v", key, allowed)
 	if allowed {
 		return nil
 	}
-	log.Println(limiter)
 	return ErrRateLimitExceeded
 }
