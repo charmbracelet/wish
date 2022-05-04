@@ -15,6 +15,10 @@ import (
 // ErrRateLimitExceeded happens when the connection was denied due to the rate limit being exceeded.
 var ErrRateLimitExceeded = errors.New("rate limit exceeded, please try again later")
 
+// RateLimiter implementations should check if a given session is allowed to
+// proceed or not, returning an error if they aren't.
+// Its up to the implementation to handle what identifies an session as well
+// as the implementation details of these limits.
 type RateLimiter interface {
 	Allow(s ssh.Session) error
 }
