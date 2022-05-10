@@ -46,5 +46,5 @@ func Fatal(s ssh.Session, err error) {
 
 // Error prints the given error the the session's STDERR.
 func Error(s ssh.Session, err error) {
-	_, _ = fmt.Fprintln(s.Stderr(), err)
+	_, _ = fmt.Fprintf(s.Stderr(), "%s\n\r", err)
 }
