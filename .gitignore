@@ -1,4 +1,5 @@
 examples/*
+!examples/simple
 !examples/bubbletea
 examples/bubbletea/bubbletea
 examples/bubbletea/.ssh
