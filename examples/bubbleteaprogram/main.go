@@ -20,16 +20,18 @@ import (
 	"github.com/muesli/termenv"
 )
 
-const host = "localhost"
-const port = 23234
+const (
+	host = "localhost"
+	port = 23234
+)
 
 func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
-			myCustomBubbleteaMiddleware(),
 			lm.Middleware(),
+			myCustomBubbleteaMiddleware(),
 		),
 	)
 	if err != nil {
@@ -61,10 +63,8 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 		p := tea.NewProgram(m, opts...)
 		go func() {
 			for {
-				select {
-				case <-time.After(1 * time.Second):
-					p.Send(timeMsg(time.Now()))
-				}
+				<-time.After(1 * time.Second)
+				p.Send(timeMsg(time.Now()))
 			}
 		}()
 		return p
@@ -73,7 +73,7 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 		pty, _, active := s.Pty()
 		if !active {
 			fmt.Println("no active terminal, skipping")
-			s.Exit(1)
+			_ = s.Exit(1)
 			return nil
 		}
 		m := model{

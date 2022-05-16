@@ -19,16 +19,18 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-const host = "localhost"
-const port = 23234
+const (
+	host = "localhost"
+	port = 23234
+)
 
 func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
-			bm.Middleware(teaHandler),
 			lm.Middleware(),
+			bm.Middleware(teaHandler),
 		),
 	)
 	if err != nil {
@@ -56,7 +58,7 @@ func main() {
 // You can wire any Bubble Tea model up to the middleware with a function that
 // handles the incoming ssh.Session. Here we just grab the terminal info and
 // pass it to the new model. You can also return tea.ProgramOptions (such as
-// teaw.WithAltScreen) on a session by session basis
+// tea.WithAltScreen) on a session by session basis.
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	pty, _, active := s.Pty()
 	if !active {

@@ -19,9 +19,11 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-const port = 23233
-const host = "localhost"
-const repoDir = ".repos"
+const (
+	port    = 23233
+	host    = "localhost"
+	repoDir = ".repos"
+)
 
 type app struct {
 	access gm.AccessLevel
@@ -57,9 +59,9 @@ func main() {
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/git_server_ed25519"),
 		wish.WithMiddleware(
+			lm.Middleware(),
 			gm.Middleware(repoDir, a),
 			gitListMiddleware,
-			lm.Middleware(),
 		),
 	)
 	if err != nil {
