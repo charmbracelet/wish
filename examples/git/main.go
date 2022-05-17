@@ -59,9 +59,9 @@ func main() {
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/git_server_ed25519"),
 		wish.WithMiddleware(
-			lm.Middleware(),
 			gm.Middleware(repoDir, a),
 			gitListMiddleware,
+			lm.Middleware(),
 		),
 	)
 	if err != nil {

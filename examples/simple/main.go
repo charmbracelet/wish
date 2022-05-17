@@ -24,13 +24,13 @@ func main() {
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
-			logging.Middleware(),
 			func(h ssh.Handler) ssh.Handler {
 				return func(s ssh.Session) {
 					fmt.Fprintln(s, "Hello, world!")
 					h(s)
 				}
 			},
+			logging.Middleware(),
 		),
 	)
 	if err != nil {

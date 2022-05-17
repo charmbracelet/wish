@@ -30,8 +30,8 @@ func main() {
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
-			lm.Middleware(),
 			myCustomBubbleteaMiddleware(),
+			lm.Middleware(),
 		),
 	)
 	if err != nil {
