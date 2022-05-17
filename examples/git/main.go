@@ -19,9 +19,11 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-const port = 23233
-const host = "localhost"
-const repoDir = ".repos"
+const (
+	port    = 23233
+	host    = "localhost"
+	repoDir = ".repos"
+)
 
 type app struct {
 	access gm.AccessLevel
