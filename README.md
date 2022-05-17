@@ -27,6 +27,13 @@ and should be easy to integrate into any existing projects.
 
 ## Middleware
 
+Wish middlewares are analogous to those in several HTTP frameworks.
+They are essentially SSH handlers that you can use to do specific tasks,
+and then call the next middleware.
+
+Notice that middlewares are composed from first to last,
+which means the last one is executed first.
+
 ### Bubble Tea
 
 The [`bubbletea`](bubbletea) middleware makes it easy to serve any

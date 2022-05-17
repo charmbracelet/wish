@@ -35,6 +35,7 @@ func WithVersion(version string) ssh.Option {
 // WithMiddleware composes the provided Middleware and return a ssh.Option.
 // This useful if you manually create an ssh.Server and want to set the
 // Server.Handler.
+//
 // Notice that middlewares are composed from first to last, which means the last one is executed first.
 func WithMiddleware(mw ...Middleware) ssh.Option {
 	return func(s *ssh.Server) error {
