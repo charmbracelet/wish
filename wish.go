@@ -2,6 +2,7 @@ package wish
 
 import (
 	"fmt"
+	"io"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
@@ -37,14 +38,60 @@ func NewServer(ops ...ssh.Option) (*ssh.Server, error) {
 	return s, nil
 }
 
-// Fatal takes prints the given error to the given session's STDERR and exits 1.
-func Fatal(s ssh.Session, err error) {
-	Error(s, err)
+// Fatal prints to the given session's STDERR and exits 1.
+func Fatal(s ssh.Session, v ...interface{}) {
+	Error(s, v...)
+	_ = s.Exit(1)
+	_ = s.Close()
+}
+
+// Fatalf formats according to the given format, prints to the session's STDERR
+// followed by an exit 1.
+func Fatalf(s ssh.Session, f string, v ...interface{}) {
+	Errorf(s, f, v...)
+	_ = s.Exit(1)
+	_ = s.Close()
+}
+
+// Fatalln formats according to the default format, prints to the session's
+// STDERR followed by an exit 1.
+func Fatalln(s ssh.Session, v ...interface{}) {
+	Errorln(s, v...)
 	_ = s.Exit(1)
 	_ = s.Close()
 }
 
 // Error prints the given error the the session's STDERR.
-func Error(s ssh.Session, err error) {
-	_, _ = fmt.Fprintf(s.Stderr(), "%s\n\r", err)
+func Error(s ssh.Session, v ...interface{}) {
+	_, _ = fmt.Fprint(s.Stderr(), v...)
+}
+
+// Errorf formats according to the given format and prints to the session's STDERR.
+func Errorf(s ssh.Session, f string, v ...interface{}) {
+	_, _ = fmt.Fprintf(s.Stderr(), f, v...)
+}
+
+// Errorf formats according to the default format and prints to the session's STDERR.
+func Errorln(s ssh.Session, v ...interface{}) {
+	_, _ = fmt.Fprintln(s.Stderr(), v...)
+}
+
+// Print writes to the session's STDOUT followed.
+func Print(s ssh.Session, v ...interface{}) {
+	_, _ = fmt.Fprint(s, v...)
+}
+
+// Printf formats according to the given format and writes to the session's STDOUT.
+func Printf(s ssh.Session, f string, v ...interface{}) {
+	_, _ = fmt.Fprintf(s, f, v...)
+}
+
+// Println formats according to the default format and writes to the session's STDOUT.
+func Println(s ssh.Session, v ...interface{}) {
+	_, _ = fmt.Fprintln(s, v...)
+}
+
+// WriteString writes the given string to the session's STDOUT.
+func WriteString(s ssh.Session, v string) (int, error) {
+	return io.WriteString(s, v)
 }

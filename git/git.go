@@ -1,6 +1,7 @@
 package git
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,13 +14,13 @@ import (
 )
 
 // ErrNotAuthed represents unauthorized access.
-var ErrNotAuthed = fmt.Errorf("you are not authorized to do this")
+var ErrNotAuthed = errors.New("you are not authorized to do this")
 
 // ErrSystemMalfunction represents a general system error returned to clients.
-var ErrSystemMalfunction = fmt.Errorf("something went wrong")
+var ErrSystemMalfunction = errors.New("something went wrong")
 
 // ErrInvalidRepo represents an attempt to access a non-existent repo.
-var ErrInvalidRepo = fmt.Errorf("invalid repo")
+var ErrInvalidRepo = errors.New("invalid repo")
 
 // AccessLevel is the level of access allowed to a repo.
 type AccessLevel int
@@ -78,12 +79,12 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 					case ReadWriteAccess, AdminAccess:
 						err := gitReceivePack(s, gc, repoDir, repo)
 						if err != nil {
-							fatalGit(s, ErrSystemMalfunction)
+							Fatal(s, ErrSystemMalfunction)
 						} else {
 							gh.Push(repo, pk)
 						}
 					default:
-						fatalGit(s, ErrNotAuthed)
+						Fatal(s, ErrNotAuthed)
 					}
 					return
 				case "git-upload-archive", "git-upload-pack":
@@ -92,14 +93,14 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 						err := gitUploadPack(s, gc, repoDir, repo)
 						switch err {
 						case ErrInvalidRepo:
-							fatalGit(s, ErrInvalidRepo)
+							Fatal(s, ErrInvalidRepo)
 						case nil:
 							gh.Fetch(repo, pk)
 						default:
-							fatalGit(s, ErrSystemMalfunction)
+							Fatal(s, ErrSystemMalfunction)
 						}
 					default:
-						fatalGit(s, ErrNotAuthed)
+						Fatal(s, ErrNotAuthed)
 					}
 					return
 				}
@@ -157,11 +158,12 @@ func fileExists(path string) (bool, error) {
 	return true, err
 }
 
-func fatalGit(s ssh.Session, err error) {
+// Fatal prints to the session's STDOUT as a git response and exit 1.
+func Fatal(s ssh.Session, v ...interface{}) {
+	msg := fmt.Sprint(v...)
 	// hex length includes 4 byte length prefix and ending newline
-	msg := err.Error()
 	pktLine := fmt.Sprintf("%04x%s\n", len(msg)+5, msg)
-	_, _ = s.Write([]byte(pktLine))
+	_, _ = wish.WriteString(s, pktLine)
 	s.Exit(1) // nolint: errcheck
 }
 
