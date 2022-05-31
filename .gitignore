@@ -11,3 +11,6 @@ examples/git/.repos
 .repos
 .ssh
 coverage.txt
+
+# MacOS specific
+.DS_Store
