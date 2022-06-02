@@ -25,6 +25,22 @@ Wish is an SSH server with sensible defaults and a collection of middleware that
 makes building SSH apps easy. Wish is built on [gliderlabs/ssh][gliderlabs/ssh]
 and should be easy to integrate into any existing projects.
 
+## What are SSH Apps?
+
+Usually, when we think about SSH, we think about remote shell access into servers,
+most commonly through `openssh-server`.
+
+That's a perfectly valid and probably the most common use of SSH, but it can do so much more than that.
+Just like HTTP, SMTP, FTP and others, SSH is a protocol!
+It is a cryptographic network protocol for operating network services securely over an unsecured network. [^1]
+
+[^1]: https://en.wikipedia.org/wiki/Secure_Shell
+
+That means, among other things, that we can write custom SSH servers, without touching `openssh-server`,
+so we can securely do more things than just providing a shell.
+
+Wish is a library that helps writing these kind of apps using Go.
+
 ## Middleware
 
 Wish middlewares are analogous to those in several HTTP frameworks.
