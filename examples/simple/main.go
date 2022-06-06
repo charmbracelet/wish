@@ -26,7 +26,7 @@ func main() {
 		wish.WithMiddleware(
 			func(h ssh.Handler) ssh.Handler {
 				return func(s ssh.Session) {
-					wish.Println(s, "Hello world!")
+					fmt.Fprintln(s, "Hello, world!")
 					h(s)
 				}
 			},
