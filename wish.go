@@ -47,6 +47,8 @@ func Fatal(s ssh.Session, v ...interface{}) {
 
 // Fatalf formats according to the given format, prints to the session's STDERR
 // followed by an exit 1.
+//
+// Notice that this might cause formatting issues if you don't add a \r\n in the end of your string.
 func Fatalf(s ssh.Session, f string, v ...interface{}) {
 	Errorf(s, f, v...)
 	_ = s.Exit(1)
@@ -54,9 +56,10 @@ func Fatalf(s ssh.Session, f string, v ...interface{}) {
 }
 
 // Fatalln formats according to the default format, prints to the session's
-// STDERR followed by an exit 1.
+// STDERR, followed by a new line and an exit 1.
 func Fatalln(s ssh.Session, v ...interface{}) {
 	Errorln(s, v...)
+	Errorf(s, "\r")
 	_ = s.Exit(1)
 	_ = s.Close()
 }
