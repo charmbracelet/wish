@@ -6,14 +6,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/logging"
 	"github.com/gliderlabs/ssh"
-	gossh "golang.org/x/crypto/ssh"
 )
 
 const (
@@ -29,10 +27,14 @@ func main() {
 			return true
 		}),
 		wish.WithMiddleware(
+			logging.Middleware(),
 			func(h ssh.Handler) ssh.Handler {
 				return func(s ssh.Session) {
-					switch strings.TrimSpace(string(gossh.MarshalAuthorizedKey(s.PublicKey()))) {
-					case "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILxWe2rXKoiO6W14LYPVfJKzRfJ1f3Jhzxrgjc/D4tU7":
+					carlos, _, _, _, _ := ssh.ParseAuthorizedKey(
+						[]byte("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILxWe2rXKoiO6W14LYPVfJKzRfJ1f3Jhzxrgjc/D4tU7"),
+					)
+					switch {
+					case ssh.KeysEqual(s.PublicKey(), carlos):
 						wish.Println(s, "Hey Carlos!")
 					default:
 						wish.Println(s, "Hey, I don't know who you are!")
@@ -40,7 +42,6 @@ func main() {
 					h(s)
 				}
 			},
-			logging.Middleware(),
 		),
 	)
 	if err != nil {
