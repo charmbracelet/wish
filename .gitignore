@@ -1,5 +1,6 @@
 examples/*
 !examples/simple
+!examples/identity
 !examples/bubbletea
 examples/bubbletea/bubbletea
 examples/bubbletea/.ssh
