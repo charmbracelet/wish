@@ -3,9 +3,11 @@ package git
 import (
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
@@ -77,7 +79,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				case "git-receive-pack":
 					switch access {
 					case ReadWriteAccess, AdminAccess:
-						err := gitReceivePack(s, gc, repoDir, repo)
+						err := gitPack(s, gc, repoDir, repo)
 						if err != nil {
 							Fatal(s, ErrSystemMalfunction)
 						} else {
@@ -90,13 +92,14 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				case "git-upload-archive", "git-upload-pack":
 					switch access {
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
-						err := gitUploadPack(s, gc, repoDir, repo)
+						err := gitPack(s, gc, repoDir, repo)
 						switch err {
 						case ErrInvalidRepo:
 							Fatal(s, ErrInvalidRepo)
 						case nil:
 							gh.Fetch(repo, pk)
 						default:
+							log.Printf("unknown git error: %s", err)
 							Fatal(s, ErrSystemMalfunction)
 						}
 					default:
@@ -110,41 +113,36 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 	}
 }
 
-func gitReceivePack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
-	err := ensureRepo(repoDir, repo)
-	if err != nil {
-		return err
-	}
+func gitPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
+	cmd := strings.TrimPrefix(gitCmd, "git-")
 	rp := filepath.Join(repoDir, repo)
-	err = runCmd(s, "./", gitCmd, rp)
-	if err != nil {
-		return err
+	switch gitCmd {
+	case "git-upload-archive", "git-upload-pack":
+		exists, err := fileExists(rp)
+		if !exists {
+			return ErrInvalidRepo
+		}
+		if err != nil {
+			return err
+		}
+		return runGit(s, "", cmd, rp)
+	case "git-receive-pack":
+		err := ensureRepo(repoDir, repo)
+		if err != nil {
+			return err
+		}
+		err = runGit(s, "", cmd, rp)
+		if err != nil {
+			return err
+		}
+		err = ensureDefaultBranch(s, rp)
+		if err != nil {
+			return err
+		}
+		return runGit(s, rp, "update-server-info")
+	default:
+		return fmt.Errorf("unknown git command: %s", gitCmd)
 	}
-	err = ensureDefaultBranch(s, rp)
-	if err != nil {
-		return err
-	}
-	err = runCmd(s, rp, "git", "update-server-info")
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func gitUploadPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
-	rp := filepath.Join(repoDir, repo)
-	exists, err := fileExists(rp)
-	if !exists {
-		return ErrInvalidRepo
-	}
-	if err != nil {
-		return err
-	}
-	err = runCmd(s, "./", gitCmd, rp)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func fileExists(path string) (bool, error) {
@@ -192,8 +190,8 @@ func ensureRepo(dir string, repo string) error {
 	return nil
 }
 
-func runCmd(s ssh.Session, dir, name string, args ...string) error {
-	usi := exec.CommandContext(s.Context(), name, args...)
+func runGit(s ssh.Session, dir string, args ...string) error {
+	usi := exec.CommandContext(s.Context(), "git", args...)
 	usi.Dir = dir
 	usi.Stdout = s
 	usi.Stdin = s
@@ -220,7 +218,7 @@ func ensureDefaultBranch(s ssh.Session, repoPath string) error {
 	// Rename the default branch to the first branch available
 	_, err = r.Head()
 	if err == plumbing.ErrReferenceNotFound {
-		err = runCmd(s, repoPath, "git", "branch", "-M", fb.Name().Short())
+		err = runGit(s, repoPath, "branch", "-M", fb.Name().Short())
 		if err != nil {
 			return err
 		}

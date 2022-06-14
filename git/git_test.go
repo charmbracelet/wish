@@ -47,31 +47,31 @@ func TestGitMiddleware(t *testing.T) {
 
 	t.Run("create repo on master", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "master"))
-		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo1"))
-		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireNoError(t, runGit(t, pkPath, cwd, "push", "origin", "master"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "master"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo1"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "master"))
 		requireHasAction(t, hooks.pushes, pubkey, "repo1")
 	})
 
 	t.Run("create repo on main", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "main"))
-		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo2"))
-		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireNoError(t, runGit(t, pkPath, cwd, "push", "origin", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo2"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
 		requireHasAction(t, hooks.pushes, pubkey, "repo2")
 	})
 
 	t.Run("create and clone repo", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "main"))
-		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo3"))
-		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireNoError(t, runGit(t, pkPath, cwd, "push", "origin", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo3"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
 
 		cwd = t.TempDir()
-		requireNoError(t, runGit(t, pkPath, cwd, "clone", remote+"/repo3"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "clone", remote+"/repo3"))
 
 		requireHasAction(t, hooks.pushes, pubkey, "repo3")
 		requireHasAction(t, hooks.fetches, pubkey, "repo3")
@@ -79,38 +79,38 @@ func TestGitMiddleware(t *testing.T) {
 
 	t.Run("clone repo that doesnt exist", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireError(t, runGit(t, pkPath, cwd, "clone", remote+"/repo4"))
+		requireError(t, runGitHelper(t, pkPath, cwd, "clone", remote+"/repo4"))
 	})
 
 	t.Run("clone repo with no access", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireError(t, runGit(t, pkPath, cwd, "clone", remote+"/repo5"))
+		requireError(t, runGitHelper(t, pkPath, cwd, "clone", remote+"/repo5"))
 	})
 
 	t.Run("push repo with with readonly", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "main"))
-		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo6"))
-		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireError(t, runGit(t, pkPath, cwd, "push", "origin", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo6"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
 	})
 
 	t.Run("create and clone repo on weird branch", func(t *testing.T) {
 		cwd := t.TempDir()
-		requireNoError(t, runGit(t, pkPath, cwd, "init", "-b", "a-weird-branch-name"))
-		requireNoError(t, runGit(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo7"))
-		requireNoError(t, runGit(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
-		requireNoError(t, runGit(t, pkPath, cwd, "push", "origin", "a-weird-branch-name"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "a-weird-branch-name"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/repo7"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "a-weird-branch-name"))
 
 		cwd = t.TempDir()
-		requireNoError(t, runGit(t, pkPath, cwd, "clone", remote+"/repo7"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "clone", remote+"/repo7"))
 
 		requireHasAction(t, hooks.pushes, pubkey, "repo7")
 		requireHasAction(t, hooks.fetches, pubkey, "repo7")
 	})
 }
 
-func runGit(t *testing.T, pk, cwd string, args ...string) error {
+func runGitHelper(t *testing.T, pk, cwd string, args ...string) error {
 	t.Helper()
 
 	allArgs := []string{
