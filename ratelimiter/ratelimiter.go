@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
-	"github.com/golang/groupcache/lru"
+	lru "github.com/hashicorp/golang-lru"
 	"golang.org/x/time/rate"
 )
 
@@ -44,10 +44,15 @@ func Middleware(limiter RateLimiter) wish.Middleware {
 // Internally, it creates a LRU Cache of *rate.Limiter, in which the key is
 // the remote IP address.
 func NewRateLimiter(r rate.Limit, burst int, maxEntries int) RateLimiter {
+	if maxEntries <= 0 {
+		maxEntries = 1
+	}
+	// only possible error is if maxEntries is <= 0, which is prevented above.
+	cache, _ := lru.New(maxEntries)
 	return &limiters{
 		rate:  r,
 		burst: burst,
-		cache: lru.New(maxEntries),
+		cache: cache,
 	}
 }
 
