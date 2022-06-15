@@ -10,6 +10,32 @@ import (
 	"golang.org/x/time/rate"
 )
 
+func TestRateLimiterNoLimit(t *testing.T) {
+	s := &ssh.Server{
+		Handler: Middleware(NewRateLimiter(rate.Limit(0), 0, 5))(func(s ssh.Session) {
+			s.Write([]byte("hello"))
+		}),
+	}
+
+	sess := testsession.New(t, s, nil)
+	if err := sess.Run(""); err == nil {
+		t.Fatal("expected an error, got nil")
+	}
+}
+
+func TestRateLimiterZeroedMaxEntried(t *testing.T) {
+	s := &ssh.Server{
+		Handler: Middleware(NewRateLimiter(rate.Limit(1), 1, 0))(func(s ssh.Session) {
+			s.Write([]byte("hello"))
+		}),
+	}
+
+	sess := testsession.New(t, s, nil)
+	if err := sess.Run(""); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
 func TestRateLimiter(t *testing.T) {
 	s := &ssh.Server{
 		Handler: Middleware(NewRateLimiter(rate.Limit(10), 4, 1))(func(s ssh.Session) {

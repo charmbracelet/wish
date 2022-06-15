@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.4.0
 	github.com/gliderlabs/ssh v0.3.4
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/matryer/is v1.4.0
 	github.com/muesli/termenv v0.11.1-0.20220212125758-44cd13922739
 	golang.org/x/crypto v0.0.0-20220307211146-efcb8507fb70
