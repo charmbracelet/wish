@@ -72,8 +72,7 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 	teaHandler := func(s ssh.Session) *tea.Program {
 		pty, _, active := s.Pty()
 		if !active {
-			fmt.Println("no active terminal, skipping")
-			_ = s.Exit(1)
+			wish.Fatalln(s, "no active terminal, skipping")
 			return nil
 		}
 		m := model{

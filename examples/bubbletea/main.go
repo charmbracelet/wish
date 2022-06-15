@@ -62,7 +62,7 @@ func main() {
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	pty, _, active := s.Pty()
 	if !active {
-		fmt.Println("no active terminal, skipping")
+		wish.Fatalln(s, "no active terminal, skipping")
 		return nil, nil
 	}
 	m := model{

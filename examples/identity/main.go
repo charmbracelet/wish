@@ -23,14 +23,25 @@ func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
+		wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+			return true
+		}),
 		wish.WithMiddleware(
+			logging.Middleware(),
 			func(h ssh.Handler) ssh.Handler {
 				return func(s ssh.Session) {
-					wish.Println(s, "Hello, world!")
+					carlos, _, _, _, _ := ssh.ParseAuthorizedKey(
+						[]byte("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILxWe2rXKoiO6W14LYPVfJKzRfJ1f3Jhzxrgjc/D4tU7"),
+					)
+					switch {
+					case ssh.KeysEqual(s.PublicKey(), carlos):
+						wish.Println(s, "Hey Carlos!")
+					default:
+						wish.Println(s, "Hey, I don't know who you are!")
+					}
 					h(s)
 				}
 			},
-			logging.Middleware(),
 		),
 	)
 	if err != nil {
