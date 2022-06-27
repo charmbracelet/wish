@@ -54,6 +54,7 @@ func main() {
 					rootCmd.SetArgs(s.Command())
 					rootCmd.SetIn(s)
 					rootCmd.SetOut(s)
+					rootCmd.SetErr(s.Stderr())
 					rootCmd.Execute()
 					h(s)
 				}
