@@ -55,7 +55,11 @@ func main() {
 					rootCmd.SetIn(s)
 					rootCmd.SetOut(s)
 					rootCmd.SetErr(s.Stderr())
-					rootCmd.Execute()
+					if err := rootCmd.Execute(); err != nil {
+						s.Exit(1)
+						return
+					}
+
 					h(s)
 				}
 			},
