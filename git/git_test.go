@@ -201,7 +201,7 @@ func (h *testHooks) AuthRepo(repo string, key ssh.PublicKey) AccessLevel {
 	return NoAccess
 }
 
-func (h *testHooks) Push(repo string, key ssh.PublicKey) {
+func (h *testHooks) Push(repo string, opts []HookOpt, key ssh.PublicKey) {
 	h.Lock()
 	defer h.Unlock()
 

@@ -1,8 +1,10 @@
 package git
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -13,6 +15,7 @@ import (
 	"github.com/gliderlabs/ssh"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/protocol/packp"
 )
 
 // ErrNotAuthed represents unauthorized access.
@@ -49,13 +52,20 @@ const (
 // Deprecated: use Hooks instead.
 type GitHooks = Hooks // nolint: revive
 
+// HookOpt is a set of git hooks options.
+type HookOpt struct {
+	OldSha string
+	NewSha string
+	Ref    string
+}
+
 // Hooks is an interface that allows for custom authorization
 // implementations and post push/fetch notifications. Prior to git access,
 // AuthRepo will be called with the ssh.Session public key and the repo name.
 // Implementers return the appropriate AccessLevel.
 type Hooks interface {
 	AuthRepo(string, ssh.PublicKey) AccessLevel
-	Push(string, ssh.PublicKey)
+	Push(string, []HookOpt, ssh.PublicKey)
 	Fetch(string, ssh.PublicKey)
 }
 
@@ -79,11 +89,9 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				case "git-receive-pack":
 					switch access {
 					case ReadWriteAccess, AdminAccess:
-						err := gitPack(s, gc, repoDir, repo)
+						err := gitPack(s, gh, gc, repoDir, repo)
 						if err != nil {
 							Fatal(s, ErrSystemMalfunction)
-						} else {
-							gh.Push(repo, pk)
 						}
 					default:
 						Fatal(s, ErrNotAuthed)
@@ -92,7 +100,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				case "git-upload-archive", "git-upload-pack":
 					switch access {
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
-						err := gitPack(s, gc, repoDir, repo)
+						err := gitPack(s, gh, gc, repoDir, repo)
 						switch err {
 						case ErrInvalidRepo:
 							Fatal(s, ErrInvalidRepo)
@@ -113,7 +121,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 	}
 }
 
-func gitPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
+func gitPack(s ssh.Session, gh Hooks, gitCmd string, repoDir string, repo string) error {
 	cmd := strings.TrimPrefix(gitCmd, "git-")
 	rp := filepath.Join(repoDir, repo)
 	switch gitCmd {
@@ -131,10 +139,28 @@ func gitPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
 		if err != nil {
 			return err
 		}
-		err = runGit(s, "", cmd, rp)
-		if err != nil {
+		var in bytes.Buffer
+		r := io.TeeReader(s, &in)
+		usi := exec.CommandContext(s.Context(), "git", cmd, rp)
+		usi.Dir = ""
+		usi.Stdout = s
+		usi.Stdin = r
+		if err := usi.Run(); err != nil {
 			return err
 		}
+		rr := packp.NewReferenceUpdateRequest()
+		if err = rr.Decode(&in); err != nil {
+			return err
+		}
+		opts := []HookOpt{}
+		for _, c := range rr.Commands {
+			opts = append(opts, HookOpt{
+				OldSha: c.Old.String(),
+				NewSha: c.New.String(),
+				Ref:    c.Name.String(),
+			})
+		}
+		gh.Push(repo, opts, s.PublicKey())
 		err = ensureDefaultBranch(s, rp)
 		if err != nil {
 			return err
