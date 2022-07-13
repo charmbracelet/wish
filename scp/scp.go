@@ -84,8 +84,6 @@ func Middleware(rh CopyToClientHandler, wh CopyFromClientHandler) wish.Middlewar
 				wish.Fatal(s, err)
 				return
 			}
-
-			sh(s)
 		}
 	}
 }
