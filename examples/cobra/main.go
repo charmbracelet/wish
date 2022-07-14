@@ -55,6 +55,7 @@ func main() {
 					rootCmd.SetIn(s)
 					rootCmd.SetOut(s)
 					rootCmd.SetErr(s.Stderr())
+					rootCmd.CompletionOptions.DisableDefaultCmd = true
 					if err := rootCmd.Execute(); err != nil {
 						s.Exit(1)
 						return
