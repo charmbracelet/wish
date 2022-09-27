@@ -1,11 +1,15 @@
 package bubbletea
 
 import (
+	"fmt"
 	"log"
+	"os"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/wish"
+	"github.com/creack/pty"
 	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 )
@@ -49,7 +53,14 @@ func MiddlewareWithColorProfile(bth Handler, cp termenv.Profile) wish.Middleware
 		if m == nil {
 			return nil
 		}
-		opts = append(opts, tea.WithInput(s), tea.WithOutput(s))
+		out, err := outputFromSession(s)
+		if err != nil {
+			wish.Fatalln(s, err.Error())
+			return nil
+		}
+		pro := out.ColorProfile()
+		lipgloss.SetColorProfile(pro)
+		opts = append(opts, tea.WithInput(s), tea.WithOutput(out))
 		return tea.NewProgram(m, opts...)
 	}
 	return MiddlewareWithProgramHandler(h, cp)
@@ -64,22 +75,23 @@ func MiddlewareWithColorProfile(bth Handler, cp termenv.Profile) wish.Middleware
 // otherwise the program will not function properly.
 func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
-		lipgloss.SetColorProfile(cp)
+		// lipgloss.SetColorProfile(cp)
+
 		return func(s ssh.Session) {
 			errc := make(chan error, 1)
-			p := bth(s)
-			if p != nil {
+			program := bth(s)
+			if program != nil {
 				_, windowChanges, _ := s.Pty()
 				go func() {
 					for {
 						select {
 						case <-s.Context().Done():
-							if p != nil {
-								p.Quit()
+							if program != nil {
+								program.Quit()
 							}
 						case w := <-windowChanges:
-							if p != nil {
-								p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+							if program != nil {
+								program.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
 							}
 						case err := <-errc:
 							if err != nil {
@@ -88,13 +100,61 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 						}
 					}
 				}()
-				errc <- p.Start()
+				errc <- program.Start()
 				// p.Kill() will force kill the program if it's still running,
 				// and restore the terminal to its original state in case of a
 				// tui crash
-				p.Kill()
+				program.Kill()
 			}
 			sh(s)
 		}
 	}
+}
+
+type sshOutput struct {
+	ssh.Session
+	tty *os.File
+}
+
+func (s *sshOutput) Write(p []byte) (int, error) {
+	return s.Session.Write(p)
+}
+
+func (s *sshOutput) Fd() uintptr {
+	return s.tty.Fd()
+}
+
+type sshEnviron struct {
+	environ []string
+}
+
+func (s *sshEnviron) Getenv(key string) string {
+	for _, v := range s.environ {
+		if strings.HasPrefix(v, key+"=") {
+			return v[len(key)+1:]
+		}
+	}
+	return ""
+}
+
+func (s *sshEnviron) Environ() []string {
+	return s.environ
+}
+
+func outputFromSession(s ssh.Session) (*termenv.Output, error) {
+	sshPty, _, _ := s.Pty()
+	_, tty, err := pty.Open()
+	if err != nil {
+		return nil, fmt.Errorf("could not open pty: %w", err)
+	}
+	o := &sshOutput{
+		Session: s,
+		tty:     tty,
+	}
+	environ := s.Environ()
+	environ = append(environ, fmt.Sprintf("TERM=%s", sshPty.Term))
+	e := &sshEnviron{
+		environ: environ,
+	}
+	return termenv.NewOutput(o, termenv.WithEnvironment(e)), nil
 }

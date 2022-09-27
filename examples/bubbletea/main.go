@@ -12,7 +12,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/bubbles/timer"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
@@ -21,7 +23,7 @@ import (
 
 const (
 	host = "localhost"
-	port = 23234
+	port = 23235
 )
 
 func main() {
@@ -69,6 +71,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		term:   pty.Term,
 		width:  pty.Window.Width,
 		height: pty.Window.Height,
+		timer:  timer.New(time.Hour),
 	}
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
@@ -78,14 +81,21 @@ type model struct {
 	term   string
 	width  int
 	height int
+	timer  timer.Model
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return m.timer.Init()
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case timer.TickMsg:
+		var cmd tea.Cmd
+		m.timer, cmd = m.timer.Update(msg)
+		return m, cmd
+	case timer.TimeoutMsg:
+		return m, tea.Quit
 	case tea.WindowSizeMsg:
 		m.height = msg.Height
 		m.width = msg.Width
@@ -99,8 +109,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	style := lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("86"))
 	s := "Your term is %s\n"
 	s += "Your window size is x: %d y: %d\n\n"
+	s += m.timer.View() + "\n\n"
 	s += "Press 'q' to quit\n"
-	return fmt.Sprintf(s, m.term, m.width, m.height)
+	return style.Render(fmt.Sprintf(s, m.term, m.width, m.height))
 }
