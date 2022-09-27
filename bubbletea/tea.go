@@ -1,3 +1,4 @@
+// Package bubbletea provides middleware for serving bubbletea apps over SSH.
 package bubbletea
 
 import (
