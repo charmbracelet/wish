@@ -167,6 +167,11 @@ func WithPasswordAuth(p ssh.PasswordHandler) ssh.Option {
 	return ssh.PasswordAuth(p)
 }
 
+// WithKeyboardInteractiveAuth returns an ssh.Option that sets the keyboard interactive auth handler.
+func WithKeyboardInteractiveAuth(h ssh.KeyboardInteractiveHandler) ssh.Option {
+	return ssh.KeyboardInteractiveAuth(h)
+}
+
 // WithIdleTimeout returns an ssh.Option that sets the connection's idle timeout.
 func WithIdleTimeout(d time.Duration) ssh.Option {
 	return func(s *ssh.Server) error {
