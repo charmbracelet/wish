@@ -29,15 +29,22 @@ func TestNewServerWithOptions(t *testing.T) {
 	}
 }
 
-func TestError(t *testing.T) {
+func TestErrorActive(t *testing.T) {
 	eerr := errors.New("foo err")
 	sess := testsession.New(t, &ssh.Server{
 		Handler: func(s ssh.Session) {
+			_, _, active := s.Pty()
+			if !active {
+				t.Error("expected active pty, got inactive")
+			}
 			Error(s, eerr)
 		},
 	}, nil)
 	var out bytes.Buffer
 	sess.Stderr = &out
+	if err := sess.RequestPty("xterm", 80, 40, nil); err != nil {
+		t.Errorf("failed to request pty: %v", err)
+	}
 	if err := sess.Run(""); err != nil {
 		t.Errorf("expected no error, got %s", err)
 	}
