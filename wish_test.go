@@ -69,3 +69,35 @@ func TestFatal(t *testing.T) {
 		t.Errorf("expected %s, got %s", s, err)
 	}
 }
+
+func TestCRLFWriter(t *testing.T) {
+	for name, active := range map[string]bool{
+		"active pty":   true,
+		"inactive pty": false,
+	} {
+		t.Run(name, func(t *testing.T) {
+			p := &mockPtyier{active}
+			var b bytes.Buffer
+			_, err := crlfWriter{p, &b}.Write([]byte("foo\nbar"))
+			if err != nil {
+				t.Error("did not expect an error")
+			}
+			if active && !strings.Contains(b.String(), "\r\n") {
+				t.Error("should have replaced \n with \r\n:", b.String())
+			}
+			if !active && strings.Contains(b.String(), "\r\n") {
+				t.Error("should have not replaced \n with \r\n:", b.String())
+			}
+		})
+	}
+}
+
+var _ ptyier = &mockPtyier{}
+
+type mockPtyier struct {
+	ok bool
+}
+
+func (p *mockPtyier) Pty() (ssh.Pty, <-chan ssh.Window, bool) {
+	return ssh.Pty{}, nil, p.ok
+}
