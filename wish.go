@@ -66,59 +66,48 @@ func Fatalln(s ssh.Session, v ...interface{}) {
 
 // Error prints the given error the the session's STDERR.
 func Error(s ssh.Session, v ...interface{}) {
-	str := fmt.Sprint(v...)
-	if _, _, active := s.Pty(); active {
-		str = strings.ReplaceAll(str, "\n", "\r\n")
-	}
-	_, _ = fmt.Fprint(s.Stderr(), str)
+	_, _ = fmt.Fprint(crlfWriter{s, s.Stderr()}, v...)
 }
 
 // Errorf formats according to the given format and prints to the session's STDERR.
 func Errorf(s ssh.Session, f string, v ...interface{}) {
-	str := fmt.Sprintf(f, v...)
-	if _, _, active := s.Pty(); active {
-		str = strings.ReplaceAll(str, "\n", "\r\n")
-	}
-	_, _ = fmt.Fprint(s.Stderr(), str)
+	_, _ = fmt.Fprintf(crlfWriter{s, s.Stderr()}, f, v...)
 }
 
 // Errorf formats according to the default format and prints to the session's STDERR.
 func Errorln(s ssh.Session, v ...interface{}) {
-	str := fmt.Sprintln(v...)
-	if _, _, active := s.Pty(); active {
-		str = strings.ReplaceAll(str, "\n", "\r\n")
-	}
-	_, _ = fmt.Fprint(s.Stderr(), str)
+	_, _ = fmt.Fprintln(crlfWriter{s, s.Stderr()}, v...)
 }
 
 // Print writes to the session's STDOUT followed.
 func Print(s ssh.Session, v ...interface{}) {
-	str := fmt.Sprint(v...)
-	if _, _, active := s.Pty(); active {
-		str = strings.ReplaceAll(str, "\n", "\r\n")
-	}
-	_, _ = fmt.Fprint(s, str)
+	_, _ = fmt.Fprint(crlfWriter{s, s}, v...)
 }
 
 // Printf formats according to the given format and writes to the session's STDOUT.
 func Printf(s ssh.Session, f string, v ...interface{}) {
-	str := fmt.Sprintf(f, v...)
-	if _, _, active := s.Pty(); active {
-		str = strings.ReplaceAll(str, "\n", "\r\n")
-	}
-	_, _ = fmt.Fprint(s, str)
+	_, _ = fmt.Fprintf(crlfWriter{s, s}, f, v...)
 }
 
 // Println formats according to the default format and writes to the session's STDOUT.
 func Println(s ssh.Session, v ...interface{}) {
-	str := fmt.Sprintln(v...)
-	if _, _, active := s.Pty(); active {
-		str = strings.ReplaceAll(str, "\n", "\r\n")
-	}
-	_, _ = fmt.Fprint(s, str)
+	_, _ = fmt.Fprintln(crlfWriter{s, s}, v...)
 }
 
 // WriteString writes the given string to the session's STDOUT.
 func WriteString(s ssh.Session, v string) (int, error) {
 	return io.WriteString(s, v)
+}
+
+type crlfWriter struct {
+	s ssh.Session
+	w io.Writer
+}
+
+func (w crlfWriter) Write(v []byte) (n int, err error) {
+	str := string(v)
+	if _, _, active := w.s.Pty(); active {
+		str = strings.ReplaceAll(str, "\n", "\r\n")
+	}
+	return fmt.Fprint(w.w, str)
 }
