@@ -1,9 +1,9 @@
 package wish
 
 import (
+	"bytes"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/charmbracelet/keygen"
 	"github.com/gliderlabs/ssh"
@@ -66,32 +66,32 @@ func Fatalln(s ssh.Session, v ...interface{}) {
 
 // Error prints the given error the the session's STDERR.
 func Error(s ssh.Session, v ...interface{}) {
-	_, _ = fmt.Fprint(crlfWriter{s, s.Stderr()}, v...)
+	_, _ = fmt.Fprint(newErrorCRLFWriter(s), v...)
 }
 
 // Errorf formats according to the given format and prints to the session's STDERR.
 func Errorf(s ssh.Session, f string, v ...interface{}) {
-	_, _ = fmt.Fprintf(crlfWriter{s, s.Stderr()}, f, v...)
+	_, _ = fmt.Fprintf(newErrorCRLFWriter(s), f, v...)
 }
 
 // Errorf formats according to the default format and prints to the session's STDERR.
 func Errorln(s ssh.Session, v ...interface{}) {
-	_, _ = fmt.Fprintln(crlfWriter{s, s.Stderr()}, v...)
+	_, _ = fmt.Fprintln(newErrorCRLFWriter(s), v...)
 }
 
 // Print writes to the session's STDOUT followed.
 func Print(s ssh.Session, v ...interface{}) {
-	_, _ = fmt.Fprint(crlfWriter{s, s}, v...)
+	_, _ = fmt.Fprint(newCRLFWriter(s), v...)
 }
 
 // Printf formats according to the given format and writes to the session's STDOUT.
 func Printf(s ssh.Session, f string, v ...interface{}) {
-	_, _ = fmt.Fprintf(crlfWriter{s, s}, f, v...)
+	_, _ = fmt.Fprintf(newCRLFWriter(s), f, v...)
 }
 
 // Println formats according to the default format and writes to the session's STDOUT.
 func Println(s ssh.Session, v ...interface{}) {
-	_, _ = fmt.Fprintln(crlfWriter{s, s}, v...)
+	_, _ = fmt.Fprintln(newCRLFWriter(s), v...)
 }
 
 // WriteString writes the given string to the session's STDOUT.
@@ -99,15 +99,26 @@ func WriteString(s ssh.Session, v string) (int, error) {
 	return io.WriteString(s, v)
 }
 
+func newErrorCRLFWriter(s ssh.Session) io.Writer {
+	return crlfWriter{s, s.Stderr()}
+}
+
+func newCRLFWriter(s ssh.Session) io.Writer {
+	return crlfWriter{s, s}
+}
+
 type crlfWriter struct {
-	s ssh.Session
+	s ptyier
 	w io.Writer
 }
 
 func (w crlfWriter) Write(v []byte) (n int, err error) {
-	str := string(v)
 	if _, _, active := w.s.Pty(); active {
-		str = strings.ReplaceAll(str, "\n", "\r\n")
+		return w.w.Write(bytes.ReplaceAll(v, []byte("\n"), []byte("\r\n")))
 	}
-	return fmt.Fprint(w.w, str)
+	return w.w.Write(v)
+}
+
+type ptyier interface {
+	Pty() (ssh.Pty, <-chan ssh.Window, bool)
 }
