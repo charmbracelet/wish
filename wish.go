@@ -1,7 +1,6 @@
 package wish
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 
@@ -114,7 +113,23 @@ type crlfWriter struct {
 
 func (w crlfWriter) Write(v []byte) (n int, err error) {
 	if _, _, active := w.s.Pty(); active {
-		return w.w.Write(bytes.ReplaceAll(v, []byte("\n"), []byte("\r\n")))
+		var n int
+		for i, b := range v {
+			if b == '\n' && (i == 0 || v[i-1] != '\r') {
+				nn, err := w.w.Write([]byte{'\r', '\n'})
+				if err != nil {
+					return n + nn, err
+				}
+				n += nn
+			} else {
+				nn, err := w.w.Write([]byte{b})
+				if err != nil {
+					return n + nn, err
+				}
+				n += nn
+			}
+		}
+		return n, nil
 	}
 	return w.w.Write(v)
 }

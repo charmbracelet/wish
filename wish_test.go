@@ -80,7 +80,7 @@ func TestCRLFWriter(t *testing.T) {
 			var b bytes.Buffer
 			_, err := crlfWriter{p, &b}.Write([]byte("foo\nbar"))
 			if err != nil {
-				t.Error("did not expect an error")
+				t.Error("did not expect an error", err)
 			}
 			if active && !strings.Contains(b.String(), "\r\n") {
 				t.Error("should have replaced \n with \r\n:", b.String())
@@ -90,6 +90,20 @@ func TestCRLFWriter(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("do not replace \\n when its already \\r\\n", func(t *testing.T) {
+		in := "foo\r\nbar\n"
+		out := "foo\r\nbar\r\n"
+		p := &mockPtyier{true}
+		var b bytes.Buffer
+		_, err := crlfWriter{p, &b}.Write([]byte(in))
+		if err != nil {
+			t.Error("did not expect an error", err)
+		}
+		if out != b.String() {
+			t.Errorf("outputs do not match, expected %q got %q", out, b.String())
+		}
+	})
 }
 
 var _ ptyier = &mockPtyier{}
