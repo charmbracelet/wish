@@ -111,15 +111,14 @@ type crlfWriter struct {
 	w io.Writer
 }
 
-func (w crlfWriter) Write(v []byte) (n int, err error) {
+func (w crlfWriter) Write(v []byte) (int, error) {
 	if _, _, active := w.s.Pty(); active {
 		var output []byte
 		for i, b := range v {
 			if b == '\n' && (i == 0 || v[i-1] != '\r') {
-				output = append(output, []byte{'\r', '\n'}...)
-			} else {
-				output = append(output, b)
+				output = append(output, '\r')
 			}
+			output = append(output, b)
 		}
 		return w.w.Write(output)
 	}
