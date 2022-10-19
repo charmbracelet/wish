@@ -92,8 +92,8 @@ func TestCRLFWriter(t *testing.T) {
 	}
 
 	t.Run("do not replace \\n when its already \\r\\n", func(t *testing.T) {
-		in := "foo\r\nbar\n"
-		out := "foo\r\nbar\r\n"
+		in := "\nfoo\r\nbar\n"
+		out := "\r\nfoo\r\nbar\r\n"
 		p := &mockPtyier{true}
 		var b bytes.Buffer
 		_, err := crlfWriter{p, &b}.Write([]byte(in))
