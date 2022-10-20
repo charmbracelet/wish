@@ -3,7 +3,7 @@ name: examples
 on:
   push:
     branches:
-      - 'master'
+      - 'main'
     paths:
       - '.github/workflows/examples.yml'
       - './examples/go.mod'
