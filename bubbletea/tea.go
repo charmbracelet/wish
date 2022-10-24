@@ -77,6 +77,7 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 						case <-s.Context().Done():
 							if p != nil {
 								p.Quit()
+								return
 							}
 						case w := <-windowChanges:
 							if p != nil {
