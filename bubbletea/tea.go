@@ -67,7 +67,6 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 	return func(sh ssh.Handler) ssh.Handler {
 		lipgloss.SetColorProfile(cp)
 		return func(s ssh.Session) {
-			errc := make(chan error, 1)
 			p := bth(s)
 			if p != nil {
 				_, windowChanges, _ := s.Pty()
@@ -83,14 +82,12 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 							if p != nil {
 								p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
 							}
-						case err := <-errc:
-							if err != nil {
-								log.Print(err)
-							}
 						}
 					}
 				}()
-				errc <- p.Start()
+				if err := p.Start(); err != nil {
+					log.Print("app exit with error:", err)
+				}
 				// p.Kill() will force kill the program if it's still running,
 				// and restore the terminal to its original state in case of a
 				// tui crash
