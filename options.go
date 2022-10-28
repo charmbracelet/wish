@@ -148,6 +148,12 @@ func parseAuthorizedKeys(path string) ([]ssh.PublicKey, error) {
 			}
 			return keys, fmt.Errorf("failed to parse %q: %w", path, err)
 		}
+		if strings.TrimSpace(string(line)) == "" {
+			continue
+		}
+		if bytes.HasPrefix(line, []byte{'#'}) {
+			continue
+		}
 		upk, _, _, _, err := ssh.ParseAuthorizedKey(line)
 		if err != nil {
 			return keys, fmt.Errorf("failed to parse %q: %w", path, err)
