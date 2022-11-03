@@ -77,7 +77,7 @@ func TestGitMiddleware(t *testing.T) {
 		requireHasAction(t, hooks.fetches, pubkey, "repo3")
 	})
 
-	t.Run("clone repo that doesnt exist", func(t *testing.T) {
+	t.Run("clone repo that doesn't exist", func(t *testing.T) {
 		cwd := t.TempDir()
 		requireError(t, runGitHelper(t, pkPath, cwd, "clone", remote+"/repo4"))
 	})

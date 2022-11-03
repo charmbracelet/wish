@@ -19,7 +19,7 @@ type CopyToClientHandler interface {
 	// Glob should be implemented if you want to provide server-side globbing
 	// support.
 	//
-	// A minimal implementation to disable it ist to return `[]string{s}, nil`.
+	// A minimal implementation to disable it is to return `[]string{s}, nil`.
 	//
 	// Note: if your other functions expect a relative path, make sure that
 	// your Glob implementation returns relative paths as well.
