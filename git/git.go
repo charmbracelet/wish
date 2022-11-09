@@ -70,9 +70,13 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 			cmd := s.Command()
 			if len(cmd) == 2 {
 				gc := cmd[0]
-				repo := cmd[1] // cmd[1] should be `/REPO`
+				// repo should be in the form of "repo.git" or "user/repo.git"
+				repo := strings.TrimSuffix(strings.TrimPrefix(cmd[1], "/"), "/")
 				repo = filepath.Clean(repo)
-				repo = filepath.Base(repo)
+				if n := strings.Count(repo, "/"); n > 1 {
+					Fatal(s, ErrInvalidRepo)
+					return
+				}
 				pk := s.PublicKey()
 				access := gh.AuthRepo(repo, pk)
 				switch gc {
@@ -139,6 +143,7 @@ func gitPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
 		if err != nil {
 			return err
 		}
+		// Needed for git dumb http server
 		return runGit(s, rp, "update-server-info")
 	default:
 		return fmt.Errorf("unknown git command: %s", gitCmd)
