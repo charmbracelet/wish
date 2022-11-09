@@ -33,6 +33,8 @@ func TestGitMiddleware(t *testing.T) {
 			{pubkey, "repo5", NoAccess},
 			{pubkey, "repo6", ReadOnlyAccess},
 			{pubkey, "repo7", AdminAccess},
+			{pubkey, "abc/repo1", AdminAccess},
+			{pubkey, "abc/def/repo1", AdminAccess},
 		},
 	}
 	srv, err := wish.NewServer(
@@ -61,6 +63,31 @@ func TestGitMiddleware(t *testing.T) {
 		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
 		requireNoError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
 		requireHasAction(t, hooks.pushes, pubkey, "repo2")
+	})
+
+	t.Run("create repo in subdir", func(t *testing.T) {
+		cwd := t.TempDir()
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/abc/repo1"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
+		requireHasAction(t, hooks.pushes, pubkey, "abc/repo1")
+	})
+
+	t.Run("create wrong repo", func(t *testing.T) {
+		cwd := t.TempDir()
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"//../../repo1"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
+	})
+
+	t.Run("create wrong repo in subdir", func(t *testing.T) {
+		cwd := t.TempDir()
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/abc/def/repo1"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
 	})
 
 	t.Run("create and clone repo", func(t *testing.T) {
