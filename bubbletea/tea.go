@@ -85,7 +85,7 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 						}
 					}
 				}()
-				if err := p.Start(); err != nil {
+				if _, err := p.Run(); err != nil {
 					log.Print("app exit with error:", err)
 				}
 				// p.Kill() will force kill the program if it's still running,
