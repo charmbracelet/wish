@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/wish"
 	"github.com/gliderlabs/ssh"
-	lru "github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"golang.org/x/time/rate"
 )
 
@@ -48,7 +48,7 @@ func NewRateLimiter(r rate.Limit, burst int, maxEntries int) RateLimiter {
 		maxEntries = 1
 	}
 	// only possible error is if maxEntries is <= 0, which is prevented above.
-	cache, _ := lru.New(maxEntries)
+	cache, _ := lru.New[string, *rate.Limiter](maxEntries)
 	return &limiters{
 		rate:  r,
 		burst: burst,
@@ -57,7 +57,7 @@ func NewRateLimiter(r rate.Limit, burst int, maxEntries int) RateLimiter {
 }
 
 type limiters struct {
-	cache *lru.Cache
+	cache *lru.Cache[string, *rate.Limiter]
 	rate  rate.Limit
 	burst int
 }
@@ -74,7 +74,7 @@ func (r *limiters) Allow(s ssh.Session) error {
 	var allowed bool
 	limiter, ok := r.cache.Get(key)
 	if ok {
-		allowed = limiter.(*rate.Limiter).Allow()
+		allowed = limiter.Allow()
 	} else {
 		limiter := rate.NewLimiter(r.rate, r.burst)
 		allowed = limiter.Allow()
