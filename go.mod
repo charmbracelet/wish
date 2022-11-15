@@ -1,6 +1,6 @@
 module github.com/charmbracelet/wish
 
-go 1.17
+go 1.18
 
 require (
 	github.com/charmbracelet/bubbletea v0.23.0
@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/gliderlabs/ssh v0.3.5
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/hashicorp/golang-lru v0.5.4
+	github.com/hashicorp/golang-lru/v2 v2.0.0
 	github.com/matryer/is v1.4.0
 	github.com/muesli/termenv v0.13.0
 	golang.org/x/crypto v0.0.0-20220826181053-bd7e27e6170d
