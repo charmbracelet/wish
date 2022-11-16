@@ -3,7 +3,7 @@ module github.com/charmbracelet/wish
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbletea v0.23.0
+	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/keygen v0.3.0
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/gliderlabs/ssh v0.3.5
