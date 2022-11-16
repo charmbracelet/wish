@@ -16,7 +16,6 @@ import (
 	"github.com/charmbracelet/wish"
 	gm "github.com/charmbracelet/wish/git"
 	lm "github.com/charmbracelet/wish/logging"
-	"github.com/gliderlabs/ssh"
 )
 
 const (
@@ -29,23 +28,23 @@ type app struct {
 	access gm.AccessLevel
 }
 
-func (a app) AuthRepo(repo string, pk ssh.PublicKey) gm.AccessLevel {
+func (a app) AuthRepo(repo string, pk wish.PublicKey) gm.AccessLevel {
 	return a.access
 }
 
-func (a app) Push(repo string, pk ssh.PublicKey) {
+func (a app) Push(repo string, pk wish.PublicKey) {
 	log.Printf("pushed %s", repo)
 }
 
-func (a app) Fetch(repo string, pk ssh.PublicKey) {
+func (a app) Fetch(repo string, pk wish.PublicKey) {
 	log.Printf("fetch %s", repo)
 }
 
-func passHandler(ctx ssh.Context, password string) bool {
+func passHandler(ctx wish.Context, password string) bool {
 	return false
 }
 
-func pkHandler(ctx ssh.Context, key ssh.PublicKey) bool {
+func pkHandler(ctx wish.Context, key wish.PublicKey) bool {
 	return true
 }
 
@@ -54,8 +53,8 @@ func main() {
 	a := app{gm.ReadWriteAccess}
 
 	s, err := wish.NewServer(
-		ssh.PublicKeyAuth(pkHandler),
-		ssh.PasswordAuth(passHandler),
+		wish.WithPublicKeyAuth(pkHandler),
+		wish.WithPasswordAuth(passHandler),
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/git_server_ed25519"),
 		wish.WithMiddleware(
@@ -89,8 +88,8 @@ func main() {
 // Normally we would use a Bubble Tea program for the TUI but for simplicity,
 // we'll just write a list of the pushed repos to the terminal and exit the ssh
 // session.
-func gitListMiddleware(h ssh.Handler) ssh.Handler {
-	return func(s ssh.Session) {
+func gitListMiddleware(h wish.Handler) wish.Handler {
+	return func(s wish.Session) {
 		// Git will have a command included so only run this if there are no
 		// commands passed to ssh.
 		if len(s.Command()) == 0 {

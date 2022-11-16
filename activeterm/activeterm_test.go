@@ -3,9 +3,9 @@ package activeterm_test
 import (
 	"testing"
 
+	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/activeterm"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -23,8 +23,8 @@ func TestMiddleware(t *testing.T) {
 
 func setup(tb testing.TB) *gossh.Session {
 	tb.Helper()
-	return testsession.New(tb, &ssh.Server{
-		Handler: activeterm.Middleware()(func(s ssh.Session) {
+	return testsession.New(tb, &wish.Server{
+		Handler: activeterm.Middleware()(func(s wish.Session) {
 			s.Write([]byte("hello"))
 		}),
 	}, nil)

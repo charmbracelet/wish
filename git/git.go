@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 )
@@ -54,9 +53,9 @@ type GitHooks = Hooks // nolint: revive
 // AuthRepo will be called with the ssh.Session public key and the repo name.
 // Implementers return the appropriate AccessLevel.
 type Hooks interface {
-	AuthRepo(string, ssh.PublicKey) AccessLevel
-	Push(string, ssh.PublicKey)
-	Fetch(string, ssh.PublicKey)
+	AuthRepo(string, wish.PublicKey) AccessLevel
+	Push(string, wish.PublicKey)
+	Fetch(string, wish.PublicKey)
 }
 
 // Middleware adds Git server functionality to the ssh.Server. Repos are stored
@@ -65,8 +64,8 @@ type Hooks interface {
 // Hooks.Push and Hooks.Fetch will be called on successful completion of
 // their commands.
 func Middleware(repoDir string, gh Hooks) wish.Middleware {
-	return func(sh ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
+	return func(sh wish.Handler) wish.Handler {
+		return func(s wish.Session) {
 			cmd := s.Command()
 			if len(cmd) == 2 {
 				gc := cmd[0]
@@ -117,7 +116,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 	}
 }
 
-func gitPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
+func gitPack(s wish.Session, gitCmd string, repoDir string, repo string) error {
 	cmd := strings.TrimPrefix(gitCmd, "git-")
 	rp := filepath.Join(repoDir, repo)
 	switch gitCmd {
@@ -162,7 +161,7 @@ func fileExists(path string) (bool, error) {
 }
 
 // Fatal prints to the session's STDOUT as a git response and exit 1.
-func Fatal(s ssh.Session, v ...interface{}) {
+func Fatal(s wish.Session, v ...interface{}) {
 	msg := fmt.Sprint(v...)
 	// hex length includes 4 byte length prefix and ending newline
 	pktLine := fmt.Sprintf("%04x%s\n", len(msg)+5, msg)
@@ -176,7 +175,7 @@ func ensureRepo(dir string, repo string) error {
 		return err
 	}
 	if !exists {
-		err = os.MkdirAll(dir, os.ModeDir|os.FileMode(0700))
+		err = os.MkdirAll(dir, os.ModeDir|os.FileMode(0o700))
 		if err != nil {
 			return err
 		}
@@ -195,7 +194,7 @@ func ensureRepo(dir string, repo string) error {
 	return nil
 }
 
-func runGit(s ssh.Session, dir string, args ...string) error {
+func runGit(s wish.Session, dir string, args ...string) error {
 	usi := exec.CommandContext(s.Context(), "git", args...)
 	usi.Dir = dir
 	usi.Stdout = s
@@ -206,7 +205,7 @@ func runGit(s ssh.Session, dir string, args ...string) error {
 	return nil
 }
 
-func ensureDefaultBranch(s ssh.Session, repoPath string) error {
+func ensureDefaultBranch(s wish.Session, repoPath string) error {
 	r, err := git.PlainOpen(repoPath)
 	if err != nil {
 		return err

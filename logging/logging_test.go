@@ -3,9 +3,9 @@ package logging_test
 import (
 	"testing"
 
+	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/logging"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -19,8 +19,8 @@ func TestMiddleware(t *testing.T) {
 
 func setup(tb testing.TB) *gossh.Session {
 	tb.Helper()
-	return testsession.New(tb, &ssh.Server{
-		Handler: logging.Middleware()(func(s ssh.Session) {
+	return testsession.New(tb, &wish.Server{
+		Handler: logging.Middleware()(func(s wish.Session) {
 			s.Write([]byte("hello"))
 		}),
 	}, nil)

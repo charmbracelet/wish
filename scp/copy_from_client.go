@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/gliderlabs/ssh"
+	"github.com/charmbracelet/wish"
 )
 
 var (
@@ -27,7 +27,7 @@ func (e parseError) Error() string {
 	return fmt.Sprintf("failed to parse: %q", e.subject)
 }
 
-func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) error {
+func copyFromClient(s wish.Session, info Info, handler CopyFromClientHandler) error {
 	// accepts the request
 	_, _ = s.Write(NULL)
 
