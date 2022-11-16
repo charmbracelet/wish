@@ -6,7 +6,7 @@ import (
 
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/testsession"
-	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh"
 )
 
 var waitDuration = time.Second
@@ -23,7 +23,7 @@ func TestMiddleware(t *testing.T) {
 	})
 }
 
-func setup(tb testing.TB) *gossh.Session {
+func setup(tb testing.TB) *ssh.Session {
 	tb.Helper()
 	return testsession.New(tb, &wish.Server{
 		Handler: MiddlewareWithFormat("%v")(func(s wish.Session) {

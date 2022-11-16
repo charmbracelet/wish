@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/wish/testsession"
-	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh"
 )
 
 func TestWithIdleTimeout(t *testing.T) {
@@ -49,7 +49,7 @@ func TestWithAuthorizedKeys(t *testing.T) {
 		} {
 			parts := strings.Fields(key)
 			t.Run(parts[len(parts)-1], func(t *testing.T) {
-				key, _, _, _, err := gossh.ParseAuthorizedKey([]byte(key))
+				key, _, _, _, err := ssh.ParseAuthorizedKey([]byte(key))
 				requireNoError(t, err)
 				requireEqual(t, authorize, s.PublicKeyHandler(nil, key))
 			})
@@ -73,27 +73,27 @@ func TestWithAuthorizedKeys(t *testing.T) {
 }
 
 func TestWithTrustedUserCAKeys(t *testing.T) {
-	setup := func(tb testing.TB, certPath string) (*Server, *gossh.ClientConfig) {
+	setup := func(tb testing.TB, certPath string) (*Server, *ssh.ClientConfig) {
 		s := &Server{
 			Handler: func(s Session) {
-				cert, ok := s.PublicKey().(*gossh.Certificate)
+				cert, ok := s.PublicKey().(*ssh.Certificate)
 				fmt.Fprintf(s, "cert? %v - principals: %v - type: %v", ok, cert.ValidPrincipals, cert.CertType)
 			},
 		}
 		requireNoError(t, WithTrustedUserCAKeys("testdata/ca.pub")(s))
 
-		signer, err := gossh.ParsePrivateKey(getBytes(t, "testdata/foo"))
+		signer, err := ssh.ParsePrivateKey(getBytes(t, "testdata/foo"))
 		requireNoError(t, err)
 
-		cert, _, _, _, err := gossh.ParseAuthorizedKey(getBytes(t, certPath))
+		cert, _, _, _, err := ssh.ParseAuthorizedKey(getBytes(t, certPath))
 		requireNoError(t, err)
 
-		certSigner, err := gossh.NewCertSigner(cert.(*gossh.Certificate), signer)
+		certSigner, err := ssh.NewCertSigner(cert.(*ssh.Certificate), signer)
 		requireNoError(t, err)
-		return s, &gossh.ClientConfig{
+		return s, &ssh.ClientConfig{
 			User: "foo",
-			Auth: []gossh.AuthMethod{
-				gossh.PublicKeys(certSigner),
+			Auth: []ssh.AuthMethod{
+				ssh.PublicKeys(certSigner),
 			},
 		}
 	}
@@ -141,13 +141,13 @@ func TestWithTrustedUserCAKeys(t *testing.T) {
 		}
 		requireNoError(t, WithTrustedUserCAKeys("testdata/ca.pub")(s))
 
-		signer, err := gossh.ParsePrivateKey(getBytes(t, "testdata/foo"))
+		signer, err := ssh.ParsePrivateKey(getBytes(t, "testdata/foo"))
 		requireNoError(t, err)
 
-		_, err = testsession.NewClientSession(t, testsession.Listen(t, s), &gossh.ClientConfig{
+		_, err = testsession.NewClientSession(t, testsession.Listen(t, s), &ssh.ClientConfig{
 			User: "foo",
-			Auth: []gossh.AuthMethod{
-				gossh.PublicKeys(signer),
+			Auth: []ssh.AuthMethod{
+				ssh.PublicKeys(signer),
 			},
 		})
 		requireAuthError(t, err)

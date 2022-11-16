@@ -9,7 +9,7 @@ import (
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/testsession"
 	"github.com/matryer/is"
-	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh"
 )
 
 func TestGetInfo(t *testing.T) {
@@ -110,7 +110,7 @@ func TestInvalidOps(t *testing.T) {
 	})
 }
 
-func setup(tb testing.TB, rh CopyToClientHandler, wh CopyFromClientHandler) *gossh.Session {
+func setup(tb testing.TB, rh CopyToClientHandler, wh CopyFromClientHandler) *ssh.Session {
 	tb.Helper()
 	return testsession.New(tb, &wish.Server{
 		Handler: Middleware(rh, wh)(func(s wish.Session) {
