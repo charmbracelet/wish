@@ -16,7 +16,6 @@ import (
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
-	"github.com/gliderlabs/ssh"
 )
 
 const (
@@ -59,7 +58,7 @@ func main() {
 // handles the incoming ssh.Session. Here we just grab the terminal info and
 // pass it to the new model. You can also return tea.ProgramOptions (such as
 // tea.WithAltScreen) on a session by session basis.
-func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+func teaHandler(s wish.Session) (tea.Model, []tea.ProgramOption) {
 	pty, _, active := s.Pty()
 	if !active {
 		wish.Fatalln(s, "no active terminal, skipping")

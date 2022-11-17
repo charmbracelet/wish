@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 )
 
 // MiddlewareWithFormat returns a middleware that logs the elapsed time of the
@@ -12,8 +11,8 @@ import (
 //
 // This must be called as the last middleware in the chain.
 func MiddlewareWithFormat(format string) wish.Middleware {
-	return func(sh ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
+	return func(sh wish.Handler) wish.Handler {
+		return func(s wish.Session) {
 			now := time.Now()
 			sh(s)
 			wish.Printf(s, format, time.Since(now))

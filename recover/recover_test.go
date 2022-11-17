@@ -3,9 +3,9 @@ package recover
 import (
 	"testing"
 
+	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
-	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh"
 )
 
 func TestMiddleware(t *testing.T) {
@@ -15,14 +15,14 @@ func TestMiddleware(t *testing.T) {
 	})
 }
 
-func setup(tb testing.TB) *gossh.Session {
+func setup(tb testing.TB) *ssh.Session {
 	tb.Helper()
-	return testsession.New(tb, &ssh.Server{
-		Handler: Middleware(func(h ssh.Handler) ssh.Handler {
-			return func(s ssh.Session) {
+	return testsession.New(tb, &wish.Server{
+		Handler: Middleware(func(h wish.Handler) wish.Handler {
+			return func(s wish.Session) {
 				panic("hello")
 			}
-		})(func(s ssh.Session) {}),
+		})(func(s wish.Session) {}),
 	}, nil)
 }
 

@@ -4,14 +4,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
-	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh"
 )
 
-var (
-	waitDuration = time.Second
-)
+var waitDuration = time.Second
 
 func TestMiddleware(t *testing.T) {
 	t.Run("recover session", func(t *testing.T) {
@@ -25,10 +23,10 @@ func TestMiddleware(t *testing.T) {
 	})
 }
 
-func setup(tb testing.TB) *gossh.Session {
+func setup(tb testing.TB) *ssh.Session {
 	tb.Helper()
-	return testsession.New(tb, &ssh.Server{
-		Handler: MiddlewareWithFormat("%v")(func(s ssh.Session) {
+	return testsession.New(tb, &wish.Server{
+		Handler: MiddlewareWithFormat("%v")(func(s wish.Session) {
 			time.Sleep(waitDuration)
 		}),
 	}, nil)

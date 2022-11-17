@@ -3,9 +3,9 @@ package comment
 import (
 	"testing"
 
+	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
-	gossh "golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh"
 )
 
 func TestMiddleware(t *testing.T) {
@@ -18,10 +18,10 @@ func TestMiddleware(t *testing.T) {
 	})
 }
 
-func setup(tb testing.TB) *gossh.Session {
+func setup(tb testing.TB) *ssh.Session {
 	tb.Helper()
-	return testsession.New(tb, &ssh.Server{
-		Handler: Middleware("test")(func(s ssh.Session) {}),
+	return testsession.New(tb, &wish.Server{
+		Handler: Middleware("test")(func(s wish.Session) {}),
 	}, nil)
 }
 

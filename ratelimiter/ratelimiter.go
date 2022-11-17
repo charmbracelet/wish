@@ -7,7 +7,6 @@ import (
 	"net"
 
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"golang.org/x/time/rate"
 )
@@ -20,13 +19,13 @@ var ErrRateLimitExceeded = errors.New("rate limit exceeded, please try again lat
 // Its up to the implementation to handle what identifies an session as well
 // as the implementation details of these limits.
 type RateLimiter interface {
-	Allow(s ssh.Session) error
+	Allow(s wish.Session) error
 }
 
 // Middleware provides a new rate limiting Middleware.
 func Middleware(limiter RateLimiter) wish.Middleware {
-	return func(sh ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
+	return func(sh wish.Handler) wish.Handler {
+		return func(s wish.Session) {
 			if err := limiter.Allow(s); err != nil {
 				wish.Fatal(s, err)
 				return
@@ -62,7 +61,7 @@ type limiters struct {
 	burst int
 }
 
-func (r *limiters) Allow(s ssh.Session) error {
+func (r *limiters) Allow(s wish.Session) error {
 	var key string
 	switch addr := s.RemoteAddr().(type) {
 	case *net.TCPAddr:

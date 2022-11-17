@@ -17,16 +17,16 @@ import (
 )
 
 // WithAddress returns an ssh.Option that sets the address to listen on.
-func WithAddress(addr string) ssh.Option {
-	return func(s *ssh.Server) error {
+func WithAddress(addr string) Option {
+	return func(s *Server) error {
 		s.Addr = addr
 		return nil
 	}
 }
 
 // WithVersion returns an ssh.Option that sets the server version.
-func WithVersion(version string) ssh.Option {
-	return func(s *ssh.Server) error {
+func WithVersion(version string) Option {
+	return func(s *Server) error {
 		s.Version = version
 		return nil
 	}
@@ -37,9 +37,9 @@ func WithVersion(version string) ssh.Option {
 // Server.Handler.
 //
 // Notice that middlewares are composed from first to last, which means the last one is executed first.
-func WithMiddleware(mw ...Middleware) ssh.Option {
-	return func(s *ssh.Server) error {
-		h := func(s ssh.Session) {}
+func WithMiddleware(mw ...Middleware) Option {
+	return func(s *Server) error {
+		h := func(s Session) {}
 		for _, m := range mw {
 			h = m(h)
 		}
@@ -49,35 +49,35 @@ func WithMiddleware(mw ...Middleware) ssh.Option {
 }
 
 // WithHostKeyFile returns an ssh.Option that sets the path to the private.
-func WithHostKeyPath(path string) ssh.Option {
+func WithHostKeyPath(path string) Option {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		dir, f := filepath.Split(path)
 		n := strings.TrimSuffix(f, "_ed25519")
 		_, err := keygen.NewWithWrite(filepath.Join(dir, n), nil, keygen.Ed25519)
 		if err != nil {
-			return func(*ssh.Server) error {
+			return func(*Server) error {
 				return err
 			}
 		}
 		path = filepath.Join(dir, n+"_ed25519")
 	}
-	return ssh.HostKeyFile(path)
+	return HostKeyFile(path)
 }
 
 // WithHostKeyPEM returns an ssh.Option that sets the host key from a PEM block.
-func WithHostKeyPEM(pem []byte) ssh.Option {
-	return ssh.HostKeyPEM(pem)
+func WithHostKeyPEM(pem []byte) Option {
+	return HostKeyPEM(pem)
 }
 
 // WithAuthorizedKeys allows to use a SSH authorized_keys file to allowlist users.
-func WithAuthorizedKeys(path string) ssh.Option {
-	return func(s *ssh.Server) error {
+func WithAuthorizedKeys(path string) Option {
+	return func(s *Server) error {
 		if _, err := os.Stat(path); err != nil {
 			return err
 		}
-		return WithPublicKeyAuth(func(_ ssh.Context, key ssh.PublicKey) bool {
-			return isAuthorized(path, func(k ssh.PublicKey) bool {
-				return ssh.KeysEqual(key, k)
+		return WithPublicKeyAuth(func(_ Context, key PublicKey) bool {
+			return isAuthorized(path, func(k PublicKey) bool {
+				return KeysEqual(key, k)
 			})
 		})(s)
 	}
@@ -86,12 +86,12 @@ func WithAuthorizedKeys(path string) ssh.Option {
 // WithTrustedUserCAKeys authorize certificates that are signed with the given
 // Certificate Authority public key, and are valid.
 // Analogous to the TrustedUserCAKeys OpenSSH option.
-func WithTrustedUserCAKeys(path string) ssh.Option {
-	return func(s *ssh.Server) error {
+func WithTrustedUserCAKeys(path string) Option {
+	return func(s *Server) error {
 		if _, err := os.Stat(path); err != nil {
 			return err
 		}
-		return WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+		return WithPublicKeyAuth(func(ctx Context, key PublicKey) bool {
 			cert, ok := key.(*gossh.Certificate)
 			if !ok {
 				// not a certificate...
@@ -120,7 +120,7 @@ func WithTrustedUserCAKeys(path string) ssh.Option {
 	}
 }
 
-func isAuthorized(path string, checker func(k ssh.PublicKey) bool) bool {
+func isAuthorized(path string, checker func(k PublicKey) bool) bool {
 	f, err := os.Open(path)
 	if err != nil {
 		log.Printf("failed to parse %q: %s", path, err)
@@ -157,31 +157,37 @@ func isAuthorized(path string, checker func(k ssh.PublicKey) bool) bool {
 }
 
 // WithPublicKeyAuth returns an ssh.Option that sets the public key auth handler.
-func WithPublicKeyAuth(h ssh.PublicKeyHandler) ssh.Option {
-	return ssh.PublicKeyAuth(h)
+func WithPublicKeyAuth(h PublicKeyHandler) Option {
+	return ssh.PublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
+		return h(ctx, key)
+	})
 }
 
 // WithPasswordAuth returns an ssh.Option that sets the password auth handler.
-func WithPasswordAuth(p ssh.PasswordHandler) ssh.Option {
-	return ssh.PasswordAuth(p)
+func WithPasswordAuth(p PasswordHandler) Option {
+	return ssh.PasswordAuth(func(ctx ssh.Context, password string) bool {
+		return p(ctx, password)
+	})
 }
 
 // WithKeyboardInteractiveAuth returns an ssh.Option that sets the keyboard interactive auth handler.
-func WithKeyboardInteractiveAuth(h ssh.KeyboardInteractiveHandler) ssh.Option {
-	return ssh.KeyboardInteractiveAuth(h)
+func WithKeyboardInteractiveAuth(h KeyboardInteractiveHandler) Option {
+	return ssh.KeyboardInteractiveAuth(func(ctx ssh.Context, challenger gossh.KeyboardInteractiveChallenge) bool {
+		return h(ctx, challenger)
+	})
 }
 
 // WithIdleTimeout returns an ssh.Option that sets the connection's idle timeout.
-func WithIdleTimeout(d time.Duration) ssh.Option {
-	return func(s *ssh.Server) error {
+func WithIdleTimeout(d time.Duration) Option {
+	return func(s *Server) error {
 		s.IdleTimeout = d
 		return nil
 	}
 }
 
 // WithMaxTimeout returns an ssh.Option that sets the connection's absolute timeout.
-func WithMaxTimeout(d time.Duration) ssh.Option {
-	return func(s *ssh.Server) error {
+func WithMaxTimeout(d time.Duration) Option {
+	return func(s *Server) error {
 		s.MaxTimeout = d
 		return nil
 	}
