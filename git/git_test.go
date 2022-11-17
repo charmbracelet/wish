@@ -152,7 +152,7 @@ func runGitHelper(t *testing.T, pk, cwd string, args ...string) error {
 
 	cmd := exec.Command("git", allArgs...)
 	cmd.Dir = cwd
-	cmd.Env = []string{fmt.Sprintf(`GIT_SSH_COMMAND=ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i %s -F /dev/null`, pk)}
+	cmd.Env = []string{fmt.Sprintf(`GIT_SSH_COMMAND=ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i "%s" -F /dev/null`, pk)}
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Log("git out:", string(out))
