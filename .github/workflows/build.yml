@@ -6,6 +6,9 @@ on:
 
 jobs:
   build:
+    uses: charmbracelet/meta/.github/workflows/build.yml@main
+
+  codecov:
     strategy:
       matrix:
         go-version: [~1.18, ^1]
