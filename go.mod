@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.23.1
 	github.com/charmbracelet/keygen v0.3.0
 	github.com/charmbracelet/lipgloss v0.6.0
-	github.com/charmbracelet/ssh v0.0.0-20221117131612-e845afef7941
+	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/hashicorp/golang-lru/v2 v2.0.1
 	github.com/matryer/is v1.4.0
