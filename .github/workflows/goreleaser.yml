@@ -17,3 +17,14 @@ jobs:
       docker_token: ${{ secrets.DOCKERHUB_TOKEN }}
       gh_pat: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
       goreleaser_key: ${{ secrets.GORELEASER_KEY }}
+      twitter_consumer_key: ${{ secrets.twitter_consumer_key }}
+      twitter_consumer_secret: ${{ secrets.twitter_consumer_secret }}
+      twitter_access_token: ${{ secrets.twitter_access_token }}
+      twitter_access_token_secret: ${{ secrets.twitter_access_token_secret }}
+      mastodon_client_id: ${{ secrets.mastodon_client_id }}
+      mastodon_client_secret: ${{ secrets.mastodon_client_secret }}
+      mastodon_access_token: ${{ secrets.mastodon_access_token }}
+      discord_webhook_id: ${{ secrets.discord_webhook_id }}
+      discord_webhook_token: ${{ secrets.discord_webhook_token }}
+
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
