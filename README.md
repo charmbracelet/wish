@@ -111,6 +111,16 @@ Host localhost
     UserKnownHostsFile /dev/null
 ```
 
+## How it works?
+
+Wish uses [gliderlabs/ssh][gliderlabs/ssh] to implement its SSH server, and
+the OpenSSH is never used nor needed — you can even uninstall it if you want to.
+
+Incidentally, there's no risk of accidentally sharing a shell because there's no
+default behavior that does that on Wish.
+
+###
+
 ## Feedback
 
 We’d love to hear your thoughts on this project. Feel free to drop us a note!
