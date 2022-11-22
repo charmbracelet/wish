@@ -124,7 +124,12 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	tb.Helper()
 	is := is.New(tb)
 
-	out = bytes.ReplaceAll(out, NULL, []byte("<NULL>"))
+	fixOutput := func(bts []byte) []byte {
+		bts = bytes.ReplaceAll(bts, []byte("\r\n"), []byte("\n"))
+		return bytes.ReplaceAll(bts, NULL, []byte("<NULL>"))
+	}
+
+	out = fixOutput(out)
 	golden := "testdata/" + tb.Name() + ".test"
 	if os.Getenv("UPDATE") != "" {
 		is.NoErr(os.MkdirAll(filepath.Dir(golden), 0o755))
@@ -134,6 +139,6 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	gbts, err := os.ReadFile(golden)
 	is.NoErr(err)
 
-	gbts = bytes.ReplaceAll(gbts, NULL, []byte("<NULL>"))
+	gbts = fixOutput(gbts)
 	is.Equal(string(gbts), string(out))
 }
