@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/charmbracelet/wish"
+	"github.com/gliderlabs/ssh"
 )
 
-func copyToClient(s wish.Session, info Info, handler CopyToClientHandler) error {
+func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 	matches, err := handler.Glob(s, info.Path)
 	if err != nil {
 		return err

@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/testsession"
+	"github.com/gliderlabs/ssh"
 	"github.com/matryer/is"
-	"golang.org/x/crypto/ssh"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 func TestGetInfo(t *testing.T) {
@@ -110,10 +110,10 @@ func TestInvalidOps(t *testing.T) {
 	})
 }
 
-func setup(tb testing.TB, rh CopyToClientHandler, wh CopyFromClientHandler) *ssh.Session {
+func setup(tb testing.TB, rh CopyToClientHandler, wh CopyFromClientHandler) *gossh.Session {
 	tb.Helper()
-	return testsession.New(tb, &wish.Server{
-		Handler: Middleware(rh, wh)(func(s wish.Session) {
+	return testsession.New(tb, &ssh.Server{
+		Handler: Middleware(rh, wh)(func(s ssh.Session) {
 			s.Exit(0)
 			s.Close()
 		}),

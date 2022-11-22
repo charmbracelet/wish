@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/wish"
+	"github.com/gliderlabs/ssh"
 )
 
 // Middleware will exit 1 connections trying with no active terminals.
 func Middleware() wish.Middleware {
-	return func(sh wish.Handler) wish.Handler {
-		return func(s wish.Session) {
+	return func(sh ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
 			_, _, active := s.Pty()
 			if !active {
 				fmt.Fprintln(s, "Requires an active PTY")

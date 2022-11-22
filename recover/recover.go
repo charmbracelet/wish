@@ -5,6 +5,7 @@ import (
 	"runtime/debug"
 
 	"github.com/charmbracelet/wish"
+	"github.com/gliderlabs/ssh"
 )
 
 // Middleware is a wish middleware that recovers from panics and log to stderr.
@@ -18,12 +19,12 @@ func MiddlewareWithLogger(logger *log.Logger, mw ...wish.Middleware) wish.Middle
 	if logger == nil {
 		logger = log.Default()
 	}
-	h := func(wish.Session) {}
+	h := func(ssh.Session) {}
 	for _, m := range mw {
 		h = m(h)
 	}
-	return func(sh wish.Handler) wish.Handler {
-		return func(s wish.Session) {
+	return func(sh ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {

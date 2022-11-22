@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/charmbracelet/wish"
+	"github.com/gliderlabs/ssh"
 )
 
 type fsHandler struct{ fsys fs.FS }
@@ -17,15 +17,15 @@ func NewFSReadHandler(fsys fs.FS) CopyToClientHandler {
 	return &fsHandler{fsys: fsys}
 }
 
-func (h *fsHandler) Glob(_ wish.Session, s string) ([]string, error) {
+func (h *fsHandler) Glob(_ ssh.Session, s string) ([]string, error) {
 	return fs.Glob(h.fsys, s)
 }
 
-func (h *fsHandler) WalkDir(_ wish.Session, path string, fn fs.WalkDirFunc) error {
+func (h *fsHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
 	return fs.WalkDir(h.fsys, path, fn)
 }
 
-func (h *fsHandler) NewDirEntry(_ wish.Session, path string) (*DirEntry, error) {
+func (h *fsHandler) NewDirEntry(_ ssh.Session, path string) (*DirEntry, error) {
 	info, err := fs.Stat(h.fsys, path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open dir: %q: %w", path, err)
@@ -40,7 +40,7 @@ func (h *fsHandler) NewDirEntry(_ wish.Session, path string) (*DirEntry, error) 
 	}, nil
 }
 
-func (h *fsHandler) NewFileEntry(_ wish.Session, path string) (*FileEntry, func() error, error) {
+func (h *fsHandler) NewFileEntry(_ ssh.Session, path string) (*FileEntry, func() error, error) {
 	info, err := fs.Stat(h.fsys, path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)

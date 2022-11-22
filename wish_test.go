@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/wish/testsession"
+	"github.com/gliderlabs/ssh"
 )
 
 func TestNewServer(t *testing.T) {
@@ -30,8 +31,8 @@ func TestNewServerWithOptions(t *testing.T) {
 
 func TestError(t *testing.T) {
 	eerr := errors.New("foo err")
-	sess := testsession.New(t, &Server{
-		Handler: func(s Session) {
+	sess := testsession.New(t, &ssh.Server{
+		Handler: func(s ssh.Session) {
 			Error(s, eerr)
 		},
 	}, nil)
@@ -47,8 +48,8 @@ func TestError(t *testing.T) {
 
 func TestFatal(t *testing.T) {
 	err := errors.New("foo err")
-	sess := testsession.New(t, &Server{
-		Handler: func(s Session) {
+	sess := testsession.New(t, &ssh.Server{
+		Handler: func(s ssh.Session) {
 			Fatal(s, err)
 		},
 	}, nil)

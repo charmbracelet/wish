@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/wish"
+	"github.com/gliderlabs/ssh"
 )
 
 // Middleware provides basic connection logging. Connects are logged with the
@@ -27,8 +28,8 @@ type Logger interface {
 // auth was public key based. Disconnect will log the remote address and
 // connection duration.
 func MiddlewareWithLogger(l Logger) wish.Middleware {
-	return func(sh wish.Handler) wish.Handler {
-		return func(s wish.Session) {
+	return func(sh ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
 			ct := time.Now()
 			hpk := s.PublicKey() != nil
 			pty, _, _ := s.Pty()

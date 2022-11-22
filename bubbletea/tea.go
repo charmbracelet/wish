@@ -7,6 +7,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/wish"
+	"github.com/gliderlabs/ssh"
 	"github.com/muesli/termenv"
 )
 
@@ -20,7 +21,7 @@ type BubbleTeaHandler = Handler // nolint: revive
 // Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
-type Handler func(wish.Session) (tea.Model, []tea.ProgramOption)
+type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
 
 // ProgramHandler is the function Bubble Tea apps implement to hook into the SSH
 // Middleware. This should return a new tea.Program. This handler is different
@@ -29,7 +30,7 @@ type Handler func(wish.Session) (tea.Model, []tea.ProgramOption)
 //
 // Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
 // otherwise the program will not function properly.
-type ProgramHandler func(wish.Session) *tea.Program
+type ProgramHandler func(ssh.Session) *tea.Program
 
 // Middleware takes a Handler and hooks the input and output for the
 // ssh.Session into the tea.Program. It also captures window resize events and
@@ -44,7 +45,7 @@ func Middleware(bth Handler) wish.Middleware {
 // by an SSH client's terminal cannot be detected by the server but this will
 // allow for manually setting the color profile on all SSH connections.
 func MiddlewareWithColorProfile(bth Handler, cp termenv.Profile) wish.Middleware {
-	h := func(s wish.Session) *tea.Program {
+	h := func(s ssh.Session) *tea.Program {
 		m, opts := bth(s)
 		if m == nil {
 			return nil
@@ -63,9 +64,9 @@ func MiddlewareWithColorProfile(bth Handler, cp termenv.Profile) wish.Middleware
 // Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
 // otherwise the program will not function properly.
 func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.Middleware {
-	return func(sh wish.Handler) wish.Handler {
+	return func(sh ssh.Handler) ssh.Handler {
 		lipgloss.SetColorProfile(cp)
-		return func(s wish.Session) {
+		return func(s ssh.Session) {
 			p := bth(s)
 			if p != nil {
 				_, windowChanges, _ := s.Pty()
