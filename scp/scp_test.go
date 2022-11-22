@@ -95,23 +95,17 @@ func TestNoDirRootEntry(t *testing.T) {
 
 func TestInvalidOps(t *testing.T) {
 	t.Run("not scp", func(t *testing.T) {
-		session := setup(t, nil, nil)
-		t.Cleanup(func() { _ = session.Close() })
-		_, err := session.CombinedOutput("not-scp ign")
+		_, err := setup(t, nil, nil).CombinedOutput("not-scp ign")
 		is.New(t).NoErr(err)
 	})
 
 	t.Run("copy to client", func(t *testing.T) {
-		session := setup(t, nil, nil)
-		t.Cleanup(func() { _ = session.Close() })
-		_, err := session.CombinedOutput("scp -t .")
+		_, err := setup(t, nil, nil).CombinedOutput("scp -t .")
 		is.New(t).True(err != nil)
 	})
 
 	t.Run("copy from client", func(t *testing.T) {
-		session := setup(t, nil, nil)
-		t.Cleanup(func() { _ = session.Close() })
-		_, err := session.CombinedOutput("scp -f .")
+		_, err := setup(t, nil, nil).CombinedOutput("scp -f .")
 		is.New(t).True(err != nil)
 	})
 }
