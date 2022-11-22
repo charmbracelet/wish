@@ -4,8 +4,8 @@ import (
 	"log"
 	"runtime/debug"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 )
 
 // Middleware is a wish middleware that recovers from panics and log to stderr.

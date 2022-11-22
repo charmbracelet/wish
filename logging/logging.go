@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 )
 
 // Middleware provides basic connection logging. Connects are logged with the

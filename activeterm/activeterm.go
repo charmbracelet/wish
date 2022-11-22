@@ -4,8 +4,8 @@ package activeterm
 import (
 	"fmt"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 )
 
 // Middleware will exit 1 connections trying with no active terminals.

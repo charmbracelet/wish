@@ -6,8 +6,8 @@ import (
 	"log"
 	"net"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"golang.org/x/time/rate"
 )

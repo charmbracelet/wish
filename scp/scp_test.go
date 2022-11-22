@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
 	"github.com/matryer/is"
 	gossh "golang.org/x/crypto/ssh"
 )

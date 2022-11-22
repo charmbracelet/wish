@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 )
@@ -176,7 +176,7 @@ func ensureRepo(dir string, repo string) error {
 		return err
 	}
 	if !exists {
-		err = os.MkdirAll(dir, os.ModeDir|os.FileMode(0700))
+		err = os.MkdirAll(dir, os.ModeDir|os.FileMode(0o700))
 		if err != nil {
 			return err
 		}

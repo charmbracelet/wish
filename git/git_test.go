@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 )
 
 func TestGitMiddleware(t *testing.T) {

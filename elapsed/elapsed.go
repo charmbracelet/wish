@@ -3,8 +3,8 @@ package timer
 import (
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 )
 
 // MiddlewareWithFormat returns a middleware that logs the elapsed time of the

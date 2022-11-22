@@ -3,8 +3,8 @@ package recover
 import (
 	"testing"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 

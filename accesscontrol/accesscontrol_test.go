@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/accesscontrol"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 

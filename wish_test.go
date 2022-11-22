@@ -1,4 +1,4 @@
-// go:generate mockgen -package mocks -destination mocks/session.go github.com/gliderlabs/ssh Session
+// go:generate mockgen -package mocks -destination mocks/session.go github.com/charmbracelet/ssh Session
 package wish
 
 import (
@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
 )
 
 func TestNewServer(t *testing.T) {

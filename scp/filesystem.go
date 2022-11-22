@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gliderlabs/ssh"
+	"github.com/charmbracelet/ssh"
 )
 
 type fileSystemHandler struct{ root string }

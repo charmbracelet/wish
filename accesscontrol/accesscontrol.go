@@ -4,8 +4,8 @@ package accesscontrol
 import (
 	"fmt"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 )
 
 // Middleware will exit 1 connections trying to execute commands that are not allowed.

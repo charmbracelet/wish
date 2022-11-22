@@ -4,14 +4,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
-	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 
-var (
-	waitDuration = time.Second
-)
+var waitDuration = time.Second
 
 func TestMiddleware(t *testing.T) {
 	t.Run("recover session", func(t *testing.T) {

@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/logging"
-	"github.com/gliderlabs/ssh"
 )
 
 const (

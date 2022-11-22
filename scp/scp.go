@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/gliderlabs/ssh"
 )
 
 // CopyToClientHandler is a handler that can be implemented to handle files
