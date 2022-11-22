@@ -205,8 +205,8 @@ func TestFilesystem(t *testing.T) {
 			t.Run("do not exist", func(t *testing.T) {
 				is := is.New(t)
 				h := &fileSystemHandler{t.TempDir()}
-				_, closeFn, err := h.NewFileEntry(nil, "foo")
-				t.Cleanup(func() { _ = closeFn() })
+				_, closer, err := h.NewFileEntry(nil, "foo")
+				t.Cleanup(func() { _ = closer() })
 				is.True(err != nil) // should err
 			})
 		})

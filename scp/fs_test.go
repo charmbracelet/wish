@@ -23,6 +23,7 @@ func TestFS(t *testing.T) {
 		chtimesTree(t, dir, atime, mtime)
 
 		session := setup(t, h, nil)
+		t.Cleanup(func() { _ = session.Close() })
 		bts, err := session.CombinedOutput("scp -f a.txt")
 		is.NoErr(err)
 		requireEqualGolden(t, bts)
@@ -38,6 +39,7 @@ func TestFS(t *testing.T) {
 		chtimesTree(t, dir, atime, mtime)
 
 		session := setup(t, h, nil)
+		t.Cleanup(func() { _ = session.Close() })
 		bts, err := session.CombinedOutput("scp -f *.txt")
 		is.NoErr(err)
 		requireEqualGolden(t, bts)
@@ -50,6 +52,7 @@ func TestFS(t *testing.T) {
 		h := NewFSReadHandler(os.DirFS(dir))
 
 		session := setup(t, h, nil)
+		t.Cleanup(func() { _ = session.Close() })
 		_, err := session.CombinedOutput("scp -f a.txt")
 		is.True(err != nil)
 	})
@@ -66,6 +69,7 @@ func TestFS(t *testing.T) {
 		chtimesTree(t, dir, atime, mtime)
 
 		session := setup(t, h, nil)
+		t.Cleanup(func() { _ = session.Close() })
 		bts, err := session.CombinedOutput("scp -r -f a")
 		requireEqualGolden(t, bts)
 		is.NoErr(err)
@@ -83,6 +87,7 @@ func TestFS(t *testing.T) {
 		chtimesTree(t, dir, atime, mtime)
 
 		session := setup(t, h, nil)
+		t.Cleanup(func() { _ = session.Close() })
 		bts, err := session.CombinedOutput("scp -r -f a/*")
 		requireEqualGolden(t, bts)
 		is.NoErr(err)
@@ -95,6 +100,7 @@ func TestFS(t *testing.T) {
 		h := NewFSReadHandler(os.DirFS(dir))
 
 		session := setup(t, h, nil)
+		t.Cleanup(func() { _ = session.Close() })
 		_, err := session.CombinedOutput("scp -r -f a")
 		is.True(err != nil)
 	})
@@ -123,7 +129,8 @@ func TestFS(t *testing.T) {
 			t.Run("do not exist", func(t *testing.T) {
 				is := is.New(t)
 				h := &fsHandler{os.DirFS(t.TempDir())}
-				_, _, err := h.NewFileEntry(nil, "foo")
+				_, closer, err := h.NewFileEntry(nil, "foo")
+				t.Cleanup(func() { _ = closer() })
 				is.True(err != nil) // should err
 			})
 		})
