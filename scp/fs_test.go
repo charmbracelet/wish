@@ -120,8 +120,7 @@ func TestFS(t *testing.T) {
 			t.Run("do not exist", func(t *testing.T) {
 				is := is.New(t)
 				h := &fsHandler{os.DirFS(t.TempDir())}
-				_, closer, err := h.NewFileEntry(nil, "foo")
-				t.Cleanup(func() { _ = closer() })
+				_, _, err := h.NewFileEntry(nil, "foo")
 				is.True(err != nil) // should err
 			})
 		})

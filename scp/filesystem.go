@@ -84,11 +84,11 @@ func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry
 	path := h.prefixed(name)
 	info, err := os.Stat(path)
 	if err != nil {
-		return nil, noopCloser, fmt.Errorf("failed to stat %q: %w", path, err)
+		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
 	}
 	f, err := os.Open(path)
 	if err != nil {
-		return nil, noopCloser, fmt.Errorf("failed to open %q: %w", path, err)
+		return nil, nil, fmt.Errorf("failed to open %q: %w", path, err)
 	}
 	return &FileEntry{
 		Name:     info.Name(),
@@ -123,5 +123,3 @@ func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error
 	}
 	return written, h.chtimes(entry.Filepath, entry.Mtime, entry.Atime)
 }
-
-func noopCloser() error { return nil }

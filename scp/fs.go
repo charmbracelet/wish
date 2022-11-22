@@ -43,11 +43,11 @@ func (h *fsHandler) NewDirEntry(_ ssh.Session, path string) (*DirEntry, error) {
 func (h *fsHandler) NewFileEntry(_ ssh.Session, path string) (*FileEntry, func() error, error) {
 	info, err := fs.Stat(h.fsys, path)
 	if err != nil {
-		return nil, noopCloser, fmt.Errorf("failed to stat %q: %w", path, err)
+		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
 	}
 	f, err := h.fsys.Open(path)
 	if err != nil {
-		return nil, noopCloser, fmt.Errorf("failed to open %q: %w", path, err)
+		return nil, nil, fmt.Errorf("failed to open %q: %w", path, err)
 	}
 	return &FileEntry{
 		Name:     info.Name(),
