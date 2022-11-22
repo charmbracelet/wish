@@ -4,15 +4,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 )
 
 func TestRateLimiterNoLimit(t *testing.T) {
-	s := &wish.Server{
-		Handler: Middleware(NewRateLimiter(rate.Limit(0), 0, 5))(func(s wish.Session) {
+	s := &ssh.Server{
+		Handler: Middleware(NewRateLimiter(rate.Limit(0), 0, 5))(func(s ssh.Session) {
 			s.Write([]byte("hello"))
 		}),
 	}
@@ -24,8 +24,8 @@ func TestRateLimiterNoLimit(t *testing.T) {
 }
 
 func TestRateLimiterZeroedMaxEntried(t *testing.T) {
-	s := &wish.Server{
-		Handler: Middleware(NewRateLimiter(rate.Limit(1), 1, 0))(func(s wish.Session) {
+	s := &ssh.Server{
+		Handler: Middleware(NewRateLimiter(rate.Limit(1), 1, 0))(func(s ssh.Session) {
 			s.Write([]byte("hello"))
 		}),
 	}
@@ -37,8 +37,8 @@ func TestRateLimiterZeroedMaxEntried(t *testing.T) {
 }
 
 func TestRateLimiter(t *testing.T) {
-	s := &wish.Server{
-		Handler: Middleware(NewRateLimiter(rate.Limit(10), 4, 1))(func(s wish.Session) {
+	s := &ssh.Server{
+		Handler: Middleware(NewRateLimiter(rate.Limit(10), 4, 1))(func(s ssh.Session) {
 			// noop
 		}),
 	}

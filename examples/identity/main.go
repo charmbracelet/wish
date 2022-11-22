@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/logging"
-	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -23,18 +23,18 @@ func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
-		wish.WithPublicKeyAuth(func(ctx wish.Context, key wish.PublicKey) bool {
+		wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 			return true
 		}),
 		wish.WithMiddleware(
 			logging.Middleware(),
-			func(h wish.Handler) wish.Handler {
-				return func(s wish.Session) {
+			func(h ssh.Handler) ssh.Handler {
+				return func(s ssh.Session) {
 					carlos, _, _, _, _ := ssh.ParseAuthorizedKey(
 						[]byte("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILxWe2rXKoiO6W14LYPVfJKzRfJ1f3Jhzxrgjc/D4tU7"),
 					)
 					switch {
-					case wish.KeysEqual(s.PublicKey(), carlos):
+					case ssh.KeysEqual(s.PublicKey(), carlos):
 						wish.Println(s, "Hey Carlos!")
 					default:
 						wish.Println(s, "Hey, I don't know who you are!")

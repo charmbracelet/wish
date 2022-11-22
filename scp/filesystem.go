@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/ssh"
 )
 
 type fileSystemHandler struct{ root string }
@@ -45,7 +45,7 @@ func (h *fileSystemHandler) prefixed(path string) string {
 	return filepath.Join(h.root, path)
 }
 
-func (h *fileSystemHandler) Glob(_ wish.Session, s string) ([]string, error) {
+func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
 	matches, err := filepath.Glob(h.prefixed(s))
 	if err != nil {
 		return []string{}, err
@@ -60,11 +60,11 @@ func (h *fileSystemHandler) Glob(_ wish.Session, s string) ([]string, error) {
 	return matches, nil
 }
 
-func (h *fileSystemHandler) WalkDir(_ wish.Session, path string, fn fs.WalkDirFunc) error {
+func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
 	return filepath.WalkDir(h.prefixed(path), fn)
 }
 
-func (h *fileSystemHandler) NewDirEntry(_ wish.Session, name string) (*DirEntry, error) {
+func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, error) {
 	path := h.prefixed(name)
 	info, err := os.Stat(path)
 	if err != nil {
@@ -80,7 +80,7 @@ func (h *fileSystemHandler) NewDirEntry(_ wish.Session, name string) (*DirEntry,
 	}, nil
 }
 
-func (h *fileSystemHandler) NewFileEntry(_ wish.Session, name string) (*FileEntry, func() error, error) {
+func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry, func() error, error) {
 	path := h.prefixed(name)
 	info, err := os.Stat(path)
 	if err != nil {
@@ -101,14 +101,14 @@ func (h *fileSystemHandler) NewFileEntry(_ wish.Session, name string) (*FileEntr
 	}, f.Close, nil
 }
 
-func (h *fileSystemHandler) Mkdir(_ wish.Session, entry *DirEntry) error {
+func (h *fileSystemHandler) Mkdir(_ ssh.Session, entry *DirEntry) error {
 	if err := os.Mkdir(h.prefixed(entry.Filepath), entry.Mode); err != nil {
 		return fmt.Errorf("failed to create dir: %q: %w", entry.Filepath, err)
 	}
 	return h.chtimes(entry.Filepath, entry.Mtime, entry.Atime)
 }
 
-func (h *fileSystemHandler) Write(_ wish.Session, entry *FileEntry) (int64, error) {
+func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error) {
 	f, err := os.OpenFile(h.prefixed(entry.Filepath), os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)

@@ -8,39 +8,40 @@ import (
 	"testing"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
-	"golang.org/x/crypto/ssh"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 func TestWithIdleTimeout(t *testing.T) {
-	s := Server{}
+	s := ssh.Server{}
 	requireNoError(t, WithIdleTimeout(time.Second)(&s))
 	requireEqual(t, time.Second, s.IdleTimeout)
 }
 
 func TestWithMaxTimeout(t *testing.T) {
-	s := Server{}
+	s := ssh.Server{}
 	requireNoError(t, WithMaxTimeout(time.Second)(&s))
 	requireEqual(t, time.Second, s.MaxTimeout)
 }
 
 func TestIsAuthorized(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
-		requireEqual(t, true, isAuthorized("testdata/authorized_keys", func(k PublicKey) bool { return true }))
+		requireEqual(t, true, isAuthorized("testdata/authorized_keys", func(k ssh.PublicKey) bool { return true }))
 	})
 
 	t.Run("invalid", func(t *testing.T) {
-		requireEqual(t, false, isAuthorized("testdata/invalid_authorized_keys", func(k PublicKey) bool { return true }))
+		requireEqual(t, false, isAuthorized("testdata/invalid_authorized_keys", func(k ssh.PublicKey) bool { return true }))
 	})
 
 	t.Run("file not found", func(t *testing.T) {
-		requireEqual(t, false, isAuthorized("testdata/nope_authorized_keys", func(k PublicKey) bool { return true }))
+		requireEqual(t, false, isAuthorized("testdata/nope_authorized_keys", func(k ssh.PublicKey) bool { return true }))
 	})
 }
 
 func TestWithAuthorizedKeys(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
-		s := Server{}
+		s := ssh.Server{}
 		requireNoError(t, WithAuthorizedKeys("testdata/authorized_keys")(&s))
 
 		for key, authorize := range map[string]bool{
@@ -57,7 +58,7 @@ func TestWithAuthorizedKeys(t *testing.T) {
 	})
 
 	t.Run("invalid", func(t *testing.T) {
-		s := Server{}
+		s := ssh.Server{}
 		requireNoError(
 			t,
 			WithAuthorizedKeys("testdata/invalid_authorized_keys")(&s),
@@ -65,7 +66,7 @@ func TestWithAuthorizedKeys(t *testing.T) {
 	})
 
 	t.Run("file not found", func(t *testing.T) {
-		s := Server{}
+		s := ssh.Server{}
 		if err := WithAuthorizedKeys("testdata/nope_authorized_keys")(&s); err == nil {
 			t.Fatal("expected an error, got nil")
 		}
@@ -73,33 +74,33 @@ func TestWithAuthorizedKeys(t *testing.T) {
 }
 
 func TestWithTrustedUserCAKeys(t *testing.T) {
-	setup := func(tb testing.TB, certPath string) (*Server, *ssh.ClientConfig) {
-		s := &Server{
-			Handler: func(s Session) {
-				cert, ok := s.PublicKey().(*ssh.Certificate)
+	setup := func(tb testing.TB, certPath string) (*ssh.Server, *gossh.ClientConfig) {
+		s := &ssh.Server{
+			Handler: func(s ssh.Session) {
+				cert, ok := s.PublicKey().(*gossh.Certificate)
 				fmt.Fprintf(s, "cert? %v - principals: %v - type: %v", ok, cert.ValidPrincipals, cert.CertType)
 			},
 		}
 		requireNoError(t, WithTrustedUserCAKeys("testdata/ca.pub")(s))
 
-		signer, err := ssh.ParsePrivateKey(getBytes(t, "testdata/foo"))
+		signer, err := gossh.ParsePrivateKey(getBytes(t, "testdata/foo"))
 		requireNoError(t, err)
 
-		cert, _, _, _, err := ssh.ParseAuthorizedKey(getBytes(t, certPath))
+		cert, _, _, _, err := gossh.ParseAuthorizedKey(getBytes(t, certPath))
 		requireNoError(t, err)
 
-		certSigner, err := ssh.NewCertSigner(cert.(*ssh.Certificate), signer)
+		certSigner, err := gossh.NewCertSigner(cert.(*gossh.Certificate), signer)
 		requireNoError(t, err)
-		return s, &ssh.ClientConfig{
+		return s, &gossh.ClientConfig{
 			User: "foo",
-			Auth: []ssh.AuthMethod{
-				ssh.PublicKeys(certSigner),
+			Auth: []gossh.AuthMethod{
+				gossh.PublicKeys(certSigner),
 			},
 		}
 	}
 
 	t.Run("invalid ca key", func(t *testing.T) {
-		s := &Server{}
+		s := &ssh.Server{}
 		if err := WithTrustedUserCAKeys("testdata/invalid-path")(s); err == nil {
 			t.Fatal("expected an error, got nil")
 		}
@@ -134,20 +135,20 @@ func TestWithTrustedUserCAKeys(t *testing.T) {
 	})
 
 	t.Run("not a cert", func(t *testing.T) {
-		s := &Server{
-			Handler: func(s Session) {
+		s := &ssh.Server{
+			Handler: func(s ssh.Session) {
 				fmt.Fprintln(s, "hello")
 			},
 		}
 		requireNoError(t, WithTrustedUserCAKeys("testdata/ca.pub")(s))
 
-		signer, err := ssh.ParsePrivateKey(getBytes(t, "testdata/foo"))
+		signer, err := gossh.ParsePrivateKey(getBytes(t, "testdata/foo"))
 		requireNoError(t, err)
 
-		_, err = testsession.NewClientSession(t, testsession.Listen(t, s), &ssh.ClientConfig{
+		_, err = testsession.NewClientSession(t, testsession.Listen(t, s), &gossh.ClientConfig{
 			User: "foo",
-			Auth: []ssh.AuthMethod{
-				ssh.PublicKeys(signer),
+			Auth: []gossh.AuthMethod{
+				gossh.PublicKeys(signer),
 			},
 		})
 		requireAuthError(t, err)

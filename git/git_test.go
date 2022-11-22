@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"golang.org/x/crypto/ssh"
 )
 
 func TestGitMiddleware(t *testing.T) {
@@ -39,7 +39,7 @@ func TestGitMiddleware(t *testing.T) {
 	}
 	srv, err := wish.NewServer(
 		wish.WithMiddleware(Middleware(repoDir, hooks)),
-		wish.WithPublicKeyAuth(func(ctx wish.Context, key wish.PublicKey) bool {
+		wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 			return true
 		}),
 	)
@@ -176,18 +176,18 @@ func requireError(t *testing.T, err error) {
 	}
 }
 
-func requireHasAction(t *testing.T, actions []action, key wish.PublicKey, repo string) {
+func requireHasAction(t *testing.T, actions []action, key ssh.PublicKey, repo string) {
 	t.Helper()
 
 	for _, action := range actions {
-		if repo == action.repo && wish.KeysEqual(key, action.key) {
+		if repo == action.repo && ssh.KeysEqual(key, action.key) {
 			return
 		}
 	}
 	t.Fatalf("expected action for %q, got none", repo)
 }
 
-func createKeyPair(t *testing.T) (wish.PublicKey, string) {
+func createKeyPair(t *testing.T) (ssh.PublicKey, string) {
 	t.Helper()
 
 	keyDir := t.TempDir()
@@ -202,13 +202,13 @@ func createKeyPair(t *testing.T) (wish.PublicKey, string) {
 }
 
 type accessDetails struct {
-	key   wish.PublicKey
+	key   ssh.PublicKey
 	repo  string
 	level AccessLevel
 }
 
 type action struct {
-	key  wish.PublicKey
+	key  ssh.PublicKey
 	repo string
 }
 
@@ -219,23 +219,23 @@ type testHooks struct {
 	access  []accessDetails
 }
 
-func (h *testHooks) AuthRepo(repo string, key wish.PublicKey) AccessLevel {
+func (h *testHooks) AuthRepo(repo string, key ssh.PublicKey) AccessLevel {
 	for _, dets := range h.access {
-		if dets.repo == repo && wish.KeysEqual(key, dets.key) {
+		if dets.repo == repo && ssh.KeysEqual(key, dets.key) {
 			return dets.level
 		}
 	}
 	return NoAccess
 }
 
-func (h *testHooks) Push(repo string, key wish.PublicKey) {
+func (h *testHooks) Push(repo string, key ssh.PublicKey) {
 	h.Lock()
 	defer h.Unlock()
 
 	h.pushes = append(h.pushes, action{key, repo})
 }
 
-func (h *testHooks) Fetch(repo string, key wish.PublicKey) {
+func (h *testHooks) Fetch(repo string, key ssh.PublicKey) {
 	h.Lock()
 	defer h.Unlock()
 

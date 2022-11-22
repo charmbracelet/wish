@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 )
 
@@ -22,17 +23,17 @@ type CopyToClientHandler interface {
 	//
 	// Note: if your other functions expect a relative path, make sure that
 	// your Glob implementation returns relative paths as well.
-	Glob(wish.Session, string) ([]string, error)
+	Glob(ssh.Session, string) ([]string, error)
 
 	// WalkDir must be implemented if you want to allow recursive copies.
-	WalkDir(wish.Session, string, fs.WalkDirFunc) error
+	WalkDir(ssh.Session, string, fs.WalkDirFunc) error
 
 	// NewDirEntry should provide a *DirEntry for the given path.
-	NewDirEntry(wish.Session, string) (*DirEntry, error)
+	NewDirEntry(ssh.Session, string) (*DirEntry, error)
 
 	// NewFileEntry should provide a *FileEntry for the given path.
 	// Users may also provide a closing function.
-	NewFileEntry(wish.Session, string) (*FileEntry, func() error, error)
+	NewFileEntry(ssh.Session, string) (*FileEntry, func() error, error)
 }
 
 // CopyFromClientHandler is a handler that can be implemented to handle files
@@ -40,10 +41,10 @@ type CopyToClientHandler interface {
 type CopyFromClientHandler interface {
 	// Mkdir should created the given dir.
 	// Note that this usually shouldn't use os.MkdirAll and the like.
-	Mkdir(wish.Session, *DirEntry) error
+	Mkdir(ssh.Session, *DirEntry) error
 
 	// Write should write the given file.
-	Write(wish.Session, *FileEntry) (int64, error)
+	Write(ssh.Session, *FileEntry) (int64, error)
 }
 
 // Handler is a interface that can be implemented to handle both SCP
@@ -56,8 +57,8 @@ type Handler interface {
 // Middleware provides a wish middleware using the given CopyToClientHandler
 // and CopyFromClientHandler.
 func Middleware(rh CopyToClientHandler, wh CopyFromClientHandler) wish.Middleware {
-	return func(sh wish.Handler) wish.Handler {
-		return func(s wish.Session) {
+	return func(sh ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
 			info := GetInfo(s.Command())
 			if !info.Ok {
 				sh(s)

@@ -4,6 +4,7 @@ import (
 	"log"
 	"runtime/debug"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 )
 
@@ -18,12 +19,12 @@ func MiddlewareWithLogger(logger *log.Logger, mw ...wish.Middleware) wish.Middle
 	if logger == nil {
 		logger = log.Default()
 	}
-	h := func(wish.Session) {}
+	h := func(ssh.Session) {}
 	for _, m := range mw {
 		h = m(h)
 	}
-	return func(sh wish.Handler) wish.Handler {
-		return func(s wish.Session) {
+	return func(sh ssh.Handler) ssh.Handler {
+		return func(s ssh.Session) {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {

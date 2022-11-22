@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/logging"
 	"github.com/spf13/cobra"
@@ -47,8 +48,8 @@ func main() {
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
-			func(h wish.Handler) wish.Handler {
-				return func(s wish.Session) {
+			func(h ssh.Handler) ssh.Handler {
+				return func(s ssh.Session) {
 					rootCmd := cmd()
 					rootCmd.SetArgs(s.Command())
 					rootCmd.SetIn(s)

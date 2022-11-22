@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/accesscontrol"
 	"github.com/charmbracelet/wish/testsession"
-	"golang.org/x/crypto/ssh"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 const out = "hello world"
@@ -77,10 +77,10 @@ func TestMiddleware(t *testing.T) {
 	})
 }
 
-func setup(tb testing.TB, allowedCmds ...string) *ssh.Session {
+func setup(tb testing.TB, allowedCmds ...string) *gossh.Session {
 	tb.Helper()
-	return testsession.New(tb, &wish.Server{
-		Handler: accesscontrol.Middleware(allowedCmds...)(func(s wish.Session) {
+	return testsession.New(tb, &ssh.Server{
+		Handler: accesscontrol.Middleware(allowedCmds...)(func(s ssh.Session) {
 			s.Write([]byte(out))
 		}),
 	}, nil)

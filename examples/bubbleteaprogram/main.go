@@ -13,6 +13,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
@@ -68,7 +69,7 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 		}()
 		return p
 	}
-	teaHandler := func(s wish.Session) *tea.Program {
+	teaHandler := func(s ssh.Session) *tea.Program {
 		pty, _, active := s.Pty()
 		if !active {
 			wish.Fatalln(s, "no active terminal, skipping")
