@@ -27,7 +27,6 @@ func TestFilesystem(t *testing.T) {
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
-			t.Cleanup(func() { _ = session.Close() })
 			bts, err := session.CombinedOutput("scp -f a.txt")
 			is.NoErr(err)
 			requireEqualGolden(t, bts)
@@ -43,7 +42,6 @@ func TestFilesystem(t *testing.T) {
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
-			t.Cleanup(func() { _ = session.Close() })
 			bts, err := session.CombinedOutput("scp -f *.txt")
 			is.NoErr(err)
 			requireEqualGolden(t, bts)
@@ -56,7 +54,6 @@ func TestFilesystem(t *testing.T) {
 			h := NewFileSystemHandler(dir)
 
 			session := setup(t, h, nil)
-			t.Cleanup(func() { _ = session.Close() })
 			_, err := session.CombinedOutput("scp -f a.txt")
 			is.True(err != nil)
 		})
@@ -73,10 +70,9 @@ func TestFilesystem(t *testing.T) {
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
-			t.Cleanup(func() { _ = session.Close() })
 			bts, err := session.CombinedOutput("scp -r -f a")
-			requireEqualGolden(t, bts)
 			is.NoErr(err)
+			requireEqualGolden(t, bts)
 		})
 
 		t.Run("recursive glob", func(t *testing.T) {
@@ -91,10 +87,9 @@ func TestFilesystem(t *testing.T) {
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
-			t.Cleanup(func() { _ = session.Close() })
 			bts, err := session.CombinedOutput("scp -r -f a/*")
-			requireEqualGolden(t, bts)
 			is.NoErr(err)
+			requireEqualGolden(t, bts)
 		})
 
 		t.Run("recursive invalid file", func(t *testing.T) {
@@ -104,7 +99,6 @@ func TestFilesystem(t *testing.T) {
 			h := NewFileSystemHandler(dir)
 
 			session := setup(t, h, nil)
-			t.Cleanup(func() { _ = session.Close() })
 			_, err := session.CombinedOutput("scp -r -f a")
 			is.True(err != nil)
 		})
@@ -116,7 +110,6 @@ func TestFilesystem(t *testing.T) {
 			dir := t.TempDir()
 			h := NewFileSystemHandler(dir)
 			session := setup(t, nil, h)
-			t.Cleanup(func() { _ = session.Close() })
 
 			var in bytes.Buffer
 			in.WriteString("T1183832947 0 1183833773 0\n")
@@ -153,7 +146,6 @@ func TestFilesystem(t *testing.T) {
 			in.WriteString("E\n")
 
 			session := setup(t, nil, h)
-			t.Cleanup(func() { _ = session.Close() })
 			session.Stdin = &in
 			_, err := session.CombinedOutput("scp -r -t .")
 			is.NoErr(err)

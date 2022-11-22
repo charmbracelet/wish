@@ -23,7 +23,6 @@ func TestFS(t *testing.T) {
 		chtimesTree(t, dir, atime, mtime)
 
 		session := setup(t, h, nil)
-		t.Cleanup(func() { _ = session.Close() })
 		bts, err := session.CombinedOutput("scp -f a.txt")
 		is.NoErr(err)
 		requireEqualGolden(t, bts)
@@ -39,7 +38,6 @@ func TestFS(t *testing.T) {
 		chtimesTree(t, dir, atime, mtime)
 
 		session := setup(t, h, nil)
-		t.Cleanup(func() { _ = session.Close() })
 		bts, err := session.CombinedOutput("scp -f *.txt")
 		is.NoErr(err)
 		requireEqualGolden(t, bts)
@@ -52,7 +50,6 @@ func TestFS(t *testing.T) {
 		h := NewFSReadHandler(os.DirFS(dir))
 
 		session := setup(t, h, nil)
-		t.Cleanup(func() { _ = session.Close() })
 		_, err := session.CombinedOutput("scp -f a.txt")
 		is.True(err != nil)
 	})
@@ -68,11 +65,9 @@ func TestFS(t *testing.T) {
 		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
 		chtimesTree(t, dir, atime, mtime)
 
-		session := setup(t, h, nil)
-		t.Cleanup(func() { _ = session.Close() })
-		bts, err := session.CombinedOutput("scp -r -f a")
-		requireEqualGolden(t, bts)
+		bts, err := setup(t, h, nil).CombinedOutput("scp -r -f a")
 		is.NoErr(err)
+		requireEqualGolden(t, bts)
 	})
 
 	t.Run("recursive glob", func(t *testing.T) {
@@ -86,11 +81,9 @@ func TestFS(t *testing.T) {
 		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
 		chtimesTree(t, dir, atime, mtime)
 
-		session := setup(t, h, nil)
-		t.Cleanup(func() { _ = session.Close() })
-		bts, err := session.CombinedOutput("scp -r -f a/*")
-		requireEqualGolden(t, bts)
+		bts, err := setup(t, h, nil).CombinedOutput("scp -r -f a/*")
 		is.NoErr(err)
+		requireEqualGolden(t, bts)
 	})
 
 	t.Run("recursive invalid file", func(t *testing.T) {
@@ -99,9 +92,7 @@ func TestFS(t *testing.T) {
 		dir := t.TempDir()
 		h := NewFSReadHandler(os.DirFS(dir))
 
-		session := setup(t, h, nil)
-		t.Cleanup(func() { _ = session.Close() })
-		_, err := session.CombinedOutput("scp -r -f a")
+		_, err := setup(t, h, nil).CombinedOutput("scp -r -f a")
 		is.True(err != nil)
 	})
 
