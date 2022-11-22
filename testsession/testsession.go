@@ -1,13 +1,13 @@
 // Package testsession provides utilities to test SSH sessions.
 //
-// more or less copied from charmbracelet/ssh tests
+// more or less copied from gliderlabs/ssh tests
 package testsession
 
 import (
 	"net"
 	"testing"
 
-	"github.com/charmbracelet/ssh"
+	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 

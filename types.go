@@ -4,7 +4,7 @@ import (
 	"context"
 	"sync"
 
-	"github.com/charmbracelet/ssh"
+	"github.com/gliderlabs/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 
