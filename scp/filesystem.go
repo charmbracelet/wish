@@ -113,9 +113,13 @@ func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)
 	}
+	defer f.Close() //nolint:errcheck
 	written, err := io.Copy(f, entry.Reader)
 	if err != nil {
 		return 0, fmt.Errorf("failed to write file: %q: %w", entry.Filepath, err)
+	}
+	if err := f.Close(); err != nil {
+		return 0, fmt.Errorf("failed to close file: %q: %w", entry.Filepath, err)
 	}
 	return written, h.chtimes(entry.Filepath, entry.Mtime, entry.Atime)
 }
