@@ -27,6 +27,7 @@ func TestFilesystem(t *testing.T) {
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
+			t.Cleanup(func() { _ = session.Close() })
 			bts, err := session.CombinedOutput("scp -f a.txt")
 			is.NoErr(err)
 			requireEqualGolden(t, bts)
@@ -42,6 +43,7 @@ func TestFilesystem(t *testing.T) {
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
+			t.Cleanup(func() { _ = session.Close() })
 			bts, err := session.CombinedOutput("scp -f *.txt")
 			is.NoErr(err)
 			requireEqualGolden(t, bts)
@@ -54,6 +56,7 @@ func TestFilesystem(t *testing.T) {
 			h := NewFileSystemHandler(dir)
 
 			session := setup(t, h, nil)
+			t.Cleanup(func() { _ = session.Close() })
 			_, err := session.CombinedOutput("scp -f a.txt")
 			is.True(err != nil)
 		})
@@ -70,6 +73,7 @@ func TestFilesystem(t *testing.T) {
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
+			t.Cleanup(func() { _ = session.Close() })
 			bts, err := session.CombinedOutput("scp -r -f a")
 			requireEqualGolden(t, bts)
 			is.NoErr(err)
@@ -87,6 +91,7 @@ func TestFilesystem(t *testing.T) {
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
+			t.Cleanup(func() { _ = session.Close() })
 			bts, err := session.CombinedOutput("scp -r -f a/*")
 			requireEqualGolden(t, bts)
 			is.NoErr(err)
@@ -99,6 +104,7 @@ func TestFilesystem(t *testing.T) {
 			h := NewFileSystemHandler(dir)
 
 			session := setup(t, h, nil)
+			t.Cleanup(func() { _ = session.Close() })
 			_, err := session.CombinedOutput("scp -r -f a")
 			is.True(err != nil)
 		})
@@ -110,6 +116,7 @@ func TestFilesystem(t *testing.T) {
 			dir := t.TempDir()
 			h := NewFileSystemHandler(dir)
 			session := setup(t, nil, h)
+			t.Cleanup(func() { _ = session.Close() })
 
 			var in bytes.Buffer
 			in.WriteString("T1183832947 0 1183833773 0\n")
@@ -146,6 +153,7 @@ func TestFilesystem(t *testing.T) {
 			in.WriteString("E\n")
 
 			session := setup(t, nil, h)
+			t.Cleanup(func() { _ = session.Close() })
 			session.Stdin = &in
 			_, err := session.CombinedOutput("scp -r -t .")
 			is.NoErr(err)
@@ -197,7 +205,8 @@ func TestFilesystem(t *testing.T) {
 			t.Run("do not exist", func(t *testing.T) {
 				is := is.New(t)
 				h := &fileSystemHandler{t.TempDir()}
-				_, _, err := h.NewFileEntry(nil, "foo")
+				_, closeFn, err := h.NewFileEntry(nil, "foo")
+				t.Cleanup(func() { _ = closeFn() })
 				is.True(err != nil) // should err
 			})
 		})
@@ -209,7 +218,7 @@ func TestFilesystem(t *testing.T) {
 				err := h.Mkdir(nil, &DirEntry{
 					Name:     "foo",
 					Filepath: "foo/bar/baz",
-					Mode:     0755,
+					Mode:     0o755,
 				})
 				is.True(err != nil) // should err
 			})
@@ -222,7 +231,7 @@ func TestFilesystem(t *testing.T) {
 				_, err := h.Write(nil, &FileEntry{
 					Name:     "foo.txt",
 					Filepath: "baz/foo.txt",
-					Mode:     0644,
+					Mode:     0o644,
 					Size:     10,
 				})
 				is.True(err != nil) // should err
@@ -234,23 +243,21 @@ func TestFilesystem(t *testing.T) {
 				_, err := h.Write(nil, &FileEntry{
 					Name:     "foo.txt",
 					Filepath: "foo.txt",
-					Mode:     0644,
+					Mode:     0o644,
 					Size:     10,
 					Reader:   iotest.ErrReader(fmt.Errorf("fake err")),
 				})
 				is.True(err != nil) // should err
 			})
 		})
-
 	})
-
 }
 
 func chtimesTree(tb testing.TB, dir string, atime, mtime time.Time) {
 	is := is.New(tb)
 
-	filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+	is.NoErr(filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
 		is.NoErr(os.Chtimes(path, atime, mtime))
 		return nil
-	})
+	}))
 }
