@@ -127,10 +127,9 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	is := is.New(tb)
 
 	fixOutput := func(bts []byte) []byte {
-		bts = bytes.ReplaceAll(bts, []byte("\r\n"), []byte("\n"))
 		bts = bytes.ReplaceAll(bts, []byte("\r"), []byte(""))
 		if runtime.GOOS == "windows" {
-			// i give up
+			// perms always come different on Windows because, well, its Windows.
 			bts = bytes.ReplaceAll(bts, []byte("0666"), []byte("0644"))
 			bts = bytes.ReplaceAll(bts, []byte("0777"), []byte("0755"))
 		}
@@ -149,6 +148,6 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	gbts = fixOutput(gbts)
 
 	if diff := cmp.Diff(string(gbts), string(out)); diff != "" {
-		tb.Fatal("expected no diff, got:", diff)
+		tb.Fatal("files do not match:", diff)
 	}
 }

@@ -159,6 +159,7 @@ func (e *RootEntry) Append(entry Entry) {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
+			fmt.Printf("%q has prefix %q? %v", parent, dir.Filepath, strings.HasPrefix(parent, dir.Filepath))
 			if strings.HasPrefix(parent, dir.Filepath) {
 				dir.Append(entry)
 				return
