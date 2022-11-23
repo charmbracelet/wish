@@ -81,7 +81,7 @@ func TestNoDirRootEntry(t *testing.T) {
 	root.Append(&FileEntry{
 		Name:     "f1",
 		Filepath: "f1",
-		Mode:     0o644,
+		Mode:     0o666,
 		Size:     int64(f1.Len()),
 		Reader:   &f1,
 	})
