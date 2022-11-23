@@ -224,7 +224,7 @@ func (e *DirEntry) Write(w io.Writer) error {
 
 // Appends an entry to the folder or their children.
 func (e *DirEntry) Append(entry Entry) {
-	parent := filepath.Dir(entry.path())
+	parent := normalizePath(filepath.Dir(entry.path()))
 
 	for _, child := range e.Children {
 		switch dir := child.(type) {
@@ -233,7 +233,8 @@ func (e *DirEntry) Append(entry Entry) {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
-			if strings.HasPrefix(parent, dir.path()) {
+			path := normalizePath(dir.path())
+			if strings.HasPrefix(parent, path) {
 				dir.Append(entry)
 				return
 			}
