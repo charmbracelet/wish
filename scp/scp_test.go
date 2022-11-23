@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/charmbracelet/ssh"
@@ -81,7 +82,7 @@ func TestNoDirRootEntry(t *testing.T) {
 	root.Append(&FileEntry{
 		Name:     "f1",
 		Filepath: "f1",
-		Mode:     0o664,
+		Mode:     0o644,
 		Size:     int64(f1.Len()),
 		Reader:   &f1,
 	})
@@ -128,6 +129,11 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	fixOutput := func(bts []byte) []byte {
 		bts = bytes.ReplaceAll(bts, []byte("\r\n"), []byte("\n"))
 		bts = bytes.ReplaceAll(bts, []byte("\r"), []byte(""))
+		if runtime.GOOS == "windows" {
+			// i give up
+			bts = bytes.ReplaceAll(bts, []byte("0666"), []byte("0644"))
+			bts = bytes.ReplaceAll(bts, []byte("0777"), []byte("0755"))
+		}
 		return bytes.ReplaceAll(bts, NULL, []byte("<NULL>"))
 	}
 

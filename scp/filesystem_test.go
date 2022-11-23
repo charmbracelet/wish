@@ -23,7 +23,7 @@ func TestFilesystem(t *testing.T) {
 
 			dir := t.TempDir()
 			h := NewFileSystemHandler(dir)
-			is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o664))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o644))
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
@@ -37,8 +37,8 @@ func TestFilesystem(t *testing.T) {
 
 			dir := t.TempDir()
 			h := NewFileSystemHandler(dir)
-			is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o664))
-			is.NoErr(os.WriteFile(filepath.Join(dir, "b.txt"), []byte("another text file"), 0o664))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o644))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "b.txt"), []byte("another text file"), 0o644))
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
@@ -65,8 +65,8 @@ func TestFilesystem(t *testing.T) {
 			h := NewFileSystemHandler(dir)
 
 			is.NoErr(os.MkdirAll(filepath.Join(dir, "a/b/c/d/e"), 0o755))
-			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o664))
-			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o664))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o644))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
@@ -82,8 +82,8 @@ func TestFilesystem(t *testing.T) {
 			h := NewFileSystemHandler(dir)
 
 			is.NoErr(os.MkdirAll(filepath.Join(dir, "a/b/c/d/e"), 0o755))
-			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o664))
-			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o664))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o644))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
 			chtimesTree(t, dir, atime, mtime)
 
 			session := setup(t, h, nil)
@@ -222,7 +222,7 @@ func TestFilesystem(t *testing.T) {
 				_, err := h.Write(nil, &FileEntry{
 					Name:     "foo.txt",
 					Filepath: "baz/foo.txt",
-					Mode:     0o664,
+					Mode:     0o644,
 					Size:     10,
 				})
 				is.True(err != nil) // should err
@@ -234,7 +234,7 @@ func TestFilesystem(t *testing.T) {
 				_, err := h.Write(nil, &FileEntry{
 					Name:     "foo.txt",
 					Filepath: "foo.txt",
-					Mode:     0o664,
+					Mode:     0o644,
 					Size:     10,
 					Reader:   iotest.ErrReader(fmt.Errorf("fake err")),
 				})
