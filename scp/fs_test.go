@@ -19,7 +19,7 @@ func TestFS(t *testing.T) {
 		dir := t.TempDir()
 		h := NewFSReadHandler(os.DirFS(dir))
 
-		is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o666))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o664))
 		chtimesTree(t, dir, atime, mtime)
 
 		session := setup(t, h, nil)
@@ -33,8 +33,8 @@ func TestFS(t *testing.T) {
 
 		dir := t.TempDir()
 		h := NewFSReadHandler(os.DirFS(dir))
-		is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o666))
-		is.NoErr(os.WriteFile(filepath.Join(dir, "b.txt"), []byte("another text file"), 0o666))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "a.txt"), []byte("a text file"), 0o664))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "b.txt"), []byte("another text file"), 0o664))
 		chtimesTree(t, dir, atime, mtime)
 
 		session := setup(t, h, nil)
@@ -61,8 +61,8 @@ func TestFS(t *testing.T) {
 		h := NewFSReadHandler(os.DirFS(dir))
 
 		is.NoErr(os.MkdirAll(filepath.Join(dir, "a/b/c/d/e"), 0o755))
-		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o666))
-		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o666))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o664))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o664))
 		chtimesTree(t, dir, atime, mtime)
 
 		bts, err := setup(t, h, nil).CombinedOutput("scp -r -f a")
@@ -77,8 +77,8 @@ func TestFS(t *testing.T) {
 		h := NewFSReadHandler(os.DirFS(dir))
 
 		is.NoErr(os.MkdirAll(filepath.Join(dir, "a/b/c/d/e"), 0o755))
-		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o666))
-		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o666))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o664))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o664))
 		chtimesTree(t, dir, atime, mtime)
 
 		bts, err := setup(t, h, nil).CombinedOutput("scp -r -f a/*")
