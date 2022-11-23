@@ -8,6 +8,7 @@ import (
 
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
+	"github.com/google/go-cmp/cmp"
 	"github.com/matryer/is"
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -140,5 +141,9 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	is.NoErr(err)
 
 	gbts = fixOutput(gbts)
+	diff := cmp.Diff(string(gbts), string(out))
+	if diff != "" {
+		tb.Log("DIFF:", diff)
+	}
 	is.Equal(string(gbts), string(out))
 }
