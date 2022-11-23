@@ -126,7 +126,8 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	is := is.New(tb)
 
 	fixOutput := func(bts []byte) []byte {
-		// bts = bytes.ReplaceAll(bts, []byte("\r\n"), []byte("\n"))
+		bts = bytes.ReplaceAll(bts, []byte("\r\n"), []byte("\n"))
+		bts = bytes.ReplaceAll(bts, []byte("\r"), []byte(""))
 		return bytes.ReplaceAll(bts, NULL, []byte("<NULL>"))
 	}
 
@@ -141,7 +142,7 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	is.NoErr(err)
 	gbts = fixOutput(gbts)
 
-	if diff := cmp.Diff(string(gbts), string(out)); diff != "" {
+	if diff := cmp.Diff(string(out), string(gbts)); diff != "" {
 		tb.Fatal("expected no diff, got:", diff)
 	}
 }
