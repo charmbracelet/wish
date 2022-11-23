@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -159,7 +160,7 @@ func (e *RootEntry) Append(entry Entry) {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
-			fmt.Printf("%q has prefix %q? %v", parent, dir.Filepath, strings.HasPrefix(parent, dir.Filepath))
+			fmt.Printf("%q has prefix %q? %v\n", parent, dir.Filepath, strings.HasPrefix(parent, dir.Filepath))
 			if strings.HasPrefix(parent, dir.Filepath) {
 				dir.Append(entry)
 				return
@@ -294,4 +295,12 @@ func GetInfo(cmd []string) Info {
 
 func octalPerms(info fs.FileMode) string {
 	return "0" + strconv.FormatUint(uint64(info.Perm()), 8)
+}
+
+func normalizePath(p string) string {
+	p = filepath.Clean(p)
+	if runtime.GOOS == "windows" {
+		return strings.ReplaceAll(p, "\\", "/")
+	}
+	return p
 }

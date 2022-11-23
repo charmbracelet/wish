@@ -68,6 +68,7 @@ func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFun
 
 func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, error) {
 	path := h.prefixed(name)
+	path = normalizePath(path)
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open dir: %q: %w", path, err)
@@ -84,6 +85,7 @@ func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, 
 
 func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry, func() error, error) {
 	path := h.prefixed(name)
+	path = normalizePath(path)
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
