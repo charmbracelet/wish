@@ -18,8 +18,7 @@ var _ Handler = &fileSystemHandler{}
 
 // NewFileSystemHandler return a Handler based on the given dir.
 func NewFileSystemHandler(root string) Handler {
-	// FIXME: if you scp -r host:/, it'll copy the root folder too, and it
-	// shoudln't.
+	// FIXME: if you scp -r host:/, it'll copy the root folder too, and it shouldn't.
 	return &fileSystemHandler{
 		root: filepath.Clean(root),
 	}

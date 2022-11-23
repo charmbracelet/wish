@@ -65,7 +65,8 @@ func TestFS(t *testing.T) {
 		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
 		chtimesTree(t, dir, atime, mtime)
 
-		bts, err := setup(t, h, nil).CombinedOutput("scp -r -f a")
+		session := setup(t, h, nil)
+		bts, err := session.CombinedOutput("scp -r -f a")
 		is.NoErr(err)
 		requireEqualGolden(t, bts)
 	})
@@ -81,7 +82,8 @@ func TestFS(t *testing.T) {
 		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
 		chtimesTree(t, dir, atime, mtime)
 
-		bts, err := setup(t, h, nil).CombinedOutput("scp -r -f a/*")
+		session := setup(t, h, nil)
+		bts, err := session.CombinedOutput("scp -r -f a/*")
 		is.NoErr(err)
 		requireEqualGolden(t, bts)
 	})
@@ -92,7 +94,8 @@ func TestFS(t *testing.T) {
 		dir := t.TempDir()
 		h := NewFSReadHandler(os.DirFS(dir))
 
-		_, err := setup(t, h, nil).CombinedOutput("scp -r -f a")
+		session := setup(t, h, nil)
+		_, err := session.CombinedOutput("scp -r -f a")
 		is.True(err != nil)
 	})
 

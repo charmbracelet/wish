@@ -160,10 +160,7 @@ func (e *RootEntry) Append(entry Entry) {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
-
-			path := normalizePath(dir.Filepath)
-			fmt.Printf("%q has prefix %q? %v\n", parent, path, strings.HasPrefix(parent, path))
-			if strings.HasPrefix(parent, path) {
+			if strings.HasPrefix(parent, normalizePath(dir.Filepath)) {
 				dir.Append(entry)
 				return
 			}
@@ -233,8 +230,7 @@ func (e *DirEntry) Append(entry Entry) {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
-			path := normalizePath(dir.path())
-			if strings.HasPrefix(parent, path) {
+			if strings.HasPrefix(parent, normalizePath(dir.path())) {
 				dir.Append(entry)
 				return
 			}
