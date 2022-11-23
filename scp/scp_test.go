@@ -148,7 +148,7 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	is.NoErr(err)
 	gbts = fixOutput(gbts)
 
-	if diff := cmp.Diff(string(out), string(gbts)); diff != "" {
+	if diff := cmp.Diff(string(gbts), string(out)); diff != "" {
 		tb.Fatal("expected no diff, got:", diff)
 	}
 }

@@ -113,7 +113,7 @@ func TestFilesystem(t *testing.T) {
 
 			var in bytes.Buffer
 			in.WriteString("T1183832947 0 1183833773 0\n")
-			in.WriteString("C0664 6 a.txt\n")
+			in.WriteString("C0644 6 a.txt\n")
 			in.WriteString("hello\n")
 			in.Write(NULL)
 			session.Stdin = &in
@@ -134,12 +134,12 @@ func TestFilesystem(t *testing.T) {
 			var in bytes.Buffer
 			in.WriteString("T1183832947 0 1183833773 0\n")
 			in.WriteString("D0755 0 folder1\n")
-			in.WriteString("C0664 6 file1\n")
+			in.WriteString("C0644 6 file1\n")
 			in.WriteString("hello\n")
 			in.Write(NULL)
 			in.WriteString("D0755 0 folder2\n")
 			in.WriteString("T1183832947 0 1183833773 0\n")
-			in.WriteString("C0664 6 file2\n")
+			in.WriteString("C0644 6 file2\n")
 			in.WriteString("hello\n")
 			in.Write(NULL)
 			in.WriteString("E\n")
@@ -147,8 +147,7 @@ func TestFilesystem(t *testing.T) {
 
 			session := setup(t, nil, h)
 			session.Stdin = &in
-			bts, err := session.CombinedOutput("scp -r -t .")
-			t.Log(string(bts))
+			_, err := session.CombinedOutput("scp -r -t .")
 			is.NoErr(err)
 
 			mtime := int64(1183832947)
