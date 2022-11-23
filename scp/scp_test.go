@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"github.com/charmbracelet/ssh"
@@ -127,7 +126,7 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	is := is.New(tb)
 
 	fixOutput := func(bts []byte) []byte {
-		bts = bytes.ReplaceAll(bts, []byte("\r\n"), []byte("\n"))
+		// bts = bytes.ReplaceAll(bts, []byte("\r\n"), []byte("\n"))
 		return bytes.ReplaceAll(bts, NULL, []byte("<NULL>"))
 	}
 
@@ -140,11 +139,9 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 
 	gbts, err := os.ReadFile(golden)
 	is.NoErr(err)
-
 	gbts = fixOutput(gbts)
-	tb.Log("HAS rn, gbts:", strings.Contains(string(gbts), "\r\n"), "out:", strings.Contains(string(out), "\r\n"))
+
 	if diff := cmp.Diff(string(gbts), string(out)); diff != "" {
-		tb.Log("DIFF:", diff)
+		tb.Fatal("expected no diff, got:", diff)
 	}
-	is.Equal(string(gbts), string(out))
 }
