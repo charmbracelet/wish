@@ -18,7 +18,9 @@ func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 
 	rootEntry := &RootEntry{}
 	var closers []func() error
-	defer closeAll(closers)
+	defer func() {
+		closeAll(closers)
+	}()
 
 	for _, match := range matches {
 		if !info.Recursive {
