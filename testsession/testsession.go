@@ -20,6 +20,7 @@ func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) *gossh.Session
 	if err != nil {
 		tb.Fatal(err)
 	}
+	tb.Cleanup(func() { _ = sess.Close() })
 	return sess
 }
 
@@ -34,6 +35,7 @@ func Listen(tb testing.TB, srv *ssh.Server) string {
 	}()
 	tb.Cleanup(func() {
 		_ = srv.Close()
+		_ = l.Close()
 	})
 	return l.Addr().String()
 }

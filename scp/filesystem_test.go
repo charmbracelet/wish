@@ -246,10 +246,10 @@ func TestFilesystem(t *testing.T) {
 }
 
 func chtimesTree(tb testing.TB, dir string, atime, mtime time.Time) {
-	is := is.New(tb)
-
-	is.NoErr(filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		is.NoErr(os.Chtimes(path, atime, mtime))
-		return nil
+	is.New(tb).NoErr(filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		return os.Chtimes(path, atime, mtime)
 	}))
 }

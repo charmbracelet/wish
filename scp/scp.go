@@ -257,7 +257,7 @@ type Info struct {
 	// Ok is true if the current session is a SCP.
 	Ok bool
 
-	// Recursice is true if its a recursive SCP.
+	// Recursive is true if its a recursive SCP.
 	Recursive bool
 
 	// Path is the server path of the scp operation.
