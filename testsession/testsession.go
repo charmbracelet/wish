@@ -15,6 +15,7 @@ import (
 // It automatically closes everything afterwards.
 func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) *gossh.Session {
 	tb.Helper()
+	tb.Cleanup(func() { _ = srv.Close() })
 	sess, err := NewClientSession(tb, Listen(tb, srv), cfg)
 	if err != nil {
 		tb.Fatal(err)
