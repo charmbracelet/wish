@@ -71,8 +71,8 @@ func TestFilesystem(t *testing.T) {
 
 			session := setup(t, h, nil)
 			bts, err := session.CombinedOutput("scp -r -f a")
-			requireEqualGolden(t, bts)
 			is.NoErr(err)
+			requireEqualGolden(t, bts)
 		})
 
 		t.Run("recursive glob", func(t *testing.T) {
@@ -88,8 +88,8 @@ func TestFilesystem(t *testing.T) {
 
 			session := setup(t, h, nil)
 			bts, err := session.CombinedOutput("scp -r -f a/*")
-			requireEqualGolden(t, bts)
 			is.NoErr(err)
+			requireEqualGolden(t, bts)
 		})
 
 		t.Run("recursive invalid file", func(t *testing.T) {
@@ -209,7 +209,7 @@ func TestFilesystem(t *testing.T) {
 				err := h.Mkdir(nil, &DirEntry{
 					Name:     "foo",
 					Filepath: "foo/bar/baz",
-					Mode:     0755,
+					Mode:     0o755,
 				})
 				is.True(err != nil) // should err
 			})
@@ -222,7 +222,7 @@ func TestFilesystem(t *testing.T) {
 				_, err := h.Write(nil, &FileEntry{
 					Name:     "foo.txt",
 					Filepath: "baz/foo.txt",
-					Mode:     0644,
+					Mode:     0o644,
 					Size:     10,
 				})
 				is.True(err != nil) // should err
@@ -234,23 +234,21 @@ func TestFilesystem(t *testing.T) {
 				_, err := h.Write(nil, &FileEntry{
 					Name:     "foo.txt",
 					Filepath: "foo.txt",
-					Mode:     0644,
+					Mode:     0o644,
 					Size:     10,
 					Reader:   iotest.ErrReader(fmt.Errorf("fake err")),
 				})
 				is.True(err != nil) // should err
 			})
 		})
-
 	})
-
 }
 
 func chtimesTree(tb testing.TB, dir string, atime, mtime time.Time) {
-	is := is.New(tb)
-
-	filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		is.NoErr(os.Chtimes(path, atime, mtime))
-		return nil
-	})
+	is.New(tb).NoErr(filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		return os.Chtimes(path, atime, mtime)
+	}))
 }

@@ -67,8 +67,8 @@ func TestFS(t *testing.T) {
 
 		session := setup(t, h, nil)
 		bts, err := session.CombinedOutput("scp -r -f a")
-		requireEqualGolden(t, bts)
 		is.NoErr(err)
+		requireEqualGolden(t, bts)
 	})
 
 	t.Run("recursive glob", func(t *testing.T) {
@@ -84,8 +84,8 @@ func TestFS(t *testing.T) {
 
 		session := setup(t, h, nil)
 		bts, err := session.CombinedOutput("scp -r -f a/*")
-		requireEqualGolden(t, bts)
 		is.NoErr(err)
+		requireEqualGolden(t, bts)
 	})
 
 	t.Run("recursive invalid file", func(t *testing.T) {

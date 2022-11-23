@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/ssh"
 )
@@ -39,22 +40,23 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 	)
 
 	for {
-		line, _, err := r.ReadLine()
+		line, err := r.ReadString('\n')
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				break
 			}
 			return fmt.Errorf("failed to read line: %w", err)
 		}
+		line = strings.TrimSuffix(line, "\n")
 
-		if matches := reTimestamp.FindAllStringSubmatch(string(line), 2); matches != nil {
+		if matches := reTimestamp.FindAllStringSubmatch(line, 2); matches != nil {
 			mtime, err = strconv.ParseInt(matches[0][1], 10, 64)
 			if err != nil {
-				return parseError{string(line)}
+				return parseError{line}
 			}
 			atime, err = strconv.ParseInt(matches[0][2], 10, 64)
 			if err != nil {
-				return parseError{string(line)}
+				return parseError{line}
 			}
 
 			// accepts the header
@@ -62,19 +64,19 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			continue
 		}
 
-		if matches := reNewFile.FindAllStringSubmatch(string(line), 3); matches != nil {
+		if matches := reNewFile.FindAllStringSubmatch(line, 3); matches != nil {
 			if len(matches) != 1 || len(matches[0]) != 4 {
-				return parseError{string(line)}
+				return parseError{line}
 			}
 
 			mode, err := strconv.ParseUint(matches[0][1], 8, 32)
 			if err != nil {
-				return parseError{string(line)}
+				return parseError{line}
 			}
 
 			size, err := strconv.ParseInt(matches[0][2], 10, 64)
 			if err != nil {
-				return parseError{string(line)}
+				return parseError{line}
 			}
 			name := matches[0][3]
 
@@ -107,14 +109,14 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			continue
 		}
 
-		if matches := reNewFolder.FindAllStringSubmatch(string(line), 2); matches != nil {
+		if matches := reNewFolder.FindAllStringSubmatch(line, 2); matches != nil {
 			if len(matches) != 1 || len(matches[0]) != 3 {
-				return parseError{string(line)}
+				return parseError{line}
 			}
 
 			mode, err := strconv.ParseUint(matches[0][1], 8, 32)
 			if err != nil {
-				return parseError{string(line)}
+				return parseError{line}
 			}
 			name := matches[0][2]
 
@@ -136,7 +138,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			continue
 		}
 
-		if string(line) == "E" {
+		if line == "E" {
 			path = filepath.Dir(path)
 
 			// says 'hey im done'
@@ -144,7 +146,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			continue
 		}
 
-		return fmt.Errorf("unhandled input: %q", string(line))
+		return fmt.Errorf("unhandled input: %q", line)
 	}
 
 	_, _ = s.Write(NULL)

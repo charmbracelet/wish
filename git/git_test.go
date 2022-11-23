@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"testing"
 
@@ -66,6 +67,9 @@ func TestGitMiddleware(t *testing.T) {
 	})
 
 	t.Run("create repo in subdir", func(t *testing.T) {
+		if runtime.GOOS == "windows" {
+			t.Skip("permission issues")
+		}
 		cwd := t.TempDir()
 		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "main"))
 		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/abc/repo1"))

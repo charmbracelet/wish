@@ -18,6 +18,7 @@ var _ Handler = &fileSystemHandler{}
 
 // NewFileSystemHandler return a Handler based on the given dir.
 func NewFileSystemHandler(root string) Handler {
+	// FIXME: if you scp -r host:/, it'll copy the root folder too, and it shouldn't.
 	return &fileSystemHandler{
 		root: filepath.Clean(root),
 	}
@@ -113,9 +114,13 @@ func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)
 	}
+	defer f.Close() //nolint:errcheck
 	written, err := io.Copy(f, entry.Reader)
 	if err != nil {
 		return 0, fmt.Errorf("failed to write file: %q: %w", entry.Filepath, err)
+	}
+	if err := f.Close(); err != nil {
+		return 0, fmt.Errorf("failed to close file: %q: %w", entry.Filepath, err)
 	}
 	return written, h.chtimes(entry.Filepath, entry.Mtime, entry.Atime)
 }

@@ -45,6 +45,8 @@ func newLocalListener(tb testing.TB) net.Listener {
 			tb.Fatalf("failed to listen on a port: %v", err)
 		}
 	}
+
+	tb.Cleanup(func() { _ = l.Close() })
 	return l
 }
 

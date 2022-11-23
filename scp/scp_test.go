@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
+	"github.com/google/go-cmp/cmp"
 	"github.com/matryer/is"
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -115,7 +117,6 @@ func setup(tb testing.TB, rh CopyToClientHandler, wh CopyFromClientHandler) *gos
 	return testsession.New(tb, &ssh.Server{
 		Handler: Middleware(rh, wh)(func(s ssh.Session) {
 			s.Exit(0)
-			s.Close()
 		}),
 	}, nil)
 }
@@ -124,7 +125,17 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 	tb.Helper()
 	is := is.New(tb)
 
-	out = bytes.ReplaceAll(out, NULL, []byte("<NULL>"))
+	fixOutput := func(bts []byte) []byte {
+		bts = bytes.ReplaceAll(bts, []byte("\r"), []byte(""))
+		if runtime.GOOS == "windows" {
+			// perms always come different on Windows because, well, its Windows.
+			bts = bytes.ReplaceAll(bts, []byte("0666"), []byte("0644"))
+			bts = bytes.ReplaceAll(bts, []byte("0777"), []byte("0755"))
+		}
+		return bytes.ReplaceAll(bts, NULL, []byte("<NULL>"))
+	}
+
+	out = fixOutput(out)
 	golden := "testdata/" + tb.Name() + ".test"
 	if os.Getenv("UPDATE") != "" {
 		is.NoErr(os.MkdirAll(filepath.Dir(golden), 0o755))
@@ -133,7 +144,9 @@ func requireEqualGolden(tb testing.TB, out []byte) {
 
 	gbts, err := os.ReadFile(golden)
 	is.NoErr(err)
+	gbts = fixOutput(gbts)
 
-	gbts = bytes.ReplaceAll(gbts, NULL, []byte("<NULL>"))
-	is.Equal(string(gbts), string(out))
+	if diff := cmp.Diff(string(gbts), string(out)); diff != "" {
+		tb.Fatal("files do not match:", diff)
+	}
 }

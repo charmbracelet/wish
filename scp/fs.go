@@ -26,6 +26,7 @@ func (h *fsHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error
 }
 
 func (h *fsHandler) NewDirEntry(_ ssh.Session, path string) (*DirEntry, error) {
+	path = normalizePath(path)
 	info, err := fs.Stat(h.fsys, path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open dir: %q: %w", path, err)

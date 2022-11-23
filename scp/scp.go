@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/fs"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -150,7 +151,7 @@ type RootEntry []Entry
 // Appennd the given entry to a child directory, or the the itself if
 // none matches.
 func (e *RootEntry) Append(entry Entry) {
-	parent := filepath.Dir(entry.path())
+	parent := normalizePath(filepath.Dir(entry.path()))
 
 	for _, child := range *e {
 		switch dir := child.(type) {
@@ -159,7 +160,7 @@ func (e *RootEntry) Append(entry Entry) {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
-			if strings.HasPrefix(parent, dir.Filepath) {
+			if strings.HasPrefix(parent, normalizePath(dir.Filepath)) {
 				dir.Append(entry)
 				return
 			}
@@ -220,7 +221,7 @@ func (e *DirEntry) Write(w io.Writer) error {
 
 // Appends an entry to the folder or their children.
 func (e *DirEntry) Append(entry Entry) {
-	parent := filepath.Dir(entry.path())
+	parent := normalizePath(filepath.Dir(entry.path()))
 
 	for _, child := range e.Children {
 		switch dir := child.(type) {
@@ -229,7 +230,7 @@ func (e *DirEntry) Append(entry Entry) {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
-			if strings.HasPrefix(parent, dir.path()) {
+			if strings.HasPrefix(parent, normalizePath(dir.path())) {
 				dir.Append(entry)
 				return
 			}
@@ -257,7 +258,7 @@ type Info struct {
 	// Ok is true if the current session is a SCP.
 	Ok bool
 
-	// Recursice is true if its a recursive SCP.
+	// Recursive is true if its a recursive SCP.
 	Recursive bool
 
 	// Path is the server path of the scp operation.
@@ -293,4 +294,12 @@ func GetInfo(cmd []string) Info {
 
 func octalPerms(info fs.FileMode) string {
 	return "0" + strconv.FormatUint(uint64(info.Perm()), 8)
+}
+
+func normalizePath(p string) string {
+	p = filepath.Clean(p)
+	if runtime.GOOS == "windows" {
+		return strings.ReplaceAll(p, "\\", "/")
+	}
+	return p
 }
