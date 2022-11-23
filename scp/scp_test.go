@@ -117,7 +117,6 @@ func setup(tb testing.TB, rh CopyToClientHandler, wh CopyFromClientHandler) *gos
 	return testsession.New(tb, &ssh.Server{
 		Handler: Middleware(rh, wh)(func(s ssh.Session) {
 			s.Exit(0)
-			s.Close()
 		}),
 	}, nil)
 }
