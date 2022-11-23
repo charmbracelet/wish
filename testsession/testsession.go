@@ -20,7 +20,6 @@ func New(tb testing.TB, srv *ssh.Server, cfg *gossh.ClientConfig) *gossh.Session
 	if err != nil {
 		tb.Fatal(err)
 	}
-	tb.Cleanup(func() { _ = sess.Close() })
 	return sess
 }
 
@@ -33,10 +32,7 @@ func Listen(tb testing.TB, srv *ssh.Server) string {
 			tb.Fatalf("failed to serve: %v", err)
 		}
 	}()
-	tb.Cleanup(func() {
-		_ = srv.Close()
-		_ = l.Close()
-	})
+	tb.Cleanup(func() { _ = srv.Close() })
 	return l.Addr().String()
 }
 
@@ -48,6 +44,8 @@ func newLocalListener(tb testing.TB) net.Listener {
 			tb.Fatalf("failed to listen on a port: %v", err)
 		}
 	}
+
+	tb.Cleanup(func() { _ = l.Close() })
 	return l
 }
 
