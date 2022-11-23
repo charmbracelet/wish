@@ -151,7 +151,7 @@ type RootEntry []Entry
 // Appennd the given entry to a child directory, or the the itself if
 // none matches.
 func (e *RootEntry) Append(entry Entry) {
-	parent := filepath.Dir(entry.path())
+	parent := normalizePath(filepath.Dir(entry.path()))
 
 	for _, child := range *e {
 		switch dir := child.(type) {
@@ -160,8 +160,10 @@ func (e *RootEntry) Append(entry Entry) {
 				dir.Children = append(dir.Children, entry)
 				return
 			}
-			fmt.Printf("%q has prefix %q? %v\n", parent, dir.Filepath, strings.HasPrefix(parent, dir.Filepath))
-			if strings.HasPrefix(parent, dir.Filepath) {
+
+			path := normalizePath(dir.Filepath)
+			fmt.Printf("%q has prefix %q? %v\n", parent, path, strings.HasPrefix(parent, path))
+			if strings.HasPrefix(parent, path) {
 				dir.Append(entry)
 				return
 			}

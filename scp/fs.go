@@ -42,7 +42,6 @@ func (h *fsHandler) NewDirEntry(_ ssh.Session, path string) (*DirEntry, error) {
 }
 
 func (h *fsHandler) NewFileEntry(_ ssh.Session, path string) (*FileEntry, func() error, error) {
-	path = normalizePath(path)
 	info, err := fs.Stat(h.fsys, path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
