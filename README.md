@@ -119,6 +119,47 @@ the OpenSSH is never used nor needed — you can even uninstall it if you want t
 Incidentally, there's no risk of accidentally sharing a shell because there's no
 default behavior that does that on Wish.
 
+## Running with SystemD
+
+If you want to run a Wish app with `systemd`, you can create an unit like so:
+
+`/etc/systemd/system/myapp.service`:
+```service
+[Unit]
+Description=My App
+After=network.target
+
+[Service]
+Type=simple
+User=myapp
+Group=myapp
+WorkingDirectory=/home/myapp/
+ExecStart=/usr/bin/myapp
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+You can tune the values bellow, and once you're happy with them, you can run:
+
+```bash
+# need to run this every time you change the unit file
+sudo systemctl daemon-reload
+
+# start/restart/stop/etc:
+sudo systemctl start myapp
+```
+
+If you use a new user for each app (which is good), you'll need to create them
+first:
+
+```bash
+useradd --system --user-group --create-home myapp
+```
+
+That should do it.
+
 ###
 
 ## Feedback
