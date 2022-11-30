@@ -88,6 +88,23 @@ func TestFS(t *testing.T) {
 		requireEqualGolden(t, bts)
 	})
 
+	t.Run("recursive folder", func(t *testing.T) {
+		is := is.New(t)
+
+		dir := t.TempDir()
+		h := NewFileSystemHandler(dir)
+
+		is.NoErr(os.MkdirAll(filepath.Join(dir, "a/b/c/d/e"), 0o755))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c.txt"), []byte("c text file"), 0o644))
+		is.NoErr(os.WriteFile(filepath.Join(dir, "a/b/c/d/e/e.txt"), []byte("e text file"), 0o644))
+		chtimesTree(t, dir, atime, mtime)
+
+		session := setup(t, h, nil)
+		bts, err := session.CombinedOutput("scp -r -f /")
+		is.NoErr(err)
+		requireEqualGolden(t, bts)
+	})
+
 	t.Run("recursive invalid file", func(t *testing.T) {
 		is := is.New(t)
 
