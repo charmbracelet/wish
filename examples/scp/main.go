@@ -15,8 +15,10 @@ import (
 	"github.com/charmbracelet/wish/scp"
 )
 
-const host = "localhost"
-const port = 23234
+const (
+	host = "localhost"
+	port = 23235
+)
 
 func main() {
 	handler := scp.NewFileSystemHandler("./examples/scp/testdata")

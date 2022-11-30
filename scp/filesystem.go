@@ -18,7 +18,6 @@ var _ Handler = &fileSystemHandler{}
 
 // NewFileSystemHandler return a Handler based on the given dir.
 func NewFileSystemHandler(root string) Handler {
-	// FIXME: if you scp -r host:/, it'll copy the root folder too, and it shouldn't.
 	return &fileSystemHandler{
 		root: filepath.Clean(root),
 	}
@@ -62,7 +61,14 @@ func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
 }
 
 func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
-	return filepath.WalkDir(h.prefixed(path), fn)
+	return filepath.WalkDir(h.prefixed(path), func(path string, d fs.DirEntry, err error) error {
+		// if h.root is ./foo/bar, we don't want to server `bar` as the root,
+		// but instead its contents.
+		if path == h.root {
+			return err
+		}
+		return fn(path, d, err)
+	})
 }
 
 func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, error) {

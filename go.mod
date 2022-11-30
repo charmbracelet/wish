@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
 	github.com/go-git/go-git/v5 v5.4.2
+	github.com/google/go-cmp v0.5.5
 	github.com/hashicorp/golang-lru/v2 v2.0.1
 	github.com/matryer/is v1.4.0
 	github.com/muesli/termenv v0.13.0
@@ -28,7 +29,6 @@ require (
 	github.com/gliderlabs/ssh v0.3.5 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/imdario/mergo v0.3.12 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v0.0.0-20201106050909-4977a11b4351 // indirect
