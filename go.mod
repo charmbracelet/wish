@@ -3,7 +3,7 @@ module github.com/charmbracelet/wish
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbletea v0.23.1
+	github.com/charmbracelet/bubbletea v0.23.2
 	github.com/charmbracelet/keygen v0.3.0
 	github.com/charmbracelet/lipgloss v0.6.0
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
@@ -13,7 +13,7 @@ require (
 	github.com/matryer/is v1.4.0
 	github.com/muesli/termenv v0.14.0
 	golang.org/x/crypto v0.3.0
-	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
+	golang.org/x/sync v0.1.0
 	golang.org/x/time v0.0.0-20220411224347-583f2d630306
 )
 
