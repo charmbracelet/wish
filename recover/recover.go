@@ -1,9 +1,9 @@
 package recover
 
 import (
-	"log"
 	"runtime/debug"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 )
@@ -15,7 +15,7 @@ func Middleware(mw ...wish.Middleware) wish.Middleware {
 
 // MiddlewareWithLogger is a wish middleware that recovers from panics and log to
 // the provided logger.
-func MiddlewareWithLogger(logger *log.Logger, mw ...wish.Middleware) wish.Middleware {
+func MiddlewareWithLogger(logger log.Logger, mw ...wish.Middleware) wish.Middleware {
 	if logger == nil {
 		logger = log.Default()
 	}
@@ -28,7 +28,7 @@ func MiddlewareWithLogger(logger *log.Logger, mw ...wish.Middleware) wish.Middle
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						logger.Printf("panic: %v\n%s", r, string(debug.Stack()))
+						logger.Error("panic", "recovered", r, "stack", string(debug.Stack()))
 					}
 				}()
 				h(s)

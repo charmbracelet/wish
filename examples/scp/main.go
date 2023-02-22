@@ -5,12 +5,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/scp"
 )
@@ -30,23 +30,23 @@ func main() {
 		),
 	)
 	if err != nil {
-		log.Fatalln(err)
+		log.Error("could not start server", "error", err)
 	}
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	log.Printf("Starting SSH server on %s:%d", host, port)
+	log.Info("Starting SSH server", "host", host, "port", port)
 	go func() {
 		if err = s.ListenAndServe(); err != nil {
-			log.Fatalln(err)
+			log.Error("could not start server", "error", err)
 		}
 	}()
 
 	<-done
-	log.Println("Stopping SSH server")
+	log.Info("Stopping SSH server")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer func() { cancel() }()
 	if err := s.Shutdown(ctx); err != nil {
-		log.Fatalln(err)
+		log.Error("could not stop server", "error", err)
 	}
 }

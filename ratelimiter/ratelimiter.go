@@ -3,9 +3,9 @@ package ratelimiter
 
 import (
 	"errors"
-	"log"
 	"net"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -81,7 +81,7 @@ func (r *limiters) Allow(s ssh.Session) error {
 		r.cache.Add(key, limiter)
 	}
 
-	log.Printf("rate limiter key: %q, allowed? %v", key, allowed)
+	log.Debug("rate limiter key", "key", key, "allowed", allowed)
 	if allowed {
 		return nil
 	}
