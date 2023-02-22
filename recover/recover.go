@@ -1,6 +1,7 @@
 package recover
 
 import (
+	stdlog "log"
 	"runtime/debug"
 
 	"github.com/charmbracelet/log"
@@ -15,9 +16,9 @@ func Middleware(mw ...wish.Middleware) wish.Middleware {
 
 // MiddlewareWithLogger is a wish middleware that recovers from panics and log to
 // the provided logger.
-func MiddlewareWithLogger(logger log.Logger, mw ...wish.Middleware) wish.Middleware {
+func MiddlewareWithLogger(logger *stdlog.Logger, mw ...wish.Middleware) wish.Middleware {
 	if logger == nil {
-		logger = log.Default()
+		logger = log.StandardLog()
 	}
 	h := func(ssh.Session) {}
 	for _, m := range mw {
@@ -28,7 +29,7 @@ func MiddlewareWithLogger(logger log.Logger, mw ...wish.Middleware) wish.Middlew
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						logger.Error("panic", "recovered", r, "stack", string(debug.Stack()))
+						logger.Printf("panic: %v\n%s", r, string(debug.Stack()))
 					}
 				}()
 				h(s)
