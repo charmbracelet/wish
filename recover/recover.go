@@ -1,7 +1,6 @@
 package recover
 
 import (
-	stdlog "log"
 	"runtime/debug"
 
 	"github.com/charmbracelet/log"
@@ -14,9 +13,14 @@ func Middleware(mw ...wish.Middleware) wish.Middleware {
 	return MiddlewareWithLogger(nil, mw...)
 }
 
+// Logger is the interface that wraps the basic Log method.
+type Logger interface {
+	Printf(format string, v ...interface{})
+}
+
 // MiddlewareWithLogger is a wish middleware that recovers from panics and log to
 // the provided logger.
-func MiddlewareWithLogger(logger *stdlog.Logger, mw ...wish.Middleware) wish.Middleware {
+func MiddlewareWithLogger(logger Logger, mw ...wish.Middleware) wish.Middleware {
 	if logger == nil {
 		logger = log.StandardLog()
 	}
@@ -29,7 +33,11 @@ func MiddlewareWithLogger(logger *stdlog.Logger, mw ...wish.Middleware) wish.Mid
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						logger.Printf("panic: %v\n%s", r, string(debug.Stack()))
+						logger.Printf(
+							"panic: %v\n%s",
+							r,
+							string(debug.Stack()),
+						)
 					}
 				}()
 				h(s)
