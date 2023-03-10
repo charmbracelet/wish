@@ -3,12 +3,12 @@ package git
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/go-git/go-git/v5"
@@ -103,7 +103,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 						case nil:
 							gh.Fetch(repo, pk)
 						default:
-							log.Printf("unknown git error: %s", err)
+							log.Error("unknown git error", "error", err)
 							Fatal(s, ErrSystemMalfunction)
 						}
 					default:

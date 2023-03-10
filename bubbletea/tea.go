@@ -2,10 +2,9 @@
 package bubbletea
 
 import (
-	"log"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/muesli/termenv"
@@ -86,7 +85,7 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 					}
 				}()
 				if _, err := p.Run(); err != nil {
-					log.Print("app exit with error:", err)
+					log.Error("app exit with error", "error", err)
 				}
 				// p.Kill() will force kill the program if it's still running,
 				// and restore the terminal to its original state in case of a

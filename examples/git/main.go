@@ -7,12 +7,12 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	gm "github.com/charmbracelet/wish/git"
@@ -34,11 +34,11 @@ func (a app) AuthRepo(repo string, pk ssh.PublicKey) gm.AccessLevel {
 }
 
 func (a app) Push(repo string, pk ssh.PublicKey) {
-	log.Printf("pushed %s", repo)
+	log.Info("push", "repo", repo)
 }
 
 func (a app) Fetch(repo string, pk ssh.PublicKey) {
-	log.Printf("fetch %s", repo)
+	log.Info("fetch", "repo", repo)
 }
 
 func passHandler(ctx ssh.Context, password string) bool {
@@ -65,24 +65,24 @@ func main() {
 		),
 	)
 	if err != nil {
-		log.Fatalln(err)
+		log.Error("could not start server", "error", err)
 	}
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	log.Printf("Starting SSH server on %s:%d", host, port)
+	log.Info("Starting SSH server", "host", host, "port", port)
 	go func() {
 		if err = s.ListenAndServe(); err != nil {
-			log.Fatalln(err)
+			log.Error("could not start server", "error", err)
 		}
 	}()
 
 	<-done
-	log.Println("Stopping SSH server")
+	log.Info("Stopping SSH server")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer func() { cancel() }()
 	if err := s.Shutdown(ctx); err != nil {
-		log.Fatalln(err)
+		log.Error("could not stop server", "error", err)
 	}
 }
 
@@ -96,7 +96,7 @@ func gitListMiddleware(h ssh.Handler) ssh.Handler {
 		if len(s.Command()) == 0 {
 			des, err := os.ReadDir(repoDir)
 			if err != nil && err != fs.ErrNotExist {
-				log.Println(err)
+				log.Error("invalid repository", "error", err)
 			}
 			if len(des) > 0 {
 				fmt.Fprintf(s, "\n### Repo Menu ###\n\n")

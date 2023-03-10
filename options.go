@@ -5,13 +5,13 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/keygen"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
@@ -123,7 +123,7 @@ func WithTrustedUserCAKeys(path string) ssh.Option {
 func isAuthorized(path string, checker func(k ssh.PublicKey) bool) bool {
 	f, err := os.Open(path)
 	if err != nil {
-		log.Printf("failed to parse %q: %s", path, err)
+		log.Warn("failed to parse", "path", path, "error", err)
 		return false
 	}
 	defer f.Close() // nolint: errcheck
@@ -135,7 +135,7 @@ func isAuthorized(path string, checker func(k ssh.PublicKey) bool) bool {
 			if errors.Is(err, io.EOF) {
 				break
 			}
-			log.Printf("failed to parse %q: %s", path, err)
+			log.Warn("failed to parse", "path", path, "error", err)
 			return false
 		}
 		if strings.TrimSpace(string(line)) == "" {
@@ -146,7 +146,7 @@ func isAuthorized(path string, checker func(k ssh.PublicKey) bool) bool {
 		}
 		upk, _, _, _, err := ssh.ParseAuthorizedKey(line)
 		if err != nil {
-			log.Printf("failed to parse %q: %s", path, err)
+			log.Warn("failed to parse", "path", path, "error", err)
 			return false
 		}
 		if checker(upk) {
