@@ -1,7 +1,6 @@
 package logging
 
 import (
-	stdlog "log"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -19,11 +18,16 @@ func Middleware() wish.Middleware {
 	return MiddlewareWithLogger(log.StandardLog())
 }
 
+// Logger is the interface that wraps the basic Log method.
+type Logger interface {
+	Printf(format string, v ...interface{})
+}
+
 // MiddlewareWithLogger provides basic connection logging. Connects are logged with the
 // remote address, invoked command, TERM setting, window dimensions and if the
 // auth was public key based. Disconnect will log the remote address and
 // connection duration.
-func MiddlewareWithLogger(l *stdlog.Logger) wish.Middleware {
+func MiddlewareWithLogger(l Logger) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			ct := time.Now()
