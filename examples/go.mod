@@ -7,7 +7,6 @@ require (
 	github.com/charmbracelet/log v0.1.2
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
 	github.com/charmbracelet/wish v0.5.0
-	github.com/gliderlabs/ssh v0.3.5
 	github.com/muesli/termenv v0.14.0
 	github.com/spf13/cobra v1.5.0
 )

@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/scp"
-	"github.com/gliderlabs/ssh"
 )
 
 const (
