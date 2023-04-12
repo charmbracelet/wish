@@ -13,6 +13,8 @@ github.com/aymanbagabas/go-osc52/v2 v2.0.1/go.mod h1:uYgXzlJ7ZpABp8OJ+exZzJJhRNQ
 github.com/bwesterb/go-ristretto v1.2.0/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=
 github.com/caarlos0/sshmarshal v0.1.0 h1:zTCZrDORFfWh526Tsb7vCm3+Yg/SfW/Ub8aQDeosk0I=
 github.com/caarlos0/sshmarshal v0.1.0/go.mod h1:7Pd/0mmq9x/JCzKauogNjSQEhivBclCQHfr9dlpDIyA=
+github.com/charmbracelet/bubbletea v0.23.3-0.20230412185629-3912fa0800fc h1:HHdTbwvSznqdUV/IBpA6v5458LH/5Z8Jyy2FkPwfDV0=
+github.com/charmbracelet/bubbletea v0.23.3-0.20230412185629-3912fa0800fc/go.mod h1:rK3g/2+T8vOSEkNHvtq40umJpeVYDn6bLaqbgzhL/hg=
 github.com/charmbracelet/keygen v0.4.1 h1:ylwHCcCrb4UL2nHrUvVwME+/RFACcX1sjopOrIkc14g=
 github.com/charmbracelet/keygen v0.4.1/go.mod h1:4e4FT3HSdLU/u83RfJWvzJIaVb8aX4MxtDlfXwpDJaI=
 github.com/charmbracelet/lipgloss v0.7.1 h1:17WMwi7N1b1rVWOjMT+rCh7sQkvDU75B2hbZpc5Kc1E=
