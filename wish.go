@@ -26,7 +26,7 @@ func NewServer(ops ...ssh.Option) (*ssh.Server, error) {
 		}
 	}
 	if len(s.HostSigners) == 0 {
-		k, err := keygen.New("", keygen.WithKeyType(keygen.Ed25519))
+		k, err := keygen.New("id_ed25519", keygen.WithKeyType(keygen.Ed25519), keygen.WithWrite())
 		if err != nil {
 			return nil, err
 		}
