@@ -3,7 +3,6 @@ package git
 import (
 	"fmt"
 	"net"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -17,6 +16,7 @@ import (
 
 func TestGitMiddleware(t *testing.T) {
 	pubkey, pkPath := createKeyPair(t)
+	hkPath := filepath.Join(t.TempDir(), "id_ed25519")
 
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	requireNoError(t, err)
@@ -39,6 +39,7 @@ func TestGitMiddleware(t *testing.T) {
 		},
 	}
 	srv, err := wish.NewServer(
+		wish.WithHostKeyPath(hkPath),
 		wish.WithMiddleware(Middleware(repoDir, hooks)),
 		wish.WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 			return true
@@ -194,15 +195,10 @@ func requireHasAction(t *testing.T, actions []action, key ssh.PublicKey, repo st
 func createKeyPair(t *testing.T) (ssh.PublicKey, string) {
 	t.Helper()
 
-	keyDir := t.TempDir()
-	_, err := keygen.New(filepath.Join(keyDir, "id_ed25519"), keygen.WithKeyType(keygen.Ed25519), keygen.WithWrite())
+	pk := filepath.Join(t.TempDir(), "id_ed25519")
+	kp, err := keygen.New(pk, keygen.WithKeyType(keygen.Ed25519), keygen.WithWrite())
 	requireNoError(t, err)
-	pk := filepath.Join(keyDir, "id_ed25519")
-	pubBytes, err := os.ReadFile(filepath.Join(keyDir, "id_ed25519.pub"))
-	requireNoError(t, err)
-	pubkey, _, _, _, err := ssh.ParseAuthorizedKey(pubBytes)
-	requireNoError(t, err)
-	return pubkey, pk
+	return kp.PublicKey(), pk
 }
 
 type accessDetails struct {
