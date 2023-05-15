@@ -3,7 +3,6 @@ package bubbletea
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -11,7 +10,6 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/creack/pty"
 	"github.com/muesli/termenv"
 )
 
@@ -42,13 +40,40 @@ type ColoredHandler func(ssh.Session, *lipgloss.Renderer) (tea.Model, []tea.Prog
 // otherwise the program will not function properly.
 type ProgramHandler func(ssh.Session) *tea.Program
 
+type sessEnv []string
+
+func sessEnvFrom(s ssh.Session) sessEnv {
+	sshPty, _, _ := s.Pty()
+	return sessEnv(append(s.Environ(), fmt.Sprintf("TERM=%s", sshPty.Term)))
+}
+
+func (s sessEnv) Getenv(key string) string {
+	for _, env := range s {
+		k, v, ok := strings.Cut(env, "=")
+		if ok && k == key {
+			return v
+		}
+	}
+	return ""
+}
+
+func (s sessEnv) Environ() []string {
+	return s
+}
+
 // ColoredMiddleware takes a ColoredHandler and hooks the input and output for
 // the ssh.Session into the tea.Program. It also captures window resize events
 // and sends them to the tea.Program as tea.WindowSizeMsgs.
 func ColoredMiddleware(bth ColoredHandler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			out := outputFromSession(s)
+			out := termenv.NewOutput(
+				s,
+				termenv.WithColorCache(true),
+				termenv.WithTTY(true),
+				termenv.WithUnsafe(),
+				termenv.WithEnvironment(sessEnvFrom(s)),
+			)
 			renderer := lipgloss.NewRenderer(s)
 			renderer.SetOutput(out)
 			m, opts := bth(s, renderer)
@@ -74,7 +99,13 @@ func Middleware(bth Handler) wish.Middleware {
 	case ColoredHandler:
 		return func(sh ssh.Handler) ssh.Handler {
 			return func(s ssh.Session) {
-				out := outputFromSession(s)
+				out := termenv.NewOutput(
+					s,
+					termenv.WithColorCache(true),
+					termenv.WithTTY(true),
+					termenv.WithUnsafe(),
+					termenv.WithEnvironment(sessEnvFrom(s)),
+				)
 				renderer := lipgloss.NewRenderer(s)
 				renderer.SetOutput(out)
 				m, opts := h(s, renderer)
@@ -152,58 +183,4 @@ func programHandler(s ssh.Session, p *tea.Program) {
 		// tui crash
 		p.Kill()
 	}
-}
-
-// Bridge Wish and Termenv so we can query for a user's terminal capabilities.
-type sshOutput struct {
-	ssh.Session
-	tty *os.File
-}
-
-func (s *sshOutput) Write(p []byte) (int, error) {
-	return s.Session.Write(p)
-}
-
-func (s *sshOutput) Read(p []byte) (int, error) {
-	return s.Session.Read(p)
-}
-
-func (s *sshOutput) Fd() uintptr {
-	return s.tty.Fd()
-}
-
-type sshEnviron struct {
-	environ []string
-}
-
-func (s *sshEnviron) Getenv(key string) string {
-	for _, v := range s.environ {
-		k, v, ok := strings.Cut(v, "=")
-		if ok && k == key {
-			return v
-		}
-	}
-	return ""
-}
-
-func (s *sshEnviron) Environ() []string {
-	return s.environ
-}
-
-func outputFromSession(sess ssh.Session) *termenv.Output {
-	sshPty, _, _ := sess.Pty()
-	_, tty, err := pty.Open()
-	if err != nil {
-		log.Fatal(err)
-	}
-	o := &sshOutput{
-		Session: sess,
-		tty:     tty,
-	}
-	environ := sess.Environ()
-	environ = append(environ, fmt.Sprintf("TERM=%s", sshPty.Term))
-	e := &sshEnviron{environ: environ}
-	// We need to use unsafe mode here because the ssh session is not running
-	// locally and we already know that the session is a TTY.
-	return termenv.NewOutput(o, termenv.WithUnsafe(), termenv.WithEnvironment(e), termenv.WithColorCache(true))
 }

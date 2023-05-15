@@ -3,17 +3,16 @@ module github.com/charmbracelet/wish
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbletea v0.24.0
+	github.com/charmbracelet/bubbletea v0.0.0-00010101000000-000000000000
 	github.com/charmbracelet/keygen v0.4.2
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/charmbracelet/log v0.2.1
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
-	github.com/creack/pty v1.1.9
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/golang-lru/v2 v2.0.2
 	github.com/matryer/is v1.4.1
-	github.com/muesli/termenv v0.15.1
+	github.com/muesli/termenv v0.15.2-0.20230414211235-efeeaefa46fc
 	golang.org/x/crypto v0.9.0
 	golang.org/x/sync v0.2.0
 	golang.org/x/time v0.3.0
@@ -53,3 +52,5 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
+
+replace github.com/charmbracelet/bubbletea => ../bubbletea

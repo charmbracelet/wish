@@ -3,12 +3,12 @@ module examples
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbletea v0.23.3-0.20230412185629-3912fa0800fc
+	github.com/charmbracelet/bubbletea v0.0.0-00010101000000-000000000000
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/charmbracelet/log v0.2.1
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
 	github.com/charmbracelet/wish v0.5.0
-	github.com/muesli/termenv v0.15.1
+	github.com/muesli/termenv v0.15.2-0.20230414211235-efeeaefa46fc
 	github.com/spf13/cobra v1.5.0
 )
 
@@ -19,10 +19,9 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/caarlos0/sshmarshal v0.1.0 // indirect
-	github.com/charmbracelet/keygen v0.4.1 // indirect
+	github.com/charmbracelet/keygen v0.4.2 // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
-	github.com/creack/pty v1.1.9 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
@@ -45,13 +44,15 @@ require (
 	github.com/skeema/knownhosts v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
-	golang.org/x/crypto v0.8.0 // indirect
-	golang.org/x/net v0.9.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.7.0 // indirect
-	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/crypto v0.9.0 // indirect
+	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/sync v0.2.0 // indirect
+	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/term v0.8.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
 replace github.com/charmbracelet/wish => ../
+
+replace github.com/charmbracelet/bubbletea => ../../bubbletea
