@@ -4,6 +4,7 @@ package wish
 import (
 	"bytes"
 	"errors"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -13,18 +14,20 @@ import (
 )
 
 func TestNewServer(t *testing.T) {
-	_, err := NewServer()
+	fp := filepath.Join(t.TempDir(), "id_ed25519")
+	_, err := NewServer(WithHostKeyPath(fp))
 	if err != nil {
 		t.Fatal(err)
 	}
 }
 
 func TestNewServerWithOptions(t *testing.T) {
-	_, err := NewServer(
+	fp := filepath.Join(t.TempDir(), "id_ed25519")
+	if _, err := NewServer(
+		WithHostKeyPath(fp),
 		WithMaxTimeout(time.Second),
 		WithAddress(":2222"),
-	)
-	if err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 }
