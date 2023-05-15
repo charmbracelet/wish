@@ -3,7 +3,7 @@ module examples
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbletea v0.0.0-00010101000000-000000000000
+	github.com/charmbracelet/bubbletea v0.24.1-0.20230515130251-91354e02d8ed
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/charmbracelet/log v0.2.1
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
@@ -54,5 +54,3 @@ require (
 )
 
 replace github.com/charmbracelet/wish => ../
-
-replace github.com/charmbracelet/bubbletea => ../../bubbletea

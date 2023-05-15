@@ -3,7 +3,7 @@ module github.com/charmbracelet/wish
 go 1.18
 
 require (
-	github.com/charmbracelet/bubbletea v0.0.0-00010101000000-000000000000
+	github.com/charmbracelet/bubbletea v0.24.1-0.20230515130251-91354e02d8ed
 	github.com/charmbracelet/keygen v0.4.2
 	github.com/charmbracelet/lipgloss v0.7.1
 	github.com/charmbracelet/log v0.2.1
@@ -52,5 +52,3 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
-
-replace github.com/charmbracelet/bubbletea => ../bubbletea
