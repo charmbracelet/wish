@@ -23,8 +23,9 @@ github.com/charmbracelet/log v0.2.2 h1:CaXgos+ikGn5tcws5Cw3paQuk9e/8bIwuYGhnkqQF
 github.com/charmbracelet/log v0.2.2/go.mod h1:Zs11hKpb8l+UyX4y1srwZIGW+MPCXJHIty3MB9l/sno=
 github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103 h1:wpHMERIN0pQZE635jWwT1dISgfjbpUcEma+fbPKSMCU=
 github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103/go.mod h1:0Vm2/8yBljiLDnGJHU8ehswfawrEybGk33j5ssqKQVM=
-github.com/cloudflare/circl v1.1.0 h1:bZgT/A+cikZnKIwn7xL2OBj012Bmvho/o6RpRvv3GKY=
 github.com/cloudflare/circl v1.1.0/go.mod h1:prBCrKB9DV4poKZY1l9zBXg2QJY7mvgRvtMxxK7fi4I=
+github.com/cloudflare/circl v1.3.3 h1:fE/Qz0QdIGqeWfnwq0RE0R7MI51s0M2E4Ga9kq5AEMs=
+github.com/cloudflare/circl v1.3.3/go.mod h1:5XYMA4rFBvNIrhs50XuiBJ15vF2pZn4nnUKZrLbUZFA=
 github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 h1:q2hJAaP1k2wIvVRd/hEHD7lacgqrCPS+k8g1MndzfWY=
 github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81/go.mod h1:YynlIjWYF8myEu6sdkwKIvGQq+cOckRm6So2avqoYAk=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
