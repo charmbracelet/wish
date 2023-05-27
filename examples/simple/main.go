@@ -44,6 +44,7 @@ func main() {
 	go func() {
 		if err = s.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
 			log.Error("could not start server", "error", err)
+			done <- nil
 		}
 	}()
 
