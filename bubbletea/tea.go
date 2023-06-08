@@ -2,6 +2,8 @@
 package bubbletea
 
 import (
+	"context"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
@@ -69,10 +71,11 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 			p := bth(s)
 			if p != nil {
 				_, windowChanges, _ := s.Pty()
+				ctx, cancel := context.WithCancel(s.Context())
 				go func() {
 					for {
 						select {
-						case <-s.Context().Done():
+						case <-ctx.Done():
 							if p != nil {
 								p.Quit()
 								return
@@ -91,6 +94,7 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 				// and restore the terminal to its original state in case of a
 				// tui crash
 				p.Kill()
+				cancel()
 			}
 			sh(s)
 		}
