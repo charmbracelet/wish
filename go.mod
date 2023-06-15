@@ -14,7 +14,7 @@ require (
 	github.com/matryer/is v1.4.1
 	github.com/muesli/termenv v0.15.1
 	golang.org/x/crypto v0.10.0
-	golang.org/x/sync v0.2.0
+	golang.org/x/sync v0.3.0
 	golang.org/x/time v0.3.0
 )
 
