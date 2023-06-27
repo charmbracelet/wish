@@ -12,7 +12,7 @@ require (
 	github.com/google/go-cmp v0.5.9
 	github.com/hashicorp/golang-lru/v2 v2.0.4
 	github.com/matryer/is v1.4.1
-	github.com/muesli/termenv v0.15.1
+	github.com/muesli/termenv v0.15.2
 	golang.org/x/crypto v0.10.0
 	golang.org/x/sync v0.3.0
 	golang.org/x/time v0.3.0
