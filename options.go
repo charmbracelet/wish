@@ -31,8 +31,8 @@ func WithVersion(version string) ssh.Option {
 	}
 }
 
-// WithMiddleware composes the provided Middleware and return a ssh.Option.
-// This useful if you manually create an ssh.Server and want to set the
+// WithMiddleware composes the provided Middleware and returns an ssh.Option.
+// This is useful if you manually create an ssh.Server and want to set the
 // Server.Handler.
 //
 // Notice that middlewares are composed from first to last, which means the last one is executed first.
@@ -65,7 +65,7 @@ func WithHostKeyPEM(pem []byte) ssh.Option {
 	return ssh.HostKeyPEM(pem)
 }
 
-// WithAuthorizedKeys allows to use a SSH authorized_keys file to allowlist users.
+// WithAuthorizedKeys allows the use of an SSH authorized_keys file to allowlist users.
 func WithAuthorizedKeys(path string) ssh.Option {
 	return func(s *ssh.Server) error {
 		if _, err := os.Stat(path); err != nil {

@@ -14,12 +14,14 @@
 Make SSH apps, just like that! 💫
 
 SSH is an excellent platform to build remotely accessible applications on. It
-offers secure communication without the hassle of HTTPS certificates, it has
-user identification with SSH keys and it's accessible from anywhere with a
-terminal. Powerful protocols like Git work over SSH and you can even render
-TUIs directly over an SSH connection.
+offers:
+* secure communication without the hassle of HTTPS certificates
+* user identification with SSH keys
+* accessiblity from anywhere with a terminal
 
-Wish is an SSH server with sensible defaults and a collection of middleware that
+Powerful protocols like Git work over SSH and you can even render TUIs directly over an SSH connection.
+
+Wish is an SSH server with sensible defaults and a collection of middlewares that
 makes building SSH apps easy. Wish is built on [gliderlabs/ssh][gliderlabs/ssh]
 and should be easy to integrate into any existing projects.
 
@@ -34,7 +36,7 @@ It is a cryptographic network protocol for operating network services securely o
 
 [^1]: https://en.wikipedia.org/wiki/Secure_Shell
 
-That means, among other things, that we can write custom SSH servers, without touching `openssh-server`,
+That means, among other things, that we can write custom SSH servers without touching `openssh-server`,
 so we can securely do more things than just providing a shell.
 
 Wish is a library that helps writing these kind of apps using Go.
@@ -114,7 +116,7 @@ Host localhost
 ## How it works?
 
 Wish uses [gliderlabs/ssh][gliderlabs/ssh] to implement its SSH server, and
-the OpenSSH is never used nor needed — you can even uninstall it if you want to.
+OpenSSH is never used nor needed — you can even uninstall it if you want to.
 
 Incidentally, there's no risk of accidentally sharing a shell because there's no
 default behavior that does that on Wish.
@@ -141,7 +143,7 @@ Restart=on-failure
 WantedBy=multi-user.target
 ```
 
-You can tune the values bellow, and once you're happy with them, you can run:
+You can tune the values below, and once you're happy with them, you can run:
 
 ```bash
 # need to run this every time you change the unit file
