@@ -65,8 +65,11 @@ func MiddlewareWithColorProfile(bth Handler, cp termenv.Profile) wish.Middleware
 // Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
 // otherwise the program will not function properly.
 func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.Middleware {
+	// XXX: This is a hack to make sure the default Termenv output color
+	// profile is set before the program starts. Ideally, we want a Lip Gloss
+	// renderer per session.
+	lipgloss.SetColorProfile(cp)
 	return func(sh ssh.Handler) ssh.Handler {
-		lipgloss.SetColorProfile(cp)
 		return func(s ssh.Session) {
 			p := bth(s)
 			if p != nil {
