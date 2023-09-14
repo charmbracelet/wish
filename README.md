@@ -97,6 +97,7 @@ and [Git server](examples/git) in the [examples](examples) folder.
 * [Wishlist](https://github.com/charmbracelet/wishlist)
 * [SSHWordle](https://github.com/davidcroda/sshwordle)
 * [clidle](https://github.com/ajeetdsouza/clidle)
+* [ssh-warm-welcome](https://git.coopcloud.tech/decentral1se/ssh-warm-welcome)
 
 [bubbletea]: https://github.com/charmbracelet/bubbletea
 [gliderlabs/ssh]: https://github.com/gliderlabs/ssh
