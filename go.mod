@@ -6,7 +6,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/keygen v0.4.3
 	github.com/charmbracelet/lipgloss v0.8.0
-	github.com/charmbracelet/log v0.2.4
+	github.com/charmbracelet/log v0.2.5
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
 	github.com/go-git/go-git/v5 v5.9.0
 	github.com/google/go-cmp v0.5.9
