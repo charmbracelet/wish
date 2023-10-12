@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/charmbracelet/bubbletea v0.24.2
 	github.com/charmbracelet/keygen v0.5.0
-	github.com/charmbracelet/lipgloss v0.9.0
+	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.2.5
 	github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103
 	github.com/go-git/go-git/v5 v5.9.0
