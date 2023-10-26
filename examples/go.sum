@@ -21,8 +21,8 @@ github.com/charmbracelet/bubbletea v0.24.2 h1:uaQIKx9Ai6Gdh5zpTbGiWpytMU+CfsPp06
 github.com/charmbracelet/bubbletea v0.24.2/go.mod h1:XdrNrV4J8GiyshTtx3DNuYkR1FDaJmO3l2nejekbsgg=
 github.com/charmbracelet/keygen v0.5.0 h1:XY0fsoYiCSM9axkrU+2ziE6u6YjJulo/b9Dghnw6MZc=
 github.com/charmbracelet/keygen v0.5.0/go.mod h1:DfvCgLHxZ9rJxdK0DGw3C/LkV4SgdGbnliHcObV3L+8=
-github.com/charmbracelet/lipgloss v0.9.0 h1:BHIM7U4vX77xGEld8GrTKspBMtSv7j0wxPCH73nrdxE=
-github.com/charmbracelet/lipgloss v0.9.0/go.mod h1:h8KDyaivONasw1Bhb4nWiKlk4P1wHPly+3+3v6EFMmA=
+github.com/charmbracelet/lipgloss v0.9.1 h1:PNyd3jvaJbg4jRHKWXnCj1akQm4rh8dbEzN1p/u1KWg=
+github.com/charmbracelet/lipgloss v0.9.1/go.mod h1:1mPmG4cxScwUQALAAnacHaigiiHB9Pmr+v1VEawJl6I=
 github.com/charmbracelet/log v0.2.5 h1:1yVvyKCKVV639RR4LIq1iy1Cs1AKxuNO+Hx2LJtk7Wc=
 github.com/charmbracelet/log v0.2.5/go.mod h1:nQGK8tvc4pS9cvVEH/pWJiZ50eUq1aoXUOjGpXvdD0k=
 github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103 h1:wpHMERIN0pQZE635jWwT1dISgfjbpUcEma+fbPKSMCU=
@@ -45,9 +45,9 @@ github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 h1:+zs/tPmkDkHx3U66D
 github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376/go.mod h1:an3vInlBmSxCcxctByoQdvwPiA7DTK7jaaFDBTtu0ic=
 github.com/go-git/go-billy/v5 v5.5.0 h1:yEY4yhzCDuMGSv83oGxiBotRzhwhNr8VZyphhiu+mTU=
 github.com/go-git/go-billy/v5 v5.5.0/go.mod h1:hmexnoNsr2SJU1Ju67OaNz5ASJY3+sHgFRpCtpDCKow=
-github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20230305113008-0c11038e723f h1:Pz0DHeFij3XFhoBRGUDPzSJ+w2UcK5/0JvF8DRI58r8=
-github.com/go-git/go-git/v5 v5.9.0 h1:cD9SFA7sHVRdJ7AYck1ZaAa/yeuBvGPxwXDL8cxrObY=
-github.com/go-git/go-git/v5 v5.9.0/go.mod h1:RKIqga24sWdMGZF+1Ekv9kylsDz6LzdTSI2s/OsZWE0=
+github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20231010084843-55a94097c399 h1:eMje31YglSBqCdIqdhKBW8lokaMrL3uTkpGYlE2OOT4=
+github.com/go-git/go-git/v5 v5.10.0 h1:F0x3xXrAWmhwtzoCokU4IMPcBdncG+HAAqi9FcOOjbQ=
+github.com/go-git/go-git/v5 v5.10.0/go.mod h1:1FOZ/pQnqw24ghP2n7cunVl0ON55BsjPYvhWHvZGhoo=
 github.com/go-logfmt/logfmt v0.6.0 h1:wGYYu3uicYdqXVgoYbvnkrPVXkuLM1p1ifugDMEdRi4=
 github.com/go-logfmt/logfmt v0.6.0/go.mod h1:WYhtIu8zTZfxdn5+rREduYbwxfcBr/Vr6KEVveWlfTs=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da h1:oI5xCqsCo564l8iNU+DwB5epxmsaqB+rhGL0m5jtYqE=
