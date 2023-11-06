@@ -15,7 +15,7 @@ require (
 	github.com/muesli/termenv v0.15.2
 	golang.org/x/crypto v0.14.0
 	golang.org/x/sync v0.4.0
-	golang.org/x/time v0.3.0
+	golang.org/x/time v0.4.0
 )
 
 require (
