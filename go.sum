@@ -19,8 +19,8 @@ github.com/charmbracelet/keygen v0.5.0 h1:XY0fsoYiCSM9axkrU+2ziE6u6YjJulo/b9Dghn
 github.com/charmbracelet/keygen v0.5.0/go.mod h1:DfvCgLHxZ9rJxdK0DGw3C/LkV4SgdGbnliHcObV3L+8=
 github.com/charmbracelet/lipgloss v0.9.1 h1:PNyd3jvaJbg4jRHKWXnCj1akQm4rh8dbEzN1p/u1KWg=
 github.com/charmbracelet/lipgloss v0.9.1/go.mod h1:1mPmG4cxScwUQALAAnacHaigiiHB9Pmr+v1VEawJl6I=
-github.com/charmbracelet/log v0.3.0 h1:u5aB2KJDgNZo4WOfOC8C+KvGIkJ2rCFNlPWDu6xhnqI=
-github.com/charmbracelet/log v0.3.0/go.mod h1:OR4E1hutLsax3ZKpXbgUqPtTjQfrh1pG3zwHGWuuq8g=
+github.com/charmbracelet/log v0.3.1 h1:TjuY4OBNbxmHWSwO3tosgqs5I3biyY8sQPny/eCMTYw=
+github.com/charmbracelet/log v0.3.1/go.mod h1:OR4E1hutLsax3ZKpXbgUqPtTjQfrh1pG3zwHGWuuq8g=
 github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103 h1:wpHMERIN0pQZE635jWwT1dISgfjbpUcEma+fbPKSMCU=
 github.com/charmbracelet/ssh v0.0.0-20221117183211-483d43d97103/go.mod h1:0Vm2/8yBljiLDnGJHU8ehswfawrEybGk33j5ssqKQVM=
 github.com/cloudflare/circl v1.3.3 h1:fE/Qz0QdIGqeWfnwq0RE0R7MI51s0M2E4Ga9kq5AEMs=
