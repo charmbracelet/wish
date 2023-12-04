@@ -95,7 +95,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case VimFinishedMsg:
 		if msg.err != nil {
 			m.err = msg.err
-			return m, tea.Quit
+			return m, nil
 		}
 	}
 
@@ -106,5 +106,5 @@ func (m model) View() string {
 	if m.err != nil {
 		return m.err.Error() + "\n"
 	}
-	return "Press 'e' to edit..."
+	return "Press 'e' to edit or 'q' to quit..."
 }
