@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/charmbracelet/bubbles v0.16.1
-	github.com/charmbracelet/bubbletea v0.24.2
+	github.com/charmbracelet/bubbletea v0.24.3-0.20231204180345-7e60f93c11a6
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
 	github.com/charmbracelet/ssh v0.0.0-20231203183338-c29875a2932c
@@ -27,7 +27,6 @@ require (
 	github.com/creack/pty v1.1.15 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/gliderlabs/ssh v0.3.5 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-git/go-git/v5 v5.10.1 // indirect
@@ -61,3 +60,5 @@ require (
 	golang.org/x/tools v0.14.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
+
+replace github.com/charmbracelet/wish => ../
