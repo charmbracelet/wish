@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/aymanbagabas/go-pty v0.2.1
-	github.com/charmbracelet/bubbletea v0.24.2
+	github.com/charmbracelet/bubbletea v0.24.3-0.20231204180345-7e60f93c11a6
 	github.com/charmbracelet/keygen v0.5.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
@@ -58,5 +58,3 @@ require (
 	golang.org/x/tools v0.14.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
-
-replace github.com/charmbracelet/bubbletea => ../bubbletea
