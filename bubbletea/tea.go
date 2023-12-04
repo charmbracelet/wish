@@ -4,6 +4,7 @@ package bubbletea
 import (
 	"context"
 
+	"github.com/aymanbagabas/go-pty"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
@@ -51,10 +52,31 @@ func MiddlewareWithColorProfile(bth Handler, cp termenv.Profile) wish.Middleware
 		if m == nil {
 			return nil
 		}
-		opts = append(opts, tea.WithInput(s), tea.WithOutput(s))
-		return tea.NewProgram(m, opts...)
+		return tea.NewProgram(m, append(opts, makeIOOpts(s)...)...)
 	}
 	return MiddlewareWithProgramHandler(h, cp)
+}
+
+func makeIOOpts(s ssh.Session) []tea.ProgramOption {
+	noPtyOpts := []tea.ProgramOption{
+		tea.WithInput(s),
+		tea.WithOutput(s),
+	}
+
+	tty, _, ok := s.Pty()
+	if !ok {
+		return noPtyOpts
+	}
+
+	upty, ok := tty.Pty.(pty.UnixPty)
+	if !ok {
+		return noPtyOpts
+	}
+	f := upty.Slave()
+	return []tea.ProgramOption{
+		tea.WithInput(f),
+		tea.WithOutput(f),
+	}
 }
 
 // MiddlewareWithProgramHandler allows you to specify the ProgramHandler to be
