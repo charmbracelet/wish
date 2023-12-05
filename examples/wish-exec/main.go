@@ -93,10 +93,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case VimFinishedMsg:
-		if msg.err != nil {
-			m.err = msg.err
-			return m, nil
-		}
+		m.err = msg.err
+		return m, nil
 	}
 
 	return m, nil
