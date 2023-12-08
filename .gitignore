@@ -9,3 +9,5 @@ coverage.txt
 
 # MacOS specific
 .DS_Store
+id_ed25519
+id_ed25519.pub

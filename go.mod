@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/aymanbagabas/go-pty v0.2.1
-	github.com/charmbracelet/bubbletea v0.24.3-0.20231204180345-7e60f93c11a6
+	github.com/charmbracelet/bubbletea v0.24.3-0.20231207115923-e671b840f205
 	github.com/charmbracelet/keygen v0.5.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1

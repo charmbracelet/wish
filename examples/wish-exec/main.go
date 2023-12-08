@@ -13,6 +13,7 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -57,19 +58,20 @@ func main() {
 	}
 }
 
-func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-	_, _, active := s.Pty()
-	if !active {
-		wish.Fatalln(s, "no active terminal, skipping")
-		return nil, nil
+func teaHandler(s ssh.Session, renderer *lipgloss.Renderer) (tea.Model, []tea.ProgramOption) {
+	m := model{
+		sess:     s,
+		style:    renderer.NewStyle().Foreground(lipgloss.Color("8")),
+		errStyle: renderer.NewStyle().Foreground(lipgloss.Color("3")),
 	}
-	m := model{sess: s}
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
 
 type model struct {
-	err  error
-	sess ssh.Session
+	err      error
+	sess     ssh.Session
+	style    lipgloss.Style
+	errStyle lipgloss.Style
 }
 
 func (m model) Init() tea.Cmd {
@@ -85,7 +87,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "e":
 			pty, _, _ := m.sess.Pty()
 			c := pty.Command("vim", "file.txt")
-			cmd := tea.ExecPty(c, func(err error) tea.Msg {
+			cmd := tea.Exec(bm.Command(c), func(err error) tea.Msg {
+				if err != nil {
+					log.Error("vim finished", "error", err)
+				}
 				return VimFinishedMsg{err: err}
 			})
 			return m, cmd
@@ -102,7 +107,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	if m.err != nil {
-		return m.err.Error() + "\n"
+		return m.errStyle.Render(m.err.Error() + "\n")
 	}
-	return "Press 'e' to edit or 'q' to quit..."
+	return m.style.Render("Press 'e' to edit or 'q' to quit...\n")
 }

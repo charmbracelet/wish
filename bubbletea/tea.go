@@ -3,6 +3,7 @@ package bubbletea
 
 import (
 	"context"
+	"io"
 
 	"github.com/aymanbagabas/go-pty"
 	tea "github.com/charmbracelet/bubbletea"
@@ -23,7 +24,7 @@ type BubbleTeaHandler = Handler // nolint: revive
 // Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
-type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
+type Handler func(ssh.Session, *lipgloss.Renderer) (tea.Model, []tea.ProgramOption)
 
 // ProgramHandler is the function Bubble Tea apps implement to hook into the SSH
 // Middleware. This should return a new tea.Program. This handler is different
@@ -34,48 +35,20 @@ type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
 // otherwise the program will not function properly.
 type ProgramHandler func(ssh.Session) *tea.Program
 
-// Middleware takes a Handler and hooks the input and output for the
-// ssh.Session into the tea.Program. It also captures window resize events and
-// sends them to the tea.Program as tea.WindowSizeMsgs. By default a 256 color
-// profile will be used when rendering with Lip Gloss.
-func Middleware(bth Handler) wish.Middleware {
-	return MiddlewareWithColorProfile(bth, termenv.ANSI256)
-}
-
-// MiddlewareWithColorProfile allows you to specify the number of colors
-// returned by the server when using Lip Gloss. The number of colors supported
-// by an SSH client's terminal cannot be detected by the server but this will
-// allow for manually setting the color profile on all SSH connections.
-func MiddlewareWithColorProfile(bth Handler, cp termenv.Profile) wish.Middleware {
-	h := func(s ssh.Session) *tea.Program {
-		m, opts := bth(s)
-		if m == nil {
-			return nil
-		}
-		return tea.NewProgram(m, append(opts, makeIOOpts(s)...)...)
-	}
-	return MiddlewareWithProgramHandler(h, cp)
-}
-
-func makeIOOpts(s ssh.Session) []tea.ProgramOption {
-	noPtyOpts := []tea.ProgramOption{
+func makeIOOpts(s ssh.Session, tty ssh.Pty) []tea.ProgramOption {
+	defaultTeaOpts := []tea.ProgramOption{
 		tea.WithInput(s),
 		tea.WithOutput(s),
 	}
-
-	tty, _, ok := s.Pty()
-	if !ok {
-		return noPtyOpts
-	}
-
 	upty, ok := tty.Pty.(pty.UnixPty)
 	if !ok {
-		return noPtyOpts
+		return defaultTeaOpts
 	}
 	f := upty.Slave()
+	out := termenv.NewOutput(f, termenv.WithColorCache(true))
 	return []tea.ProgramOption{
 		tea.WithInput(f),
-		tea.WithOutput(f),
+		tea.WithOutput(out),
 	}
 }
 
@@ -86,16 +59,26 @@ func makeIOOpts(s ssh.Session) []tea.ProgramOption {
 //
 // Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
 // otherwise the program will not function properly.
-func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.Middleware {
-	// XXX: This is a hack to make sure the default Termenv output color
-	// profile is set before the program starts. Ideally, we want a Lip Gloss
-	// renderer per session.
-	lipgloss.SetColorProfile(cp)
+func Middleware(bth Handler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			p := bth(s)
+			tty, windowChanges, ok := s.Pty()
+			if !ok {
+				wish.Fatalln(s, "no active terminal, skipping")
+				return
+			}
+			ioopts := makeIOOpts(s, tty)
+
+			renderer := lipgloss.NewRenderer(tty, termenv.WithColorCache(true))
+
+			m, opts := bth(s, renderer)
+			if m == nil {
+				log.Error("no model returned by the handler")
+				return
+			}
+
+			p := tea.NewProgram(m, append(opts, ioopts...)...)
 			if p != nil {
-				_, windowChanges, _ := s.Pty()
 				ctx, cancel := context.WithCancel(s.Context())
 				go func() {
 					for {
@@ -120,8 +103,21 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 				// tui crash
 				p.Kill()
 				cancel()
+				if err := tty.Close(); err != nil {
+					log.Error("could not close pty", "error", err)
+					return
+				}
 			}
 			sh(s)
 		}
 	}
 }
+
+// Command makes a *pty.Cmd executable with tea.Exec.
+func Command(c *pty.Cmd) tea.ExecCommand { return &ptyCommand{c} }
+
+type ptyCommand struct{ *pty.Cmd }
+
+func (*ptyCommand) SetStderr(io.Writer) {}
+func (*ptyCommand) SetStdin(io.Reader)  {}
+func (*ptyCommand) SetStdout(io.Writer) {}
