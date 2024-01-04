@@ -35,23 +35,6 @@ type Handler func(ssh.Session, *lipgloss.Renderer) (tea.Model, []tea.ProgramOpti
 // otherwise the program will not function properly.
 type ProgramHandler func(ssh.Session) *tea.Program
 
-func makeIOOpts(s ssh.Session, tty ssh.Pty) []tea.ProgramOption {
-	defaultTeaOpts := []tea.ProgramOption{
-		tea.WithInput(s),
-		tea.WithOutput(s),
-	}
-	upty, ok := tty.Pty.(pty.UnixPty)
-	if !ok {
-		return defaultTeaOpts
-	}
-	f := upty.Slave()
-	out := termenv.NewOutput(f, termenv.WithColorCache(true))
-	return []tea.ProgramOption{
-		tea.WithInput(f),
-		tea.WithOutput(out),
-	}
-}
-
 // MiddlewareWithProgramHandler allows you to specify the ProgramHandler to be
 // able to access the underlying tea.Program. This is useful for creating custom
 // middlewars that need access to tea.Program for instance to use p.Send() to
@@ -62,52 +45,61 @@ func makeIOOpts(s ssh.Session, tty ssh.Pty) []tea.ProgramOption {
 func Middleware(bth Handler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
+			opts := []tea.ProgramOption{tea.WithInput(s), tea.WithOutput(s)}
+
 			tty, windowChanges, ok := s.Pty()
 			if !ok {
 				wish.Fatalln(s, "no active terminal, skipping")
 				return
 			}
-			ioopts := makeIOOpts(s, tty)
+
+			upty, ok := tty.Pty.(pty.UnixPty)
+			if ok {
+				f := upty.Slave()
+				out := termenv.NewOutput(f, termenv.WithColorCache(true))
+				opts = []tea.ProgramOption{tea.WithInput(f), tea.WithOutput(out)}
+			}
 
 			renderer := lipgloss.NewRenderer(tty, termenv.WithColorCache(true))
 
-			m, opts := bth(s, renderer)
+			m, hopts := bth(s, renderer)
 			if m == nil {
 				log.Error("no model returned by the handler")
 				return
 			}
 
-			p := tea.NewProgram(m, append(opts, ioopts...)...)
-			if p != nil {
-				ctx, cancel := context.WithCancel(s.Context())
-				go func() {
-					for {
-						select {
-						case <-ctx.Done():
-							if p != nil {
-								p.Quit()
-								return
-							}
-						case w := <-windowChanges:
-							if p != nil {
-								p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
-							}
+			opts = append(opts, hopts...)
+
+			p := tea.NewProgram(m, opts...)
+			ctx, cancel := context.WithCancel(s.Context())
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						if p != nil {
+							p.Quit()
+							return
+						}
+					case w := <-windowChanges:
+						if p != nil {
+							p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
 						}
 					}
-				}()
-				if _, err := p.Run(); err != nil {
-					log.Error("app exit with error", "error", err)
 				}
-				// p.Kill() will force kill the program if it's still running,
-				// and restore the terminal to its original state in case of a
-				// tui crash
-				p.Kill()
-				cancel()
-				if err := tty.Close(); err != nil {
-					log.Error("could not close pty", "error", err)
-					return
-				}
+			}()
+			if _, err := p.Run(); err != nil {
+				log.Error("app exit with error", "error", err)
 			}
+			// p.Kill() will force kill the program if it's still running,
+			// and restore the terminal to its original state in case of a
+			// tui crash
+			p.Kill()
+			cancel()
+			if err := tty.Close(); err != nil {
+				log.Error("could not close pty", "error", err)
+				return
+			}
+
 			sh(s)
 		}
 	}
@@ -118,6 +110,6 @@ func Command(c *pty.Cmd) tea.ExecCommand { return &ptyCommand{c} }
 
 type ptyCommand struct{ *pty.Cmd }
 
-func (*ptyCommand) SetStderr(io.Writer) {}
-func (*ptyCommand) SetStdin(io.Reader)  {}
-func (*ptyCommand) SetStdout(io.Writer) {}
+func (*ptyCommand) SetStderr(io.Writer) {} // noop
+func (*ptyCommand) SetStdin(io.Reader)  {} // noop
+func (*ptyCommand) SetStdout(io.Writer) {} // noop
