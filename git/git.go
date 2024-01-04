@@ -131,7 +131,7 @@ func gitPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {
 		}
 		return runGit(s, "", cmd, rp)
 	case "git-receive-pack":
-		err := ensureRepo(repoDir, repo)
+		err := EnsureRepo(repoDir, repo)
 		if err != nil {
 			return err
 		}
@@ -170,7 +170,12 @@ func Fatal(s ssh.Session, v ...interface{}) {
 	s.Exit(1) // nolint: errcheck
 }
 
-func ensureRepo(dir string, repo string) error {
+// EnsureRepo makes sure the given repo exists within the given dir, and that
+// it is git repository.
+//
+// If path does not exist, it'll be created.
+// If the path is not a git repo, it will be git init-ed as a bare repository.
+func EnsureRepo(dir, repo string) error {
 	exists, err := fileExists(dir)
 	if err != nil {
 		return err

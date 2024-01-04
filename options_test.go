@@ -75,22 +75,23 @@ func TestWithAuthorizedKeys(t *testing.T) {
 
 func TestWithTrustedUserCAKeys(t *testing.T) {
 	setup := func(tb testing.TB, certPath string) (*ssh.Server, *gossh.ClientConfig) {
+		tb.Helper()
 		s := &ssh.Server{
 			Handler: func(s ssh.Session) {
 				cert, ok := s.PublicKey().(*gossh.Certificate)
 				fmt.Fprintf(s, "cert? %v - principals: %v - type: %v", ok, cert.ValidPrincipals, cert.CertType)
 			},
 		}
-		requireNoError(t, WithTrustedUserCAKeys("testdata/ca.pub")(s))
+		requireNoError(tb, WithTrustedUserCAKeys("testdata/ca.pub")(s))
 
-		signer, err := gossh.ParsePrivateKey(getBytes(t, "testdata/foo"))
-		requireNoError(t, err)
+		signer, err := gossh.ParsePrivateKey(getBytes(tb, "testdata/foo"))
+		requireNoError(tb, err)
 
-		cert, _, _, _, err := gossh.ParseAuthorizedKey(getBytes(t, certPath))
-		requireNoError(t, err)
+		cert, _, _, _, err := gossh.ParseAuthorizedKey(getBytes(tb, certPath))
+		requireNoError(tb, err)
 
 		certSigner, err := gossh.NewCertSigner(cert.(*gossh.Certificate), signer)
-		requireNoError(t, err)
+		requireNoError(tb, err)
 		return s, &gossh.ClientConfig{
 			User: "foo",
 			Auth: []gossh.AuthMethod{
