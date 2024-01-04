@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/elapsed"
 	"github.com/charmbracelet/wish/logging"
 )
 
@@ -42,6 +43,7 @@ func main() {
 					h(s)
 				}
 			},
+			elapsed.Middleware(),
 			logging.Middleware(),
 		),
 	)
