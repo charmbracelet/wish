@@ -72,33 +72,28 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, cp termenv.Profile) wish.M
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			p := bth(s)
-			if p != nil {
-				_, windowChanges, _ := s.Pty()
-				ctx, cancel := context.WithCancel(s.Context())
-				go func() {
-					for {
-						select {
-						case <-ctx.Done():
-							if p != nil {
-								p.Quit()
-								return
-							}
-						case w := <-windowChanges:
-							if p != nil {
-								p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
-							}
-						}
+			_, windowChanges, _ := s.Pty()
+			ctx, cancel := context.WithCancel(s.Context())
+			go func() {
+				for {
+					select {
+					case <-ctx.Done():
+						p.Quit()
+						return
+					case w := <-windowChanges:
+						p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
 					}
-				}()
-				if _, err := p.Run(); err != nil {
-					log.Error("app exit with error", "error", err)
 				}
-				// p.Kill() will force kill the program if it's still running,
-				// and restore the terminal to its original state in case of a
-				// tui crash
-				p.Kill()
-				cancel()
+			}()
+			if _, err := p.Run(); err != nil {
+				log.Error("app exit with error", "error", err)
 			}
+			// p.Kill() will force kill the program if it's still running,
+			// and restore the terminal to its original state in case of a
+			// tui crash
+			p.Kill()
+			cancel()
+
 			sh(s)
 		}
 	}
