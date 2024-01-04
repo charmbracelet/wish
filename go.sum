@@ -21,6 +21,8 @@ github.com/charmbracelet/log v0.3.1 h1:TjuY4OBNbxmHWSwO3tosgqs5I3biyY8sQPny/eCMT
 github.com/charmbracelet/log v0.3.1/go.mod h1:OR4E1hutLsax3ZKpXbgUqPtTjQfrh1pG3zwHGWuuq8g=
 github.com/charmbracelet/ssh v0.0.0-20240104163730-e2196430eae5 h1:fF2y7pPSFr3p2taKoOpH1MNt1dwRRnMIqBsnay4wU5A=
 github.com/charmbracelet/ssh v0.0.0-20240104163730-e2196430eae5/go.mod h1:A1H384KV/cJcSKofWjdSIb+dfbikXiW6449EluL3qJI=
+github.com/charmbracelet/ssh v0.0.0-20240104172912-e11ae277b249 h1:M1Q/UIbi9Cfla0HK3A9puhQhb8ZPkA5HQxeSYcVrGpo=
+github.com/charmbracelet/ssh v0.0.0-20240104172912-e11ae277b249/go.mod h1:A1H384KV/cJcSKofWjdSIb+dfbikXiW6449EluL3qJI=
 github.com/cloudflare/circl v1.3.3 h1:fE/Qz0QdIGqeWfnwq0RE0R7MI51s0M2E4Ga9kq5AEMs=
 github.com/cloudflare/circl v1.3.3/go.mod h1:5XYMA4rFBvNIrhs50XuiBJ15vF2pZn4nnUKZrLbUZFA=
 github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 h1:q2hJAaP1k2wIvVRd/hEHD7lacgqrCPS+k8g1MndzfWY=

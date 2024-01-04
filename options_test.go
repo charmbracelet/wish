@@ -31,6 +31,26 @@ func TestWithBanner(t *testing.T) {
 	requireEqual(t, banner, got)
 }
 
+func TestWithBannerHandler(t *testing.T) {
+	var got string
+
+	srv := &ssh.Server{
+		Handler: func(s ssh.Session) {},
+	}
+	requireNoError(t, WithBannerHandler(func(ctx ssh.Context) string {
+		return fmt.Sprintf("banner for %s", ctx.User())
+	})(srv))
+
+	requireNoError(t, testsession.New(t, srv, &gossh.ClientConfig{
+		User: "fulano",
+		BannerCallback: func(message string) error {
+			got = message
+			return nil
+		},
+	}).Run(""))
+	requireEqual(t, "banner for fulano", got)
+}
+
 func TestWithIdleTimeout(t *testing.T) {
 	s := ssh.Server{}
 	requireNoError(t, WithIdleTimeout(time.Second)(&s))

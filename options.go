@@ -39,6 +39,15 @@ func WithBanner(banner string) ssh.Option {
 	}
 }
 
+// WithBannerHandler return an ssh.Option that sets the server banner handler,
+// overriding WithBanner.
+func WithBannerHandler(h ssh.BannerHandler) ssh.Option {
+	return func(s *ssh.Server) error {
+		s.BannerHandler = h
+		return nil
+	}
+}
+
 // WithMiddleware composes the provided Middleware and returns an ssh.Option.
 // This is useful if you manually create an ssh.Server and want to set the
 // Server.Handler.
