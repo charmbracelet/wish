@@ -31,6 +31,14 @@ func WithVersion(version string) ssh.Option {
 	}
 }
 
+// WithBanner return an ssh.Option that sets the server banner.
+func WithBanner(banner string) ssh.Option {
+	return func(s *ssh.Server) error {
+		s.Banner = banner
+		return nil
+	}
+}
+
 // WithMiddleware composes the provided Middleware and returns an ssh.Option.
 // This is useful if you manually create an ssh.Server and want to set the
 // Server.Handler.
