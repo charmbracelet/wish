@@ -1,0 +1,14 @@
+
+Hello %s, welcome to a SSH server powered by
+__        ___     _     _ _ _
+\ \      / (_)___| |__ | | | |
+ \ \ /\ / /| / __| '_ \| | | |
+  \ V  V / | \__ \ | | |_|_|_|
+   \_/\_/  |_|___/_| |_(_|_|_)
+
+
+ PS: The password is "asd123".
+PPS: Visit https://charm.sh to learn more!
+
+---
+

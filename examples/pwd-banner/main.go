@@ -9,6 +9,8 @@ import (
 	"syscall"
 	"time"
 
+	_ "embed"
+
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -20,30 +22,16 @@ const (
 	port = 23234
 )
 
-const banner = `
-
-Welcome to
-__        ___     _
-\ \      / (_)___| |__
- \ \ /\ / /| / __| '_ \
-  \ V  V / | \__ \ | | |
-   \_/\_/  |_|___/_| |_|
-
----
-
-The password is "asd123".
-
----
-
-Visit https://charm.sh to learn more!
-
-`
+//go:embed banner.txt
+var banner string
 
 func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
-		wish.WithBanner(banner),
+		wish.WithBannerHandler(func(ctx ssh.Context) string {
+			return fmt.Sprintf(banner, ctx.User())
+		}),
 		wish.WithPasswordAuth(func(ctx ssh.Context, password string) bool {
 			return password == "asd123"
 		}),
