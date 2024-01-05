@@ -100,8 +100,8 @@ func Middleware(bth Handler) wish.Middleware {
 					return
 				}
 
-				sh(s)
 			}
+			sh(s)
 		}
 	}
 }
