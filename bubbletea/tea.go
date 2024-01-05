@@ -26,37 +26,18 @@ type BubbleTeaHandler = Handler // nolint: revive
 // start it with the tea.ProgramOptions returned.
 type Handler func(ssh.Session, *lipgloss.Renderer) (tea.Model, []tea.ProgramOption)
 
-// ProgramHandler is the function Bubble Tea apps implement to hook into the SSH
-// Middleware. This should return a new tea.Program. This handler is different
-// from the default handler in that it returns a tea.Program instead of
-// (tea.Model, tea.ProgramOptions).
+// Middleware takes a Handler and hooks the input and output for the
+// ssh.Session into the tea.Program.
 //
-// Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
-// otherwise the program will not function properly.
-type ProgramHandler func(ssh.Session) *tea.Program
-
-// MiddlewareWithProgramHandler allows you to specify the ProgramHandler to be
-// able to access the underlying tea.Program. This is useful for creating custom
-// middlewars that need access to tea.Program for instance to use p.Send() to
-// send messages to tea.Program.
-//
-// Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
-// otherwise the program will not function properly.
+// It also captures window resize events and sends them to the tea.Program
+// as tea.WindowSizeMsgs.
 func Middleware(bth Handler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			opts := []tea.ProgramOption{tea.WithInput(s), tea.WithOutput(s)}
-
 			tty, windowChanges, ok := s.Pty()
 			if !ok {
 				wish.Fatalln(s, "no active terminal, skipping")
 				return
-			}
-
-			upty, ok := tty.Pty.(pty.UnixPty)
-			if ok {
-				f := upty.Slave()
-				opts = []tea.ProgramOption{tea.WithInput(f), tea.WithOutput(f)}
 			}
 
 			renderer := lipgloss.NewRenderer(tty, termenv.WithColorCache(true))
@@ -67,8 +48,7 @@ func Middleware(bth Handler) wish.Middleware {
 				return
 			}
 
-			opts = append(opts, hopts...)
-
+			opts := append(hopts, makeIOOpts(tty)...)
 			p := tea.NewProgram(m, opts...)
 			if p != nil {
 				ctx, cancel := context.WithCancel(s.Context())
@@ -114,3 +94,19 @@ type ptyCommand struct{ *pty.Cmd }
 func (*ptyCommand) SetStderr(io.Writer) {} // noop
 func (*ptyCommand) SetStdin(io.Reader)  {} // noop
 func (*ptyCommand) SetStdout(io.Writer) {} // noop
+
+func makeIOOpts(tty ssh.Pty) []tea.ProgramOption {
+	upty, ok := tty.Pty.(pty.UnixPty)
+	if !ok {
+		return []tea.ProgramOption{
+			tea.WithInput(tty),
+			tea.WithOutput(tty),
+		}
+	}
+
+	f := upty.Slave()
+	return []tea.ProgramOption{
+		tea.WithInput(f),
+		tea.WithOutput(f),
+	}
+}
