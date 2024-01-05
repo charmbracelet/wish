@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
-	github.com/charmbracelet/ssh v0.0.0-20240104172912-e11ae277b249
+	github.com/charmbracelet/ssh v0.0.0-20240105010023-df1b8bf5b159
 	github.com/charmbracelet/wish v0.5.0
 	github.com/muesli/termenv v0.15.2
 	github.com/spf13/cobra v1.7.0

@@ -56,8 +56,7 @@ func Middleware(bth Handler) wish.Middleware {
 			upty, ok := tty.Pty.(pty.UnixPty)
 			if ok {
 				f := upty.Slave()
-				out := termenv.NewOutput(f, termenv.WithColorCache(true))
-				opts = []tea.ProgramOption{tea.WithInput(f), tea.WithOutput(out)}
+				opts = []tea.ProgramOption{tea.WithInput(f), tea.WithOutput(f)}
 			}
 
 			renderer := lipgloss.NewRenderer(tty, termenv.WithColorCache(true))
