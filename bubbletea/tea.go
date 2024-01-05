@@ -70,36 +70,38 @@ func Middleware(bth Handler) wish.Middleware {
 			opts = append(opts, hopts...)
 
 			p := tea.NewProgram(m, opts...)
-			ctx, cancel := context.WithCancel(s.Context())
-			go func() {
-				for {
-					select {
-					case <-ctx.Done():
-						if p != nil {
-							p.Quit()
-							return
-						}
-					case w := <-windowChanges:
-						if p != nil {
-							p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+			if p != nil {
+				ctx, cancel := context.WithCancel(s.Context())
+				go func() {
+					for {
+						select {
+						case <-ctx.Done():
+							if p != nil {
+								p.Quit()
+								return
+							}
+						case w := <-windowChanges:
+							if p != nil {
+								p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+							}
 						}
 					}
+				}()
+				if _, err := p.Run(); err != nil {
+					log.Error("app exit with error", "error", err)
 				}
-			}()
-			if _, err := p.Run(); err != nil {
-				log.Error("app exit with error", "error", err)
-			}
-			// p.Kill() will force kill the program if it's still running,
-			// and restore the terminal to its original state in case of a
-			// tui crash
-			p.Kill()
-			cancel()
-			if err := tty.Close(); err != nil {
-				log.Error("could not close pty", "error", err)
-				return
-			}
+				// p.Kill() will force kill the program if it's still running,
+				// and restore the terminal to its original state in case of a
+				// tui crash
+				p.Kill()
+				cancel()
+				if err := tty.Close(); err != nil {
+					log.Error("could not close pty", "error", err)
+					return
+				}
 
-			sh(s)
+				sh(s)
+			}
 		}
 	}
 }
