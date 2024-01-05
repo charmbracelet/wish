@@ -26,6 +26,7 @@ func TestNewServerWithOptions(t *testing.T) {
 	if _, err := NewServer(
 		WithHostKeyPath(fp),
 		WithMaxTimeout(time.Second),
+		WithBanner("welcome"),
 		WithAddress(":2222"),
 	); err != nil {
 		t.Fatal(err)
