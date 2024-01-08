@@ -30,6 +30,7 @@ const (
 func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
+		ssh.AllocatePty(),
 		wish.WithMiddleware(
 			bm.Middleware(teaHandler),
 			lm.Middleware(),
@@ -38,7 +39,6 @@ func main() {
 	if err != nil {
 		log.Error("could not start server", "error", err)
 	}
-	s.PtyHandler = ssh.AllocatePty
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
