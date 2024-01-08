@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/keygen v0.5.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
-	github.com/charmbracelet/ssh v0.0.0-20240108173924-d928369dd254
+	github.com/charmbracelet/ssh v0.0.0-20240108193150-97a8c4d0f968
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7

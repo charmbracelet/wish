@@ -5,11 +5,9 @@ import (
 	"context"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/muesli/termenv"
 )
 
 // BubbleTeaHandler is the function Bubble Tea apps implement to hook into the
@@ -22,7 +20,7 @@ type BubbleTeaHandler = Handler // nolint: revive
 // Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
-type Handler func(ssh.Session, *lipgloss.Renderer) (tea.Model, []tea.ProgramOption)
+type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
 
 // Middleware takes a Handler and hooks the input and output for the
 // ssh.Session into the tea.Program.
@@ -32,15 +30,13 @@ type Handler func(ssh.Session, *lipgloss.Renderer) (tea.Model, []tea.ProgramOpti
 func Middleware(bth Handler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			tty, windowChanges, ok := s.Pty()
+			_, windowChanges, ok := s.Pty()
 			if !ok {
 				wish.Fatalln(s, "no active terminal, skipping")
 				return
 			}
 
-			renderer := lipgloss.NewRenderer(tty.Slave, termenv.WithColorCache(true))
-
-			m, hopts := bth(s, renderer)
+			m, hopts := bth(s)
 			if m == nil {
 				log.Error("no model returned by the handler")
 				return
@@ -76,20 +72,5 @@ func Middleware(bth Handler) wish.Middleware {
 			}
 			sh(s)
 		}
-	}
-}
-
-func makeIOOpts(s ssh.Session) []tea.ProgramOption {
-	pty, _, ok := s.Pty()
-	if !ok || s.EmulatedPty() {
-		return []tea.ProgramOption{
-			tea.WithInput(s),
-			tea.WithOutput(s),
-		}
-	}
-
-	return []tea.ProgramOption{
-		tea.WithInput(pty.Slave),
-		tea.WithOutput(pty.Slave),
 	}
 }

@@ -23,6 +23,14 @@ github.com/charmbracelet/log v0.3.1 h1:TjuY4OBNbxmHWSwO3tosgqs5I3biyY8sQPny/eCMT
 github.com/charmbracelet/log v0.3.1/go.mod h1:OR4E1hutLsax3ZKpXbgUqPtTjQfrh1pG3zwHGWuuq8g=
 github.com/charmbracelet/ssh v0.0.0-20240108173924-d928369dd254 h1:LQEx1n2MuC2Kzgetq8TW7v2JDXN/+o3BsqloJmKgoiY=
 github.com/charmbracelet/ssh v0.0.0-20240108173924-d928369dd254/go.mod h1:H/cBXf4vsbGUlCLiR8cNGP7lpv8wuHbgD3GnWJ8quHA=
+github.com/charmbracelet/ssh v0.0.0-20240108184918-e75da4447a78 h1:OPhgZLveCrbwJqVyPj0+bFMi7ncEdXtvhiq+m8y9kVs=
+github.com/charmbracelet/ssh v0.0.0-20240108184918-e75da4447a78/go.mod h1:H/cBXf4vsbGUlCLiR8cNGP7lpv8wuHbgD3GnWJ8quHA=
+github.com/charmbracelet/ssh v0.0.0-20240108190445-72503be29e9d h1:ykEOWspdc2kLCGF10gTJ015n5Q1VZZ5Q59oU+/RBm2s=
+github.com/charmbracelet/ssh v0.0.0-20240108190445-72503be29e9d/go.mod h1:H/cBXf4vsbGUlCLiR8cNGP7lpv8wuHbgD3GnWJ8quHA=
+github.com/charmbracelet/ssh v0.0.0-20240108191434-0c40f63bb0ce h1:JnzZdHKxn6p4m2o/VGV/GifrxHWmzN7pQwlPJEMDYAg=
+github.com/charmbracelet/ssh v0.0.0-20240108191434-0c40f63bb0ce/go.mod h1:H/cBXf4vsbGUlCLiR8cNGP7lpv8wuHbgD3GnWJ8quHA=
+github.com/charmbracelet/ssh v0.0.0-20240108193150-97a8c4d0f968 h1:J64ERdPQ3kaV2p8y+Lm28SGWOO6o5fEriUJQt3FLTY4=
+github.com/charmbracelet/ssh v0.0.0-20240108193150-97a8c4d0f968/go.mod h1:H/cBXf4vsbGUlCLiR8cNGP7lpv8wuHbgD3GnWJ8quHA=
 github.com/cloudflare/circl v1.3.3 h1:fE/Qz0QdIGqeWfnwq0RE0R7MI51s0M2E4Ga9kq5AEMs=
 github.com/cloudflare/circl v1.3.3/go.mod h1:5XYMA4rFBvNIrhs50XuiBJ15vF2pZn4nnUKZrLbUZFA=
 github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 h1:q2hJAaP1k2wIvVRd/hEHD7lacgqrCPS+k8g1MndzfWY=
