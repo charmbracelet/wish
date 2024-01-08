@@ -9,7 +9,6 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	"github.com/muesli/termenv"
 )
 
 // BubbleTeaHandler is the function Bubble Tea apps implement to hook into the
@@ -22,7 +21,13 @@ type BubbleTeaHandler = Handler // nolint: revive
 // Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
-type Handler func(ssh.Session, *lipgloss.Renderer) (tea.Model, []tea.ProgramOption)
+type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
+
+// NewRenderer returns a lipgloss renderer for the current session.
+// This function handle PTYs as well, and should be used to style your application.
+func NewRenderer(s ssh.Session) *lipgloss.Renderer {
+	return newRenderer(s)
+}
 
 // Middleware takes a Handler and hooks the input and output for the
 // ssh.Session into the tea.Program.
@@ -38,19 +43,13 @@ func Middleware(bth Handler) wish.Middleware {
 				return
 			}
 
-			renderer := lipgloss.NewRenderer(tty.Slave, termenv.WithColorCache(true))
-
-			m, opts := bth(s, renderer)
+			m, opts := bth(s)
 			if m == nil {
 				log.Error("no model returned by the handler")
 				return
 			}
 
-			p := tea.NewProgram(m, append(
-				opts,
-				tea.WithInput(tty.Slave),
-				tea.WithOutput(tty.Slave),
-			)...)
+			p := tea.NewProgram(m, append(opts, makeIOOpts(s)...)...)
 			if p != nil {
 				ctx, cancel := context.WithCancel(s.Context())
 				go func() {

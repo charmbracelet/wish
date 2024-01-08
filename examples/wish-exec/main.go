@@ -59,7 +59,8 @@ func main() {
 	}
 }
 
-func teaHandler(s ssh.Session, renderer *lipgloss.Renderer) (tea.Model, []tea.ProgramOption) {
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+	renderer := bm.NewRenderer(s)
 	m := model{
 		sess:     s,
 		style:    renderer.NewStyle().Foreground(lipgloss.Color("8")),
