@@ -3,9 +3,7 @@ package bubbletea
 
 import (
 	"context"
-	"io"
 
-	"github.com/aymanbagabas/go-pty"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
@@ -40,7 +38,7 @@ func Middleware(bth Handler) wish.Middleware {
 				return
 			}
 
-			renderer := lipgloss.NewRenderer(tty, termenv.WithColorCache(true))
+			renderer := lipgloss.NewRenderer(tty.Slave, termenv.WithColorCache(true))
 
 			m, hopts := bth(s, renderer)
 			if m == nil {
@@ -48,7 +46,7 @@ func Middleware(bth Handler) wish.Middleware {
 				return
 			}
 
-			opts := append(hopts, makeIOOpts(tty)...)
+			opts := append(hopts, makeIOOpts(s)...)
 			p := tea.NewProgram(m, opts...)
 			if p != nil {
 				ctx, cancel := context.WithCancel(s.Context())
@@ -75,38 +73,23 @@ func Middleware(bth Handler) wish.Middleware {
 				// tui crash
 				p.Kill()
 				cancel()
-				if err := tty.Close(); err != nil {
-					log.Error("could not close pty", "error", err)
-					return
-				}
-
 			}
 			sh(s)
 		}
 	}
 }
 
-// Command makes a *pty.Cmd executable with tea.Exec.
-func Command(c *pty.Cmd) tea.ExecCommand { return &ptyCommand{c} }
-
-type ptyCommand struct{ *pty.Cmd }
-
-func (*ptyCommand) SetStderr(io.Writer) {} // noop
-func (*ptyCommand) SetStdin(io.Reader)  {} // noop
-func (*ptyCommand) SetStdout(io.Writer) {} // noop
-
-func makeIOOpts(tty ssh.Pty) []tea.ProgramOption {
-	upty, ok := tty.Pty.(pty.UnixPty)
-	if !ok {
+func makeIOOpts(s ssh.Session) []tea.ProgramOption {
+	pty, _, ok := s.Pty()
+	if !ok || s.EmulatedPty() {
 		return []tea.ProgramOption{
-			tea.WithInput(tty),
-			tea.WithOutput(tty),
+			tea.WithInput(s),
+			tea.WithOutput(s),
 		}
 	}
 
-	f := upty.Slave()
 	return []tea.ProgramOption{
-		tea.WithInput(f),
-		tea.WithOutput(f),
+		tea.WithInput(pty.Slave),
+		tea.WithOutput(pty.Slave),
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -29,7 +30,6 @@ const (
 func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
-		ssh.AllocatePty(),
 		wish.WithMiddleware(
 			bm.Middleware(teaHandler),
 			lm.Middleware(),
@@ -38,6 +38,7 @@ func main() {
 	if err != nil {
 		log.Error("could not start server", "error", err)
 	}
+	s.PtyHandler = ssh.AllocatePty
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
@@ -85,9 +86,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "e":
-			pty, _, _ := m.sess.Pty()
-			c := pty.Command("vim", "file.txt")
-			cmd := tea.Exec(bm.Command(c), func(err error) tea.Msg {
+			c := exec.Command("vim", "file.txt")
+			cmd := tea.ExecProcess(c, func(err error) tea.Msg {
 				if err != nil {
 					log.Error("vim finished", "error", err)
 				}
