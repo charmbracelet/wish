@@ -34,10 +34,10 @@ linters:
     - whitespace
     - depguard
 
-
 linters-settings:
   depguard:
-     list-type: 'denylist'
-     packages-with-error-message:
-       - 'github.com/gliderlabs/ssh': 'use github.com/charmbracelet/ssh instead'
-
+    rules:
+      main:
+        deny:
+          - pkg: "github.com/gliderlabs/ssh"
+            desc: "use github.com/charmbracelet/ssh instead"
