@@ -23,9 +23,9 @@ type BubbleTeaHandler = Handler // nolint: revive
 // start it with the tea.ProgramOptions returned.
 type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
 
-// NewRenderer returns a lipgloss renderer for the current session.
+// MakeRenderer returns a lipgloss renderer for the current session.
 // This function handle PTYs as well, and should be used to style your application.
-func NewRenderer(s ssh.Session) *lipgloss.Renderer {
+func MakeRenderer(s ssh.Session) *lipgloss.Renderer {
 	return newRenderer(s)
 }
 
@@ -37,7 +37,7 @@ func NewRenderer(s ssh.Session) *lipgloss.Renderer {
 func Middleware(bth Handler) wish.Middleware {
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			tty, windowChanges, ok := s.Pty()
+			_, windowChanges, ok := s.Pty()
 			if !ok {
 				wish.Fatalln(s, "no active terminal, skipping")
 				return
@@ -75,11 +75,6 @@ func Middleware(bth Handler) wish.Middleware {
 				// tui crash
 				p.Kill()
 				cancel()
-				if err := tty.Close(); err != nil {
-					log.Error("could not close pty", "error", err)
-					return
-				}
-
 			}
 			sh(s)
 		}

@@ -18,5 +18,5 @@ func makeIOOpts(s ssh.Session) []tea.ProgramOption {
 }
 
 func newRenderer(s ssh.Session) *lipgloss.Renderer {
-	return lipgloss.NewRenderer(s, termenv.WithColorCache(true))
+	return lipgloss.NewRenderer(s, termenv.WithUnsafe(), termenv.WithColorCache(true))
 }
