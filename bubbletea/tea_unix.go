@@ -10,7 +10,7 @@ import (
 	"github.com/muesli/termenv"
 )
 
-func makeIOOpts(s ssh.Session) []tea.ProgramOption {
+func makeOpts(s ssh.Session) []tea.ProgramOption {
 	pty, _, ok := s.Pty()
 	if !ok || s.EmulatedPty() {
 		return []tea.ProgramOption{

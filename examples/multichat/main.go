@@ -18,7 +18,6 @@ import (
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
-	"github.com/muesli/termenv"
 )
 
 const (
@@ -41,16 +40,14 @@ func (a *app) send(msg tea.Msg) {
 
 func newApp() *app {
 	a := new(app)
-
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
-			bm.MiddlewareWithProgramHandler(a.ProgramHandler, termenv.ANSI256),
+			bm.MiddlewareWithProgramHandler(a.ProgramHandler),
 			lm.Middleware(),
 		),
 	)
-
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -88,7 +85,7 @@ func (a *app) ProgramHandler(s ssh.Session) *tea.Program {
 	model.app = a
 	model.id = s.User()
 
-	p := tea.NewProgram(model, tea.WithOutput(s), tea.WithInput(s))
+	p := tea.NewProgram(model, bm.MakePTYAwareIOOpts(s)...)
 	a.progs = append(a.progs, p)
 
 	return p

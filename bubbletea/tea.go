@@ -11,12 +11,14 @@ import (
 	"github.com/charmbracelet/wish"
 )
 
-// BubbleTeaHandler is the function Bubble Tea apps implement to hook into the
-// SSH Middleware. This will create a new tea.Program for every connection and
-// start it with the tea.ProgramOptions returned.
+// ProgramHandler is the function Bubble Tea apps implement to hook into the SSH
+// Middleware. This should return a new tea.Program. This handler is different
+// from the default handler in that it returns a tea.Program instead of
+// (tea.Model, tea.ProgramOptions).
 //
-// Deprecated: use Handler instead.
-type BubbleTeaHandler = Handler // nolint: revive
+// Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
+// otherwise the program will not function properly.
+type ProgramHandler func(ssh.Session) *tea.Program
 
 // Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
@@ -29,27 +31,39 @@ func MakeRenderer(s ssh.Session) *lipgloss.Renderer {
 	return newRenderer(s)
 }
 
+// MakePTYAwareOpts returns tea.WithInput and tea.WithOutput taking into
+// account Emulated and Allocated PTYs.
+func MakePTYAwareOpts(s ssh.Session) []tea.ProgramOption {
+	return makeOpts(s)
+}
+
 // Middleware takes a Handler and hooks the input and output for the
 // ssh.Session into the tea.Program.
 //
 // It also captures window resize events and sends them to the tea.Program
 // as tea.WindowSizeMsgs.
 func Middleware(bth Handler) wish.Middleware {
-	return func(sh ssh.Handler) ssh.Handler {
+	h := func(s ssh.Session) *tea.Program {
+		m, opts := bth(s)
+		if m == nil {
+			return nil
+		}
+		return tea.NewProgram(m, append(opts, makeOpts(s)...)...)
+	}
+	return MiddlewareWithProgramHandler(h)
+}
+
+// Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
+// otherwise the program will not function properly.
+func MiddlewareWithProgramHandler(bth ProgramHandler) wish.Middleware {
+	return func(h ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			_, windowChanges, ok := s.Pty()
 			if !ok {
 				wish.Fatalln(s, "no active terminal, skipping")
 				return
 			}
-
-			m, opts := bth(s)
-			if m == nil {
-				log.Error("no model returned by the handler")
-				return
-			}
-
-			p := tea.NewProgram(m, append(opts, makeIOOpts(s)...)...)
+			p := bth(s)
 			if p != nil {
 				ctx, cancel := context.WithCancel(s.Context())
 				go func() {
@@ -76,7 +90,7 @@ func Middleware(bth Handler) wish.Middleware {
 				p.Kill()
 				cancel()
 			}
-			sh(s)
+			h(s)
 		}
 	}
 }
