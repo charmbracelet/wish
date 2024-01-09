@@ -1,4 +1,6 @@
-// Package ratelimiter provides basic rate limiting functionality as a with middeware.
+// Package ratelimiter provides basic rate limiting functionality as a with middleware.
+//
+// It limits the amount of connections a source can make in a specified amount of time.
 package ratelimiter
 
 import (
