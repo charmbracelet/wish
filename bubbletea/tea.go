@@ -3,12 +3,14 @@ package bubbletea
 
 import (
 	"context"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
+	"github.com/muesli/termenv"
 )
 
 // ProgramHandler is the function Bubble Tea apps implement to hook into the SSH
@@ -91,4 +93,23 @@ func MiddlewareWithProgramHandler(bth ProgramHandler) wish.Middleware {
 			h(s)
 		}
 	}
+}
+
+type sshEnviron []string
+
+var _ termenv.Environ = sshEnviron(nil)
+
+// Environ implements termenv.Environ.
+func (e sshEnviron) Environ() []string {
+	return e
+}
+
+// Getenv implements termenv.Environ.
+func (e sshEnviron) Getenv(k string) string {
+	for _, v := range e {
+		if strings.HasPrefix(v, k+"=") {
+			return v[len(k)+1:]
+		}
+	}
+	return ""
 }
