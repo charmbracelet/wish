@@ -85,7 +85,7 @@ func (a *app) ProgramHandler(s ssh.Session) *tea.Program {
 	model.app = a
 	model.id = s.User()
 
-	p := tea.NewProgram(model, bm.MakePTYAwareIOOpts(s)...)
+	p := tea.NewProgram(model, bm.MakeOptions(s)...)
 	a.progs = append(a.progs, p)
 
 	return p

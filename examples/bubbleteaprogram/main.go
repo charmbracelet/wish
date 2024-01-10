@@ -82,7 +82,7 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 			height: pty.Window.Height,
 			time:   time.Now(),
 		}
-		return newProg(m, append(bm.MakePTYAwareOpts(s), tea.WithAltScreen())...)
+		return newProg(m, append(bm.MakeOptions(s), tea.WithAltScreen())...)
 	}
 	return bm.MiddlewareWithProgramHandler(teaHandler)
 }

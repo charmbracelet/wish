@@ -33,9 +33,9 @@ func MakeRenderer(s ssh.Session) *lipgloss.Renderer {
 	return newRenderer(s)
 }
 
-// MakePTYAwareOpts returns tea.WithInput and tea.WithOutput taking into
-// account Emulated and Allocated PTYs.
-func MakePTYAwareOpts(s ssh.Session) []tea.ProgramOption {
+// MakeOptions returns the tea.WithInput and tea.WithOutput program options
+// taking into account possible Emulated or Allocated PTYs.
+func MakeOptions(s ssh.Session) []tea.ProgramOption {
 	return makeOpts(s)
 }
 
