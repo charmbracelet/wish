@@ -6,8 +6,8 @@ examples/git/.repos
 .repos
 .ssh
 coverage.txt
+id_ed25519
+id_ed25519.pub
 
 # MacOS specific
 .DS_Store
-id_ed25519
-id_ed25519.pub
