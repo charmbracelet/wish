@@ -13,6 +13,19 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
+func TestWithSFTP(t *testing.T) {
+	srv := &ssh.Server{
+		Handler: func(s ssh.Session) {},
+	}
+	requireNoError(t, WithSFTPServer()(srv))
+	if srv.SubsystemHandlers == nil {
+		t.Fatalf("should not have been nil")
+	}
+	if _, ok := srv.SubsystemHandlers["sftp"]; !ok {
+		t.Fatalf("should have set the sftp subsystem handler")
+	}
+}
+
 func TestWithBanner(t *testing.T) {
 	const banner = "a banner"
 	var got string

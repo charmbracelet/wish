@@ -17,6 +17,14 @@ func TestFilesystem(t *testing.T) {
 	mtime := time.Unix(1323853868, 0)
 	atime := time.Unix(1380425711, 0)
 
+	t.Run("sftp", func(t *testing.T) {
+		is := is.New(t)
+		dir := t.TempDir()
+		h := NewFileSystemHandler(dir)
+		opts := h.ServerOptions()
+		is.True(len(opts) == 1) // one option only
+	})
+
 	t.Run("scp -f", func(t *testing.T) {
 		t.Run("file", func(t *testing.T) {
 			is := is.New(t)
@@ -262,7 +270,7 @@ func TestFilesystem(t *testing.T) {
 }
 
 func chtimesTree(tb testing.TB, dir string, atime, mtime time.Time) {
-	is.New(tb).NoErr(filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+	is.New(tb).NoErr(filepath.WalkDir(dir, func(path string, _ fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
