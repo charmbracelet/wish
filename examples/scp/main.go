@@ -27,6 +27,7 @@ func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
+		wish.WithSFTPServer(handler.ServerOptions()...),
 		wish.WithMiddleware(
 			scp.Middleware(handler, handler),
 		),

@@ -12,6 +12,7 @@ import (
 
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
+	"github.com/pkg/sftp"
 )
 
 // CopyToClientHandler is a handler that can be implemented to handle files
@@ -53,6 +54,11 @@ type CopyFromClientHandler interface {
 type Handler interface {
 	CopyFromClientHandler
 	CopyToClientHandler
+}
+
+// SFTP makes the SCP handler reusable to sftp.Server as a set of sftp.ServerOptions.
+type SFTP interface {
+	ServerOptions() []sftp.ServerOption
 }
 
 // Middleware provides a wish middleware using the given CopyToClientHandler
