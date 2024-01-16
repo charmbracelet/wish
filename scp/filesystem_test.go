@@ -187,14 +187,14 @@ func TestFilesystem(t *testing.T) {
 
 	t.Run("errors", func(t *testing.T) {
 		t.Run("chtimes", func(t *testing.T) {
-			h := &fileSystemHandler{t.TempDir()}
+			h := &FileSystemHandler{t.TempDir()}
 			is.New(t).True(h.chtimes("nope", 1212212, 323232) != nil) // should err
 		})
 
 		t.Run("glob", func(t *testing.T) {
 			t.Run("invalid glob", func(t *testing.T) {
 				is := is.New(t)
-				h := &fileSystemHandler{t.TempDir()}
+				h := &FileSystemHandler{t.TempDir()}
 				matches, err := h.Glob(nil, "[asda")
 				is.True(err != nil) // should err
 				is.Equal([]string{}, matches)
@@ -204,7 +204,7 @@ func TestFilesystem(t *testing.T) {
 		t.Run("NewDirEntry", func(t *testing.T) {
 			t.Run("do not exist", func(t *testing.T) {
 				is := is.New(t)
-				h := &fileSystemHandler{t.TempDir()}
+				h := &FileSystemHandler{t.TempDir()}
 				_, err := h.NewDirEntry(nil, "foo")
 				is.True(err != nil) // should err
 			})
@@ -213,7 +213,7 @@ func TestFilesystem(t *testing.T) {
 		t.Run("NewFileEntry", func(t *testing.T) {
 			t.Run("do not exist", func(t *testing.T) {
 				is := is.New(t)
-				h := &fileSystemHandler{t.TempDir()}
+				h := &FileSystemHandler{t.TempDir()}
 				_, _, err := h.NewFileEntry(nil, "foo")
 				is.True(err != nil) // should err
 			})
@@ -222,7 +222,7 @@ func TestFilesystem(t *testing.T) {
 		t.Run("Mkdir", func(t *testing.T) {
 			t.Run("parent do not exist", func(t *testing.T) {
 				is := is.New(t)
-				h := &fileSystemHandler{t.TempDir()}
+				h := &FileSystemHandler{t.TempDir()}
 				err := h.Mkdir(nil, &DirEntry{
 					Name:     "foo",
 					Filepath: "foo/bar/baz",
@@ -235,7 +235,7 @@ func TestFilesystem(t *testing.T) {
 		t.Run("Write", func(t *testing.T) {
 			t.Run("parent do not exist", func(t *testing.T) {
 				is := is.New(t)
-				h := &fileSystemHandler{t.TempDir()}
+				h := &FileSystemHandler{t.TempDir()}
 				_, err := h.Write(nil, &FileEntry{
 					Name:     "foo.txt",
 					Filepath: "baz/foo.txt",
@@ -247,7 +247,7 @@ func TestFilesystem(t *testing.T) {
 
 			t.Run("reader fails", func(t *testing.T) {
 				is := is.New(t)
-				h := &fileSystemHandler{t.TempDir()}
+				h := &FileSystemHandler{t.TempDir()}
 				_, err := h.Write(nil, &FileEntry{
 					Name:     "foo.txt",
 					Filepath: "foo.txt",
