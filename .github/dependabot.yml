@@ -7,7 +7,16 @@ updates:
     labels:
       - "dependencies"
     commit-message:
-      prefix: "feat"
+      prefix: "chore"
+      include: "scope"
+  - package-ecosystem: "gomod"
+    directory: "/examples"
+    schedule:
+      interval: "daily"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
       include: "scope"
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -25,5 +34,5 @@ updates:
     labels:
       - "dependencies"
     commit-message:
-      prefix: "feat"
+      prefix: "chore"
       include: "scope"
