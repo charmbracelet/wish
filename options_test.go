@@ -13,16 +13,16 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func TestWithSFTP(t *testing.T) {
+func TestWithSubsystemHandler(t *testing.T) {
 	srv := &ssh.Server{
 		Handler: func(s ssh.Session) {},
 	}
-	requireNoError(t, WithSFTPServer()(srv))
+	requireNoError(t, WithSubsystemHandler("foo", func(s ssh.Session) {})(srv))
 	if srv.SubsystemHandlers == nil {
 		t.Fatalf("should not have been nil")
 	}
-	if _, ok := srv.SubsystemHandlers["sftp"]; !ok {
-		t.Fatalf("should have set the sftp subsystem handler")
+	if _, ok := srv.SubsystemHandlers["foo"]; !ok {
+		t.Fatalf("should have set the foo subsystem handler")
 	}
 }
 

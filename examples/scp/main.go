@@ -15,6 +15,7 @@ import (
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 	"github.com/charmbracelet/wish/scp"
+	"github.com/charmbracelet/wish/sftp"
 )
 
 const (
@@ -27,7 +28,7 @@ func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
-		wish.WithSFTPServer(handler.ServerOptions()...),
+		wish.WithSubsystemHandler("sftp", sftp.Subsystem(handler.SFTPServerOptions()...)),
 		wish.WithMiddleware(
 			scp.Middleware(handler, handler),
 		),

@@ -28,7 +28,7 @@ func NewFileSystemHandler(root string) *FileSystemHandler {
 	}
 }
 
-func (h *FileSystemHandler) ServerOptions() []sftp.ServerOption {
+func (h *FileSystemHandler) SFTPServerOptions() []sftp.ServerOption {
 	return []sftp.ServerOption{
 		func(s *sftp.Server) error {
 			abs, err := filepath.Abs(h.root)

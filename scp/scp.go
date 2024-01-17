@@ -58,7 +58,7 @@ type Handler interface {
 
 // SFTP makes the SCP handler reusable to sftp.Server as a set of sftp.ServerOptions.
 type SFTP interface {
-	ServerOptions() []sftp.ServerOption
+	SFTPServerOptions() []sftp.ServerOption
 }
 
 // Middleware provides a wish middleware using the given CopyToClientHandler

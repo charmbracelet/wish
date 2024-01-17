@@ -12,7 +12,6 @@ import (
 	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
-	"github.com/pkg/sftp"
 	gossh "golang.org/x/crypto/ssh"
 )
 
@@ -201,27 +200,14 @@ func WithMaxTimeout(d time.Duration) ssh.Option {
 	}
 }
 
-// WithSFTPServer enables a SFTP server using pkg/sftp.
-//
-// Usually you'll want to pass a sftp.WithServerWorkingDirectory() option.
-func WithSFTPServer(options ...sftp.ServerOption) ssh.Option {
+// WithSubsystemHandler returns an ssh.Option that sets the subsystem
+// handler for a given protocol.
+func WithSubsystemHandler(key string, h ssh.SubsystemHandler) ssh.Option {
 	return func(s *ssh.Server) error {
 		if s.SubsystemHandlers == nil {
 			s.SubsystemHandlers = map[string]ssh.SubsystemHandler{}
 		}
-		s.SubsystemHandlers["sftp"] = func(s ssh.Session) {
-			srv, err := sftp.NewServer(s, options...)
-			if err != nil {
-				Fatalln(s, "sftp:", err)
-			}
-			if err := srv.Serve(); err == io.EOF {
-				if err := srv.Close(); err != nil {
-					Fatalln(s, "sftp:", err)
-				}
-			} else if err != nil {
-				Fatalln(s, "sftp:", err)
-			}
-		}
+		s.SubsystemHandlers[key] = h
 		return nil
 	}
 }

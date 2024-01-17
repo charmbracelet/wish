@@ -21,7 +21,7 @@ func TestFilesystem(t *testing.T) {
 		is := is.New(t)
 		dir := t.TempDir()
 		h := NewFileSystemHandler(dir)
-		opts := h.ServerOptions()
+		opts := h.SFTPServerOptions()
 		is.True(len(opts) == 1) // one option only
 	})
 
