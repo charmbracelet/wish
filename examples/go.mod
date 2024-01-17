@@ -10,7 +10,7 @@ require (
 	github.com/charmbracelet/ssh v0.0.0-20240104172912-e11ae277b249
 	github.com/charmbracelet/wish v0.5.0
 	github.com/muesli/termenv v0.15.2
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	golang.org/x/crypto v0.18.0
 )
 
