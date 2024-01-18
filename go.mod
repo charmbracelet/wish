@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/keygen v0.5.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
-	github.com/charmbracelet/ssh v0.0.0-20240117164921-7ed763aac5dd
+	github.com/charmbracelet/ssh v0.0.0-20240118111811-4b44fe1ec610
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
@@ -25,7 +25,7 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651 // indirect
-	github.com/charmbracelet/x/exp/term v0.0.0-20240117030132-5a84c80527c7 // indirect
+	github.com/charmbracelet/x/exp/term v0.0.0-20240117031359-6e25c76a1efe // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/creack/pty v1.1.21 // indirect

@@ -21,10 +21,14 @@ github.com/charmbracelet/log v0.3.1 h1:TjuY4OBNbxmHWSwO3tosgqs5I3biyY8sQPny/eCMT
 github.com/charmbracelet/log v0.3.1/go.mod h1:OR4E1hutLsax3ZKpXbgUqPtTjQfrh1pG3zwHGWuuq8g=
 github.com/charmbracelet/ssh v0.0.0-20240117164921-7ed763aac5dd h1:kDEVxAnD8YIESoEg9wyRZoQD/nhU8ubj0aQ7fVwwl9w=
 github.com/charmbracelet/ssh v0.0.0-20240117164921-7ed763aac5dd/go.mod h1:S0C+rR1Adt/2p8krTVZnWrYmgMtqo8L0d5AT9w6itaI=
+github.com/charmbracelet/ssh v0.0.0-20240118111811-4b44fe1ec610 h1:dUv7zOtpNuA4oBhRFtZlwaq+U0FvUeIRFBr/Q2u+euo=
+github.com/charmbracelet/ssh v0.0.0-20240118111811-4b44fe1ec610/go.mod h1:l/6/exIt0QMHEW5IiqoY9HyPlSuXAm6xkngFIJgiEYI=
 github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651 h1:3RXpZWGWTOeVXCTv0Dnzxdv/MhNUkBfEcbaTY0zrTQI=
 github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651/go.mod h1:2P0UgXMEa6TsToMSuFqKFQR+fZTO9CNGUNokkPatT/0=
 github.com/charmbracelet/x/exp/term v0.0.0-20240117030132-5a84c80527c7 h1:S2M2vYTMILqCHZ7IUahNj5w1IWg/cjrfa3yFpQtOXVg=
 github.com/charmbracelet/x/exp/term v0.0.0-20240117030132-5a84c80527c7/go.mod h1:kOOxxyxgAFQVcR5yQJWTuLjzt5dR2pcgwy3WaLEudjE=
+github.com/charmbracelet/x/exp/term v0.0.0-20240117031359-6e25c76a1efe h1:HeRgHWxOTu7l73rKsa5BRAeaUenmNyomiPCUHXv/y14=
+github.com/charmbracelet/x/exp/term v0.0.0-20240117031359-6e25c76a1efe/go.mod h1:kOOxxyxgAFQVcR5yQJWTuLjzt5dR2pcgwy3WaLEudjE=
 github.com/cloudflare/circl v1.3.3/go.mod h1:5XYMA4rFBvNIrhs50XuiBJ15vF2pZn4nnUKZrLbUZFA=
 github.com/cloudflare/circl v1.3.7 h1:qlCDlTPz2n9fu58M0Nh1J/JzcFpfgkFHHX3O35r5vcU=
 github.com/cloudflare/circl v1.3.7/go.mod h1:sRTcRWXGLrKw6yIGJ+l7amYJFfAXbZG0kBSc8r4zxgA=
