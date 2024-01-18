@@ -1,13 +1,11 @@
 package main
 
-// An example Bubble Tea server. This will put an ssh session into alt screen
-// and continually print up to date terminal information.
-
 import (
 	"context"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -23,13 +21,13 @@ import (
 
 const (
 	host = "localhost"
-	port = 23234
+	port = 23235
 )
 
 func main() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
-		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
+		ssh.AllocatePty(),
 		wish.WithMiddleware(
 			bm.Middleware(teaHandler),
 			lm.Middleware(),
@@ -58,55 +56,57 @@ func main() {
 	}
 }
 
-// You can wire any Bubble Tea model up to the middleware with a function that
-// handles the incoming ssh.Session. Here we just grab the terminal info and
-// pass it to the new model. You can also return tea.ProgramOptions (such as
-// tea.WithAltScreen) on a session by session basis.
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-	pty, _, active := s.Pty()
-	if !active {
-		wish.Fatalln(s, "no active terminal, skipping")
-		return nil, nil
-	}
 	renderer := bm.MakeRenderer(s)
 	m := model{
-		term:      pty.Term,
-		width:     pty.Window.Width,
-		height:    pty.Window.Height,
-		txtStyle:  renderer.NewStyle().Foreground(lipgloss.Color("10")),
-		quitStyle: renderer.NewStyle().Foreground(lipgloss.Color("8")),
+		sess:     s,
+		style:    renderer.NewStyle().Foreground(lipgloss.Color("8")),
+		errStyle: renderer.NewStyle().Foreground(lipgloss.Color("3")),
 	}
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
 
-// Just a generic tea.Model to demo terminal information of ssh.
 type model struct {
-	term      string
-	width     int
-	height    int
-	txtStyle  lipgloss.Style
-	quitStyle lipgloss.Style
+	err      error
+	sess     ssh.Session
+	style    lipgloss.Style
+	errStyle lipgloss.Style
 }
 
 func (m model) Init() tea.Cmd {
 	return nil
 }
 
+type vimFinishedMsg struct{ err error }
+
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.height = msg.Height
-		m.width = msg.Width
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "e":
+			// PS: this does not work on Windows.
+			c := exec.Command("vim", "file.txt")
+			cmd := tea.ExecProcess(c, func(err error) tea.Msg {
+				if err != nil {
+					log.Error("vim finished", "error", err)
+				}
+				return vimFinishedMsg{err: err}
+			})
+			return m, cmd
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		}
+	case vimFinishedMsg:
+		m.err = msg.err
+		return m, nil
 	}
+
 	return m, nil
 }
 
 func (m model) View() string {
-	s := fmt.Sprintf("Your term is %s\nYour window size is %dx%d", m.term, m.width, m.height)
-	return m.txtStyle.Render(s) + "\n\n" + m.quitStyle.Render("Press 'q' to quit\n")
+	if m.err != nil {
+		return m.errStyle.Render(m.err.Error() + "\n")
+	}
+	return m.style.Render("Press 'e' to edit or 'q' to quit...\n")
 }
