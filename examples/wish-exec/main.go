@@ -77,25 +77,26 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-type VimFinishedMsg struct{ err error }
+type vimFinishedMsg struct{ err error }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "e":
+			// PS: this does not work on Windows.
 			c := exec.Command("vim", "file.txt")
 			cmd := tea.ExecProcess(c, func(err error) tea.Msg {
 				if err != nil {
 					log.Error("vim finished", "error", err)
 				}
-				return VimFinishedMsg{err: err}
+				return vimFinishedMsg{err: err}
 			})
 			return m, cmd
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		}
-	case VimFinishedMsg:
+	case vimFinishedMsg:
 		m.err = msg.err
 		return m, nil
 	}
