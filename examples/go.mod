@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
-	github.com/charmbracelet/ssh v0.0.0-20240108200552-7ffdd484aa1b
+	github.com/charmbracelet/ssh v0.0.0-20240118173142-6d7cf11c8371
 	github.com/charmbracelet/wish v0.5.0
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/crypto v0.18.0
@@ -21,6 +21,8 @@ require (
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/keygen v0.5.0 // indirect
+	github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651 // indirect
+	github.com/charmbracelet/x/exp/term v0.0.0-20240117031359-6e25c76a1efe // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/creack/pty v1.1.21 // indirect
