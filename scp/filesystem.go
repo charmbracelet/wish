@@ -18,7 +18,7 @@ type FileSystemHandler struct{ root string }
 
 var (
 	_ Handler = &FileSystemHandler{}
-	_ SFTP    = &FileSystemHandler{}
+	_ Sftp    = &FileSystemHandler{}
 )
 
 // NewFileSystemHandler return a Handler based on the given dir.
@@ -28,7 +28,7 @@ func NewFileSystemHandler(root string) *FileSystemHandler {
 	}
 }
 
-func (h *FileSystemHandler) SFTPServerOptions() []sftp.ServerOption {
+func (h *FileSystemHandler) ServerOptions() []sftp.ServerOption {
 	return []sftp.ServerOption{
 		func(s *sftp.Server) error {
 			abs, err := filepath.Abs(h.root)
