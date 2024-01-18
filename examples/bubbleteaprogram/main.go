@@ -18,6 +18,7 @@ import (
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
+	"github.com/muesli/termenv"
 )
 
 const (
@@ -84,7 +85,7 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 		}
 		return newProg(m, append(bm.MakeOptions(s), tea.WithAltScreen())...)
 	}
-	return bm.MiddlewareWithProgramHandler(teaHandler)
+	return bm.MiddlewareWithProgramHandler(teaHandler, termenv.ANSI256)
 }
 
 // Just a generic tea.Model to demo terminal information of ssh.
