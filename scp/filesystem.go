@@ -10,33 +10,17 @@ import (
 	"time"
 
 	"github.com/charmbracelet/ssh"
-	"github.com/pkg/sftp"
 )
 
-// FileSystemHandler is Handler and SFTP implementation for a given root path.
+// FileSystemHandler is a Handler implementation for a given root path.
 type FileSystemHandler struct{ root string }
 
-var (
-	_ Handler = &FileSystemHandler{}
-	_ Sftp    = &FileSystemHandler{}
-)
+var _ Handler = &FileSystemHandler{}
 
 // NewFileSystemHandler return a Handler based on the given dir.
 func NewFileSystemHandler(root string) *FileSystemHandler {
 	return &FileSystemHandler{
 		root: filepath.Clean(root),
-	}
-}
-
-func (h *FileSystemHandler) ServerOptions() []sftp.ServerOption {
-	return []sftp.ServerOption{
-		func(s *sftp.Server) error {
-			abs, err := filepath.Abs(h.root)
-			if err != nil {
-				return err
-			}
-			return sftp.WithServerWorkingDirectory(abs)(s)
-		},
 	}
 }
 
