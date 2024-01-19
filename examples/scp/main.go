@@ -78,17 +78,20 @@ func sftpSubsystem(root string) ssh.SubsystemHandler {
 	}
 }
 
+// Example readonly handler implementation for sftp.
+//
+// other example implementations:
+// - https://github.com/gravitational/teleport/blob/f57dc2fe2a9900ec198779aae747ac4f833b278d/tool/teleport/common/sftp.go
+// - https://github.com/minio/minio/blob/c66c5828eacb4a7fa9a49b4c890c77dd8684b171/cmd/sftp-server.go
+type sftpHandler struct {
+	root string
+}
+
 var (
 	_ sftp.FileLister = &sftpHandler{}
 	_ sftp.FileReader = &sftpHandler{}
 )
 
-// example readonly handler implementation for sftp.
-type sftpHandler struct {
-	root string
-}
-
-// listerAt satisfies [sftp.ListerAt].
 type listerAt []fs.FileInfo
 
 func (l listerAt) ListAt(ls []fs.FileInfo, offset int64) (int, error) {
@@ -99,7 +102,6 @@ func (l listerAt) ListAt(ls []fs.FileInfo, offset int64) (int, error) {
 	if n < len(ls) {
 		return n, io.EOF
 	}
-
 	return n, nil
 }
 
