@@ -17,14 +17,6 @@ func TestFilesystem(t *testing.T) {
 	mtime := time.Unix(1323853868, 0)
 	atime := time.Unix(1380425711, 0)
 
-	t.Run("sftp", func(t *testing.T) {
-		is := is.New(t)
-		dir := t.TempDir()
-		h := NewFileSystemHandler(dir)
-		opts := h.SFTPServerOptions()
-		is.True(len(opts) == 1) // one option only
-	})
-
 	t.Run("scp -f", func(t *testing.T) {
 		t.Run("file", func(t *testing.T) {
 			is := is.New(t)

@@ -13,11 +13,11 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
-func TestWithSubsystemHandler(t *testing.T) {
+func TestWithSubsystem(t *testing.T) {
 	srv := &ssh.Server{
 		Handler: func(s ssh.Session) {},
 	}
-	requireNoError(t, WithSubsystemHandler("foo", func(s ssh.Session) {})(srv))
+	requireNoError(t, WithSubsystem("foo", func(s ssh.Session) {})(srv))
 	if srv.SubsystemHandlers == nil {
 		t.Fatalf("should not have been nil")
 	}
