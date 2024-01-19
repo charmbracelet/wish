@@ -18,6 +18,7 @@ import (
 	"github.com/charmbracelet/wish"
 	bm "github.com/charmbracelet/wish/bubbletea"
 	lm "github.com/charmbracelet/wish/logging"
+	"github.com/muesli/termenv"
 )
 
 const (
@@ -44,7 +45,7 @@ func newApp() *app {
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
 		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
 		wish.WithMiddleware(
-			bm.MiddlewareWithProgramHandler(a.ProgramHandler),
+			bm.MiddlewareWithProgramHandler(a.ProgramHandler, termenv.ANSI256),
 			lm.Middleware(),
 		),
 	)
