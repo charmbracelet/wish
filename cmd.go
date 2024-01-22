@@ -58,7 +58,7 @@ func (*Cmd) SetStdout(io.Writer) {}
 // Run runs the program and waits for it to finish.
 func (c *Cmd) Run() error {
 	if c.pty == nil {
-		return c.Run()
+		return c.cmd.Run()
 	}
 
 	if err := c.pty.Start(c.cmd); err != nil {
