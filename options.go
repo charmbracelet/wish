@@ -199,3 +199,15 @@ func WithMaxTimeout(d time.Duration) ssh.Option {
 		return nil
 	}
 }
+
+// WithSubsystem returns an ssh.Option that sets the subsystem
+// handler for a given protocol.
+func WithSubsystem(key string, h ssh.SubsystemHandler) ssh.Option {
+	return func(s *ssh.Server) error {
+		if s.SubsystemHandlers == nil {
+			s.SubsystemHandlers = map[string]ssh.SubsystemHandler{}
+		}
+		s.SubsystemHandlers[key] = h
+		return nil
+	}
+}

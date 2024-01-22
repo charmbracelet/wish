@@ -13,6 +13,19 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
+func TestWithSubsystem(t *testing.T) {
+	srv := &ssh.Server{
+		Handler: func(s ssh.Session) {},
+	}
+	requireNoError(t, WithSubsystem("foo", func(s ssh.Session) {})(srv))
+	if srv.SubsystemHandlers == nil {
+		t.Fatalf("should not have been nil")
+	}
+	if _, ok := srv.SubsystemHandlers["foo"]; !ok {
+		t.Fatalf("should have set the foo subsystem handler")
+	}
+}
+
 func TestWithBanner(t *testing.T) {
 	const banner = "a banner"
 	var got string

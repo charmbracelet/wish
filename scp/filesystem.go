@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/ssh"
 )
 
+// fileSystemHandler is a Handler implementation for a given root path.
 type fileSystemHandler struct{ root string }
 
 var _ Handler = &fileSystemHandler{}
