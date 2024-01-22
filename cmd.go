@@ -17,14 +17,15 @@ import (
 // If the current session does not have a PTY, it sets them to the session
 // itself.
 func CommandContext(ctx context.Context, s ssh.Session, name string, args ...string) *Cmd {
-	c := exec.CommandContext(ctx, name, args...)
+	cmd := exec.CommandContext(ctx, name, args...)
 	pty, _, ok := s.Pty()
 	if !ok {
-		c.Stdin, c.Stdout, c.Stderr = s, s, s
-		return &Cmd{cmd: c}
+		cmd.Stdin, cmd.Stdout, cmd.Stderr = s, s, s
+		return &Cmd{cmd: cmd}
 	}
 
-	return &Cmd{c, &pty}
+	cmd.Env = append(cmd.Environ(), "SSH_TTY="+pty.Name(), fmt.Sprintf("TERM=%s", pty.Term))
+	return &Cmd{cmd, &pty}
 }
 
 // Command sets stdin, stdout, and stderr to the current session's PTY slave.
@@ -67,24 +68,22 @@ func (c *Cmd) Run() error {
 	if err := c.pty.Start(c.cmd); err != nil {
 		return err
 	}
-	start := time.Now()
+
 	if runtime.GOOS == "windows" {
+		start := time.Now()
 		for c.cmd.ProcessState == nil {
 			if time.Since(start) > time.Second*10 {
 				return fmt.Errorf("could not start process")
 			}
 			time.Sleep(100 * time.Millisecond)
 		}
-
 		if !c.cmd.ProcessState.Success() {
 			return fmt.Errorf("process failed: exit %d", c.cmd.ProcessState.ExitCode())
 		}
-	} else {
-		if err := c.cmd.Wait(); err != nil {
-			return err
-		}
+		return nil
 	}
-	return nil
+
+	return c.cmd.Wait()
 }
 
 var _ tea.ExecCommand = &Cmd{}
