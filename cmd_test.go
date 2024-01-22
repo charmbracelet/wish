@@ -37,17 +37,19 @@ func TestCommandNoPty(t *testing.T) {
 			}
 		},
 	}, nil)
-	var out bytes.Buffer
-	sess.Stdout = &out
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	sess.Stdout = &stdout
+	sess.Stderr = &stderr
 	if err := sess.Run(""); err != nil {
-		t.Errorf("expected no error, got %v", err)
+		t.Errorf("expected no error, got %v: %s", err, stderr.String())
 	}
 	expect := strings.Join([]string{
 		"hello",
 		"HELLO=hello",
 		tmp,
 	}, "\n") + "\n"
-	if s := out.String(); s != expect {
+	if s := stdout.String(); s != expect {
 		t.Errorf("expected output to be %q, got %q", expect, s)
 	}
 }
@@ -86,17 +88,19 @@ func TestCommandPty(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	var out bytes.Buffer
-	sess.Stdout = &out
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	sess.Stdout = &stdout
+	sess.Stderr = &stderr
 	if err := sess.Run(""); err != nil {
-		t.Errorf("expected no error, got %v", err)
+		t.Errorf("expected no error, got %v: %s", err, stderr.String())
 	}
 	expect := strings.Join([]string{
 		"hello",
 		"HELLO=hello",
 		tmp,
 	}, "\r\n") + "\r\n"
-	if s := out.String(); s != expect {
+	if s := stdout.String(); s != expect {
 		t.Errorf("expected output to be %q, got %q", expect, s)
 	}
 }
@@ -118,13 +122,13 @@ func TestCommandPtyError(t *testing.T) {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	var out bytes.Buffer
-	sess.Stderr = &out
+	var stderr bytes.Buffer
+	sess.Stderr = &stderr
 	if err := sess.Run(""); err == nil {
 		t.Errorf("expected an error, got nil")
 	}
 	expect := `exec: "nopenopenope"`
-	if s := out.String(); !strings.Contains(s, expect) {
+	if s := stderr.String(); !strings.Contains(s, expect) {
 		t.Errorf("expected output to contain %q, got %q", expect, s)
 	}
 }
