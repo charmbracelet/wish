@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/signal"
 	"syscall"
 	"time"
@@ -77,26 +76,35 @@ func (m model) Init() tea.Cmd {
 	return nil
 }
 
-type vimFinishedMsg struct{ err error }
+type cmdFinishedMsg struct{ err error }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// PS: the execs won't work on windows.
 		switch msg.String() {
 		case "e":
-			// PS: this does not work on Windows.
-			c := exec.Command("vim", "file.txt")
-			cmd := tea.ExecProcess(c, func(err error) tea.Msg {
+			c := wish.Command(m.sess, "vim", "file.txt")
+			cmd := tea.Exec(c, func(err error) tea.Msg {
 				if err != nil {
 					log.Error("vim finished", "error", err)
 				}
-				return vimFinishedMsg{err: err}
+				return cmdFinishedMsg{err: err}
+			})
+			return m, cmd
+		case "s":
+			c := wish.Command(m.sess, "bash", "-im")
+			cmd := tea.Exec(c, func(err error) tea.Msg {
+				if err != nil {
+					log.Error("shell finished", "error", err)
+				}
+				return cmdFinishedMsg{err: err}
 			})
 			return m, cmd
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		}
-	case vimFinishedMsg:
+	case cmdFinishedMsg:
 		m.err = msg.err
 		return m, nil
 	}
@@ -108,5 +116,5 @@ func (m model) View() string {
 	if m.err != nil {
 		return m.errStyle.Render(m.err.Error() + "\n")
 	}
-	return m.style.Render("Press 'e' to edit or 'q' to quit...\n")
+	return m.style.Render("Press 'e' to edit, 's' to hop into a shell, or 'q' to quit...\n")
 }
