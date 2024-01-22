@@ -123,6 +123,21 @@ type Cmd struct {
 	pty *ssh.Pty
 }
 
+// SetDir set the underlying exec.Cmd env.
+func (c *Cmd) SetEnv(env []string) {
+	c.cmd.Env = env
+}
+
+// Environ returns the underlying exec.Cmd environment.
+func (c *Cmd) Environ() []string {
+	return c.cmd.Environ()
+}
+
+// SetDir set the underlying exec.Cmd dir.
+func (c *Cmd) SetDir(dir string) {
+	c.cmd.Dir = dir
+}
+
 // SetStderr conforms with tea.ExecCommand.
 func (*Cmd) SetStderr(io.Writer) {}
 
