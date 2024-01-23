@@ -2,6 +2,7 @@ package wish
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -75,6 +76,11 @@ func (c *Cmd) Run() error {
 	if err != nil {
 		return fmt.Errorf("cmd: %w", err)
 	}
+	defer func() {
+		if err := ptmx.Close(); err != nil {
+			log.Warn("could not close pty", "err", err)
+		}
+	}()
 
 	// setup resizes
 	ch := make(chan os.Signal, 1)
@@ -82,7 +88,7 @@ func (c *Cmd) Run() error {
 	go func() {
 		for range ch {
 			if err := pty.InheritSize(ppty.Master, ptmx); err != nil {
-				log.Printf("error resizing pty: %s", err)
+				log.Warn("error resizing pty", "err", err)
 			}
 		}
 	}()
@@ -97,7 +103,11 @@ func (c *Cmd) Run() error {
 	if err != nil {
 		return fmt.Errorf("cmd: %w", err)
 	}
-	defer func() { _ = term.Restore(int(ppty.Slave.Fd()), oldState) }()
+	defer func() {
+		if err := term.Restore(int(ppty.Slave.Fd()), oldState); err != nil {
+			log.Error("could not restore terminal", "err", err)
+		}
+	}()
 
 	// we'll need to be able to cancel the reader, otherwise the copy
 	// from ptmx will eat the next keypress after the exec exits.
@@ -108,10 +118,20 @@ func (c *Cmd) Run() error {
 	defer func() { stdin.Cancel() }()
 
 	// sync io
-	go func() { _, _ = io.Copy(ptmx, stdin) }()
-	_, _ = io.Copy(ppty.Slave, ptmx)
+	go func() {
+		if _, err := io.Copy(ptmx, stdin); err != nil {
+			if errors.Is(err, io.EOF) || errors.Is(err, cancelreader.ErrCanceled) {
+				// safe to ignore
+				return
+			}
+			log.Warn("failed to copy", "err", err)
+		}
+	}()
+	if _, err := io.Copy(ppty.Slave, ptmx); err != nil && !errors.Is(err, io.EOF) {
+		return err
+	}
 
-	// TODO: check if this works on windows
+	// TODO: check if this works on windows.
 	if runtime.GOOS == "windows" {
 		start := time.Now()
 		for c.cmd.ProcessState == nil {
