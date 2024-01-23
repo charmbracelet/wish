@@ -4,12 +4,19 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
+	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
+	"github.com/creack/pty"
+	"github.com/muesli/cancelreader"
+	"golang.org/x/term"
 )
 
 // CommandContext is like Command but includes a context.
@@ -18,14 +25,7 @@ import (
 // itself.
 func CommandContext(ctx context.Context, s ssh.Session, name string, args ...string) *Cmd {
 	cmd := exec.CommandContext(ctx, name, args...)
-	pty, _, ok := s.Pty()
-	if !ok {
-		cmd.Stdin, cmd.Stdout, cmd.Stderr = s, s, s
-		return &Cmd{cmd: cmd}
-	}
-
-	cmd.Env = append(cmd.Environ(), "SSH_TTY="+pty.Name(), fmt.Sprintf("TERM=%s", pty.Term))
-	return &Cmd{cmd, &pty}
+	return &Cmd{s, cmd}
 }
 
 // Command sets stdin, stdout, and stderr to the current session's PTY slave.
@@ -40,8 +40,8 @@ func Command(s ssh.Session, name string, args ...string) *Cmd {
 
 // Cmd wraps a *exec.Cmd and a ssh.Pty so a command can be properly run.
 type Cmd struct {
-	cmd *exec.Cmd
-	pty *ssh.Pty
+	sess ssh.Session
+	cmd  *exec.Cmd
 }
 
 // SetDir set the underlying exec.Cmd env.
@@ -61,14 +61,57 @@ func (c *Cmd) SetDir(dir string) {
 
 // Run runs the program and waits for it to finish.
 func (c *Cmd) Run() error {
-	if c.pty == nil {
+	ppty, _, ok := c.sess.Pty()
+	if !ok {
+		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.sess, c.sess, c.sess
 		return c.cmd.Run()
 	}
 
-	if err := c.pty.Start(c.cmd); err != nil {
-		return err
+	// especially on macOS, the slave pty is killed once exec finishes.
+	// since we're using it for the ssh session, this would render
+	// the pty and the session unusable.
+	// so, we need to create another pty, and run the Cmd on it instead.
+	ptmx, err := pty.Start(c.cmd)
+	if err != nil {
+		return fmt.Errorf("cmd: %w", err)
 	}
 
+	// setup resizes
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGWINCH)
+	go func() {
+		for range ch {
+			if err := pty.InheritSize(ppty.Master, ptmx); err != nil {
+				log.Printf("error resizing pty: %s", err)
+			}
+		}
+	}()
+	ch <- syscall.SIGWINCH // initial size
+	defer func() {
+		signal.Stop(ch)
+		close(ch)
+	}()
+
+	// put the ssh session's pty in raw mode
+	oldState, err := term.MakeRaw(int(ppty.Slave.Fd()))
+	if err != nil {
+		return fmt.Errorf("cmd: %w", err)
+	}
+	defer func() { _ = term.Restore(int(ppty.Slave.Fd()), oldState) }()
+
+	// we'll need to be able to cancel the reader, otherwise the copy
+	// from ptmx will eat the next keypress after the exec exits.
+	stdin, err := cancelreader.NewReader(ppty.Slave)
+	if err != nil {
+		return fmt.Errorf("cmd: %w", err)
+	}
+	defer func() { stdin.Cancel() }()
+
+	// sync io
+	go func() { _, _ = io.Copy(ptmx, stdin) }()
+	_, _ = io.Copy(ppty.Slave, ptmx)
+
+	// TODO: check if this works on windows
 	if runtime.GOOS == "windows" {
 		start := time.Now()
 		for c.cmd.ProcessState == nil {
