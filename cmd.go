@@ -127,8 +127,11 @@ func (c *Cmd) Run() error {
 			log.Warn("failed to copy", "err", err)
 		}
 	}()
-	if _, err := io.Copy(ppty.Slave, ptmx); err != nil && !errors.Is(err, io.EOF) {
-		return err
+	if _, err := io.Copy(ppty.Slave, ptmx); err != nil {
+		if !errors.Is(err, io.EOF) && !errors.Is(err, syscall.EIO) {
+			return fmt.Errorf("cmd: copy: %w", err)
+		}
+		log.Warn("failed to copy", "err", err)
 	}
 
 	// TODO: check if this works on windows.
