@@ -51,12 +51,12 @@ func (c *Cmd) SetDir(dir string) {
 
 // Run runs the program and waits for it to finish.
 func (c *Cmd) Run() error {
-	ppty, _, ok := c.sess.Pty()
+	ppty, winCh, ok := c.sess.Pty()
 	if !ok {
 		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.sess, c.sess, c.sess
 		return c.cmd.Run()
 	}
-	return c.doRun(ppty)
+	return c.doRun(ppty, winCh)
 }
 
 var _ tea.ExecCommand = &Cmd{}
