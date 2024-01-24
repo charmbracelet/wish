@@ -5,7 +5,6 @@ package wish
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/signal"
@@ -25,7 +24,7 @@ import (
 func (c *Cmd) doRun(ppty ssh.Pty) error {
 	ptmx, err := pty.Start(c.cmd)
 	if err != nil {
-		return fmt.Errorf("cmd: %w", err)
+		return err
 	}
 	defer func() {
 		if err := ptmx.Close(); err != nil {
@@ -52,7 +51,7 @@ func (c *Cmd) doRun(ppty ssh.Pty) error {
 	// put the ssh session's pty in raw mode
 	oldState, err := term.MakeRaw(int(ppty.Slave.Fd()))
 	if err != nil {
-		return fmt.Errorf("cmd: %w", err)
+		return err
 	}
 	defer func() {
 		if err := term.Restore(int(ppty.Slave.Fd()), oldState); err != nil {
@@ -64,9 +63,9 @@ func (c *Cmd) doRun(ppty ssh.Pty) error {
 	// from ptmx will eat the next keypress after the exec exits.
 	stdin, err := cancelreader.NewReader(ppty.Slave)
 	if err != nil {
-		return fmt.Errorf("cmd: %w", err)
+		return err
 	}
-	defer func() { stdin.Cancel() }()
+	defer func() { stdin.Cancel(); stdin.Close() }()
 
 	// sync io
 	go func() {
@@ -79,7 +78,7 @@ func (c *Cmd) doRun(ppty ssh.Pty) error {
 		}
 	}()
 	if _, err := io.Copy(ppty.Slave, ptmx); err != nil && !errors.Is(err, io.EOF) {
-		return fmt.Errorf("cmd: copy: %w", err)
+		return err
 	}
 
 	return c.cmd.Wait()
