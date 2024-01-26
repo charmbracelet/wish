@@ -42,6 +42,9 @@ func TestCommandPty(t *testing.T) {
 			runEcho(s, "hello")
 			runEnv(s, []string{"HELLO=world"})
 			runPwd(s, tmp)
+			// for some reason sometimes on macos github action runners,
+			// it cuts parts of the output.
+			time.Sleep(100 * time.Millisecond)
 		},
 	}
 	if err := ssh.AllocatePty()(srv); err != nil {
