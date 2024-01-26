@@ -20,23 +20,28 @@ import (
 // so, we need to create another pty, and run the Cmd on it instead.
 func (c *Cmd) doRun(ppty ssh.Pty, winCh <-chan ssh.Window) error {
 	done := make(chan struct{}, 1)
-	go func() { <-done; close(done) }()
+	go func() {
+		<-done
+		close(done)
+	}()
+	ptmxClose := make(chan struct{}, 1)
 	ptmx, err := pty.Start(c.cmd)
 	if err != nil {
 		return err
 	}
 	defer func() {
-		<-done
 		if err := ptmx.Close(); err != nil {
 			log.Warn("could not close pty", "err", err)
 		}
+		ptmxClose <- struct{}{}
+		close(ptmxClose)
 	}()
 
 	// setup resizes
 	go func() {
 		for {
 			select {
-			case <-done:
+			case <-ptmxClose:
 				return
 			case w := <-winCh:
 				log.Infof("resize %d %d", w.Height, w.Width)
@@ -66,25 +71,22 @@ func (c *Cmd) doRun(ppty ssh.Pty, winCh <-chan ssh.Window) error {
 
 	// we'll need to be able to cancel the reader, otherwise the copy
 	// from ptmx will eat the next keypress after the exec exits.
-	stdin, err := cancelreader.NewReader(ppty.Slave)
+	cancelSlave, err := cancelreader.NewReader(ppty.Slave)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		stdin.Cancel()
-	}()
+	defer func() { cancelSlave.Cancel() }()
 
 	// sync io
 	go func() {
-		if _, err := io.Copy(ptmx, stdin); err != nil {
-			done <- struct{}{}
+		defer func() { done <- struct{}{} }()
+		if _, err := io.Copy(ptmx, cancelSlave); err != nil {
 			if errors.Is(err, io.EOF) || errors.Is(err, cancelreader.ErrCanceled) {
 				// safe to ignore
 				return
 			}
 			log.Warn("failed to copy", "err", err)
 		}
-		done <- struct{}{}
 	}()
 	if _, err := io.Copy(ppty.Slave, ptmx); err != nil && !errors.Is(err, io.EOF) {
 		return err
