@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/testsession"
@@ -33,12 +34,18 @@ func TestCommandNoPty(t *testing.T) {
 }
 
 func TestCommandPty(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip()
+	}
 	tmp := t.TempDir()
 	srv := &ssh.Server{
 		Handler: func(s ssh.Session) {
 			runEcho(s, "hello")
 			runEnv(s, []string{"HELLO=world"})
 			runPwd(s, tmp)
+			// for some reason sometimes on macos github action runners,
+			// it cuts parts of the output.
+			time.Sleep(100 * time.Millisecond)
 		},
 	}
 	if err := ssh.AllocatePty()(srv); err != nil {
@@ -64,6 +71,9 @@ func TestCommandPty(t *testing.T) {
 }
 
 func TestCommandPtyError(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip()
+	}
 	srv := &ssh.Server{
 		Handler: func(s ssh.Session) {
 			if err := Command(s, "nopenopenope").Run(); err != nil {

@@ -2,11 +2,8 @@ package wish
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os/exec"
-	"runtime"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/ssh"
@@ -18,14 +15,7 @@ import (
 // itself.
 func CommandContext(ctx context.Context, s ssh.Session, name string, args ...string) *Cmd {
 	cmd := exec.CommandContext(ctx, name, args...)
-	pty, _, ok := s.Pty()
-	if !ok {
-		cmd.Stdin, cmd.Stdout, cmd.Stderr = s, s, s
-		return &Cmd{cmd: cmd}
-	}
-
-	cmd.Env = append(cmd.Environ(), "SSH_TTY="+pty.Name(), fmt.Sprintf("TERM=%s", pty.Term))
-	return &Cmd{cmd, &pty}
+	return &Cmd{s, cmd}
 }
 
 // Command sets stdin, stdout, and stderr to the current session's PTY slave.
@@ -40,8 +30,8 @@ func Command(s ssh.Session, name string, args ...string) *Cmd {
 
 // Cmd wraps a *exec.Cmd and a ssh.Pty so a command can be properly run.
 type Cmd struct {
-	cmd *exec.Cmd
-	pty *ssh.Pty
+	sess ssh.Session
+	cmd  *exec.Cmd
 }
 
 // SetDir set the underlying exec.Cmd env.
@@ -61,29 +51,12 @@ func (c *Cmd) SetDir(dir string) {
 
 // Run runs the program and waits for it to finish.
 func (c *Cmd) Run() error {
-	if c.pty == nil {
+	ppty, winCh, ok := c.sess.Pty()
+	if !ok {
+		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.sess, c.sess, c.sess
 		return c.cmd.Run()
 	}
-
-	if err := c.pty.Start(c.cmd); err != nil {
-		return err
-	}
-
-	if runtime.GOOS == "windows" {
-		start := time.Now()
-		for c.cmd.ProcessState == nil {
-			if time.Since(start) > time.Second*10 {
-				return fmt.Errorf("could not start process")
-			}
-			time.Sleep(100 * time.Millisecond)
-		}
-		if !c.cmd.ProcessState.Success() {
-			return fmt.Errorf("process failed: exit %d", c.cmd.ProcessState.ExitCode())
-		}
-		return nil
-	}
-
-	return c.cmd.Wait()
+	return c.doRun(ppty, winCh)
 }
 
 var _ tea.ExecCommand = &Cmd{}
