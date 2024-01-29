@@ -7,17 +7,14 @@ require (
 	github.com/charmbracelet/keygen v0.5.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
-	github.com/charmbracelet/ssh v0.0.0-20240118173142-6d7cf11c8371
-	github.com/creack/pty v1.1.21
+	github.com/charmbracelet/ssh v0.0.0-20240129182809-006ab784ccc7
 	github.com/go-git/go-git/v5 v5.11.0
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/matryer/is v1.4.1
-	github.com/muesli/cancelreader v0.2.2
 	github.com/muesli/termenv v0.15.2
 	golang.org/x/crypto v0.18.0
 	golang.org/x/sync v0.6.0
-	golang.org/x/term v0.16.0
 	golang.org/x/time v0.5.0
 )
 
@@ -31,6 +28,7 @@ require (
 	github.com/charmbracelet/x/exp/term v0.0.0-20240117031359-6e25c76a1efe // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
+	github.com/creack/pty v1.1.21 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
@@ -44,6 +42,7 @@ require (
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/muesli/ansi v0.0.0-20211018074035-2e021307bc4b // indirect
+	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/reflow v0.3.0 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
@@ -55,6 +54,7 @@ require (
 	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
