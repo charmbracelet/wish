@@ -34,9 +34,6 @@ func TestCommandNoPty(t *testing.T) {
 }
 
 func TestCommandPty(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip()
-	}
 	tmp := t.TempDir()
 	srv := &ssh.Server{
 		Handler: func(s ssh.Session) {
