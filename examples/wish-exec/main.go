@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -94,6 +95,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, cmd
 		case "s":
 			c := wish.Command(m.sess, "bash", "-im")
+			if runtime.GOOS == "windows" {
+				c = wish.Command(m.sess, "powershell")
+			}
 			cmd := tea.Exec(c, func(err error) tea.Msg {
 				if err != nil {
 					log.Error("shell finished", "error", err)
