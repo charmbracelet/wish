@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/charmbracelet/log v0.3.1
-	github.com/charmbracelet/ssh v0.0.0-20240129235603-6bd0d80adf41
+	github.com/charmbracelet/ssh v0.0.0-20240130181001-ea1d614a1855
 	github.com/charmbracelet/wish v0.5.0
 	github.com/muesli/termenv v0.15.2
 	github.com/pkg/sftp v1.13.6
@@ -24,7 +24,7 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/keygen v0.5.0 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651 // indirect
-	github.com/charmbracelet/x/exp/term v0.0.0-20240117031359-6e25c76a1efe // indirect
+	github.com/charmbracelet/x/exp/term v0.0.0-20240130180102-bafe6fbaee60 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/containerd/console v1.0.4-0.20230313162750-1ae8d489ac81 // indirect
 	github.com/creack/pty v1.1.21 // indirect
