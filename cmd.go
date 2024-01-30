@@ -13,17 +13,25 @@ import (
 //
 // If the current session does not have a PTY, it sets them to the session
 // itself.
+//
+// Note that due to the way Windows conpty works, using this on a Windows
+// server in conjunction with the AllocatePty option is not recommended,
+// as once the command finishes, the PTY will be killed too.
 func CommandContext(ctx context.Context, s ssh.Session, name string, args ...string) *Cmd {
 	cmd := exec.CommandContext(ctx, name, args...)
 	return &Cmd{s, cmd}
 }
 
-// Command sets stdin, stdout, and stderr to the current session's PTY slave.
+// Command sets stdin, stdout, and stderr to the current session's PTY.
 //
 // If the current session does not have a PTY, it sets them to the session
 // itself.
 //
-// This will call CommandContext using the session's Context.
+// This will use the session's context as the context for exec.Command.
+//
+// Note that due to the way Windows conpty works, using this on a Windows
+// server in conjunction with the AllocatePty option is not recommended,
+// as once the command finishes, the PTY will be killed too.
 func Command(s ssh.Session, name string, args ...string) *Cmd {
 	return CommandContext(s.Context(), s, name, args...)
 }
