@@ -19,12 +19,12 @@ github.com/charmbracelet/lipgloss v0.9.1 h1:PNyd3jvaJbg4jRHKWXnCj1akQm4rh8dbEzN1
 github.com/charmbracelet/lipgloss v0.9.1/go.mod h1:1mPmG4cxScwUQALAAnacHaigiiHB9Pmr+v1VEawJl6I=
 github.com/charmbracelet/log v0.3.1 h1:TjuY4OBNbxmHWSwO3tosgqs5I3biyY8sQPny/eCMTYw=
 github.com/charmbracelet/log v0.3.1/go.mod h1:OR4E1hutLsax3ZKpXbgUqPtTjQfrh1pG3zwHGWuuq8g=
-github.com/charmbracelet/ssh v0.0.0-20240130181001-ea1d614a1855 h1:i6Ceyw+Dnsc+1t0nwgcUc+hz/sJ2RlZPhwvZMfTgGpI=
-github.com/charmbracelet/ssh v0.0.0-20240130181001-ea1d614a1855/go.mod h1:IHy7o73i1MrQ5lmyJjjJ0g7y4+V+g69cm+Y7JCiZWPo=
+github.com/charmbracelet/ssh v0.0.0-20240202115812-f4ab1009799a h1:ryXQeBfu7DN77RFiKLa/VA9VRkMsinpkv4qYparR//k=
+github.com/charmbracelet/ssh v0.0.0-20240202115812-f4ab1009799a/go.mod h1:GPT/bjXsVDf5TKq2P1n4zl79ZnGwt2lWr19DomWm7zw=
 github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651 h1:3RXpZWGWTOeVXCTv0Dnzxdv/MhNUkBfEcbaTY0zrTQI=
 github.com/charmbracelet/x/errors v0.0.0-20240117030013-d31dba354651/go.mod h1:2P0UgXMEa6TsToMSuFqKFQR+fZTO9CNGUNokkPatT/0=
-github.com/charmbracelet/x/exp/term v0.0.0-20240130180102-bafe6fbaee60 h1:IV19YKUZVf6ATrhiPSCirZ4Bs7EsenYwOWcUHngV+q0=
-github.com/charmbracelet/x/exp/term v0.0.0-20240130180102-bafe6fbaee60/go.mod h1:kOOxxyxgAFQVcR5yQJWTuLjzt5dR2pcgwy3WaLEudjE=
+github.com/charmbracelet/x/exp/term v0.0.0-20240202113029-6ff29cf0473e h1:45T85zTqW/gN3FK5/JFM5Jk+LJkdP2gAfJcg8xE5lBs=
+github.com/charmbracelet/x/exp/term v0.0.0-20240202113029-6ff29cf0473e/go.mod h1:8NVO/XlUZbcJU5g0gVE7K1YiNnRFqYA3nZzGS/0lBRk=
 github.com/cloudflare/circl v1.3.3/go.mod h1:5XYMA4rFBvNIrhs50XuiBJ15vF2pZn4nnUKZrLbUZFA=
 github.com/cloudflare/circl v1.3.7 h1:qlCDlTPz2n9fu58M0Nh1J/JzcFpfgkFHHX3O35r5vcU=
 github.com/cloudflare/circl v1.3.7/go.mod h1:sRTcRWXGLrKw6yIGJ+l7amYJFfAXbZG0kBSc8r4zxgA=
@@ -104,9 +104,6 @@ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
-github.com/u-root/gobusybox/src v0.0.0-20221229083637-46b2883a7f90 h1:zTk5683I9K62wtZ6eUa6vu6IWwVHXPnoKK5n2unAwv0=
-github.com/u-root/u-root v0.11.0 h1:6gCZLOeRyevw7gbTwMj3fKxnr9+yHFlgF3N7udUVNO8=
-github.com/u-root/u-root v0.11.0/go.mod h1:DBkDtiZyONk9hzVEdB/PWI9B4TxDkElWlVTHseglrZY=
 github.com/xanzy/ssh-agent v0.3.3 h1:+/15pJfg/RsTxqYcX6fHqOXZwwMP+2VyYWJeWM2qQFM=
 github.com/xanzy/ssh-agent v0.3.3/go.mod h1:6dzNDKs0J9rVPHPhaGCukekBHKqfl+L3KghI1Bc68Uw=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
