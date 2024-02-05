@@ -23,7 +23,7 @@ type BubbleTeaHandler = Handler // nolint: revive
 // Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
-type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
+type Handler func(sess ssh.Session) (tea.Model, []tea.ProgramOption)
 
 // ProgramHandler is the function Bubble Tea apps implement to hook into the SSH
 // Middleware. This should return a new tea.Program. This handler is different
@@ -32,15 +32,15 @@ type Handler func(ssh.Session) (tea.Model, []tea.ProgramOption)
 //
 // Make sure to set the tea.WithInput and tea.WithOutput to the ssh.Session
 // otherwise the program will not function properly.
-type ProgramHandler func(ssh.Session) *tea.Program
+type ProgramHandler func(sess ssh.Session) *tea.Program
 
 // Middleware takes a Handler and hooks the input and output for the
 // ssh.Session into the tea.Program.
 //
 // It also captures window resize events and sends them to the tea.Program
 // as tea.WindowSizeMsgs.
-func Middleware(bth Handler) wish.Middleware {
-	return MiddlewareWithProgramHandler(newDefaultProgramHandler(bth), termenv.Ascii)
+func Middleware(handler Handler) wish.Middleware {
+	return MiddlewareWithProgramHandler(newDefaultProgramHandler(handler), termenv.Ascii)
 }
 
 // MiddlewareWithColorProfile allows you to specify the minimum number of colors
@@ -48,8 +48,8 @@ func Middleware(bth Handler) wish.Middleware {
 //
 // If the client's color profile has less colors than p, p will be forced.
 // Use with caution.
-func MiddlewareWithColorProfile(bth Handler, p termenv.Profile) wish.Middleware {
-	return MiddlewareWithProgramHandler(newDefaultProgramHandler(bth), p)
+func MiddlewareWithColorProfile(handler Handler, profile termenv.Profile) wish.Middleware {
+	return MiddlewareWithProgramHandler(newDefaultProgramHandler(handler), profile)
 }
 
 // MiddlewareWithProgramHandler allows you to specify the ProgramHandler to be
@@ -65,21 +65,21 @@ func MiddlewareWithColorProfile(bth Handler, p termenv.Profile) wish.Middleware 
 //
 // If the client's color profile has less colors than p, p will be forced.
 // Use with caution.
-func MiddlewareWithProgramHandler(bth ProgramHandler, p termenv.Profile) wish.Middleware {
-	return func(parentHandler ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
-			s.Context().SetValue(minColorProfileKey, p)
-			_, windowChanges, ok := s.Pty()
+func MiddlewareWithProgramHandler(handler ProgramHandler, profile termenv.Profile) wish.Middleware {
+	return func(next ssh.Handler) ssh.Handler {
+		return func(sess ssh.Session) {
+			sess.Context().SetValue(minColorProfileKey, profile)
+			_, windowChanges, ok := sess.Pty()
 			if !ok {
-				wish.Fatalln(s, "no active terminal, skipping")
+				wish.Fatalln(sess, "no active terminal, skipping")
 				return
 			}
-			program := bth(s)
+			program := handler(sess)
 			if program == nil {
-				parentHandler(s)
+				next(sess)
 				return
 			}
-			ctx, cancel := context.WithCancel(s.Context())
+			ctx, cancel := context.WithCancel(sess.Context())
 			go func() {
 				for {
 					select {
@@ -99,7 +99,7 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, p termenv.Profile) wish.Mi
 			// tui crash
 			program.Kill()
 			cancel()
-			parentHandler(s)
+			next(sess)
 		}
 	}
 }
@@ -110,14 +110,14 @@ var profileNames = [4]string{"TrueColor", "ANSI256", "ANSI", "Ascii"}
 
 // MakeRenderer returns a lipgloss renderer for the current session.
 // This function handle PTYs as well, and should be used to style your application.
-func MakeRenderer(s ssh.Session) *lipgloss.Renderer {
-	cp, ok := s.Context().Value(minColorProfileKey).(termenv.Profile)
+func MakeRenderer(sess ssh.Session) *lipgloss.Renderer {
+	cp, ok := sess.Context().Value(minColorProfileKey).(termenv.Profile)
 	if !ok {
 		cp = termenv.Ascii
 	}
-	r := newRenderer(s)
+	r := newRenderer(sess)
 	if r.ColorProfile() > cp {
-		wish.Printf(s, "Warning: Client's terminal is %q, forcing %q\r\n", profileNames[r.ColorProfile()], profileNames[cp])
+		wish.Printf(sess, "Warning: Client's terminal is %q, forcing %q\r\n", profileNames[r.ColorProfile()], profileNames[cp])
 		r.SetColorProfile(cp)
 	}
 	return r
@@ -125,8 +125,8 @@ func MakeRenderer(s ssh.Session) *lipgloss.Renderer {
 
 // MakeOptions returns the tea.WithInput and tea.WithOutput program options
 // taking into account possible Emulated or Allocated PTYs.
-func MakeOptions(s ssh.Session) []tea.ProgramOption {
-	return makeOpts(s)
+func MakeOptions(sess ssh.Session) []tea.ProgramOption {
+	return makeOpts(sess)
 }
 
 type sshEnviron []string
@@ -148,9 +148,9 @@ func (e sshEnviron) Getenv(k string) string {
 	return ""
 }
 
-func newDefaultProgramHandler(bth Handler) ProgramHandler {
+func newDefaultProgramHandler(handler Handler) ProgramHandler {
 	return func(s ssh.Session) *tea.Program {
-		m, opts := bth(s)
+		m, opts := handler(s)
 		if m == nil {
 			return nil
 		}
