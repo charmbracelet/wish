@@ -24,5 +24,5 @@ We recommend you follow the examples in the following order:
 
 ## Pseudo Terminals
 
-1. [Simple PTY example](./pty)
-1. [Running Bubble Tea, and executing another program on a PTY](./wish-exec)
+1. [Allocate a PTY](./pty)
+1. [Running Bubble Tea, and executing another program on an allocated PTY](./wish-exec)
