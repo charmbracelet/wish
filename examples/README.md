@@ -15,7 +15,7 @@ We recommend you follow the examples in the following order:
 1. [Serving Bubble Tea apps](./bubbletea)
 1. [Serving Bubble Tea programs](./bubbleteaprogram)
 1. [Reverse Port Forwarding](./forward)
-1. [Multichat](./multichat/
+1. [Multichat](./multichat)
 
 ## SCP, SFTP, and Git
 
