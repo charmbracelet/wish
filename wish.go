@@ -10,7 +10,7 @@ import (
 
 // Middleware is a function that takes an ssh.Handler and returns an
 // ssh.Handler. Implementations should call the provided handler argument.
-type Middleware func(ssh.Handler) ssh.Handler
+type Middleware func(next ssh.Handler) ssh.Handler
 
 // NewServer is returns a default SSH server with the provided Middleware. A
 // new SSH key pair of type ed25519 will be created if one does not exist. By

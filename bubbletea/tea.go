@@ -66,7 +66,7 @@ func MiddlewareWithColorProfile(bth Handler, p termenv.Profile) wish.Middleware 
 // If the client's color profile has less colors than p, p will be forced.
 // Use with caution.
 func MiddlewareWithProgramHandler(bth ProgramHandler, p termenv.Profile) wish.Middleware {
-	return func(h ssh.Handler) ssh.Handler {
+	return func(parentHandler ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			s.Context().SetValue(minColorProfileKey, p)
 			_, windowChanges, ok := s.Pty()
@@ -74,9 +74,9 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, p termenv.Profile) wish.Mi
 				wish.Fatalln(s, "no active terminal, skipping")
 				return
 			}
-			p := bth(s)
-			if p == nil {
-				h(s)
+			program := bth(s)
+			if program == nil {
+				parentHandler(s)
 				return
 			}
 			ctx, cancel := context.WithCancel(s.Context())
@@ -84,22 +84,22 @@ func MiddlewareWithProgramHandler(bth ProgramHandler, p termenv.Profile) wish.Mi
 				for {
 					select {
 					case <-ctx.Done():
-						p.Quit()
+						program.Quit()
 						return
 					case w := <-windowChanges:
-						p.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
+						program.Send(tea.WindowSizeMsg{Width: w.Width, Height: w.Height})
 					}
 				}
 			}()
-			if _, err := p.Run(); err != nil {
+			if _, err := program.Run(); err != nil {
 				log.Error("app exit with error", "error", err)
 			}
 			// p.Kill() will force kill the program if it's still running,
 			// and restore the terminal to its original state in case of a
 			// tui crash
-			p.Kill()
+			program.Kill()
 			cancel()
-			h(s)
+			parentHandler(s)
 		}
 	}
 }

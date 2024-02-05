@@ -64,7 +64,7 @@ func WithMiddleware(mw ...Middleware) ssh.Option {
 	}
 }
 
-// WithHostKeyFile returns an ssh.Option that sets the path to the private.
+// WithHostKeyFile returns an ssh.Option that sets the path to the private key.
 func WithHostKeyPath(path string) ssh.Option {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		_, err := keygen.New(path, keygen.WithKeyType(keygen.Ed25519), keygen.WithWrite())
