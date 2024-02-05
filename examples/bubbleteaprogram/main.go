@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,27 +17,27 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	bm "github.com/charmbracelet/wish/bubbletea"
-	lm "github.com/charmbracelet/wish/logging"
+	"github.com/charmbracelet/wish/bubbletea"
+	"github.com/charmbracelet/wish/logging"
 	"github.com/muesli/termenv"
 )
 
 const (
 	host = "localhost"
-	port = 23234
+	port = "23234"
 )
 
 func main() {
 	s, err := wish.NewServer(
-		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
-		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
+		wish.WithAddress(net.JoinHostPort(host, port)),
+		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
 			myCustomBubbleteaMiddleware(),
-			lm.Middleware(),
+			logging.Middleware(),
 		),
 	)
 	if err != nil {
-		log.Error("could not start server", "error", err)
+		log.Error("Could not start server", "error", err)
 	}
 
 	done := make(chan os.Signal, 1)
@@ -44,7 +45,7 @@ func main() {
 	log.Info("Starting SSH server", "host", host, "port", port)
 	go func() {
 		if err = s.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-			log.Error("could not start server", "error", err)
+			log.Error("Could not start server", "error", err)
 			done <- nil
 		}
 	}()
@@ -54,7 +55,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer func() { cancel() }()
 	if err := s.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-		log.Error("could not stop server", "error", err)
+		log.Error("Could not stop server", "error", err)
 	}
 }
 
@@ -83,9 +84,9 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 			height: pty.Window.Height,
 			time:   time.Now(),
 		}
-		return newProg(m, append(bm.MakeOptions(s), tea.WithAltScreen())...)
+		return newProg(m, append(bubbletea.MakeOptions(s), tea.WithAltScreen())...)
 	}
-	return bm.MiddlewareWithProgramHandler(teaHandler, termenv.ANSI256)
+	return bubbletea.MiddlewareWithProgramHandler(teaHandler, termenv.ANSI256)
 }
 
 // Just a generic tea.Model to demo terminal information of ssh.

@@ -28,25 +28,25 @@ type Logger interface {
 // auth was public key based. Disconnect will log the remote address and
 // connection duration.
 func MiddlewareWithLogger(logger Logger) wish.Middleware {
-	return func(sh ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
+	return func(next ssh.Handler) ssh.Handler {
+		return func(sess ssh.Session) {
 			ct := time.Now()
-			hpk := s.PublicKey() != nil
-			pty, _, _ := s.Pty()
+			hpk := sess.PublicKey() != nil
+			pty, _, _ := sess.Pty()
 			logger.Printf(
 				"%s connect %s %v %v %s %v %v",
-				s.User(),
-				s.RemoteAddr().String(),
+				sess.User(),
+				sess.RemoteAddr().String(),
 				hpk,
-				s.Command(),
+				sess.Command(),
 				pty.Term,
 				pty.Window.Width,
 				pty.Window.Height,
 			)
-			sh(s)
+			next(sess)
 			logger.Printf(
 				"%s disconnect %s\n",
-				s.RemoteAddr().String(),
+				sess.RemoteAddr().String(),
 				time.Since(ct),
 			)
 		}

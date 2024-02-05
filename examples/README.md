@@ -13,7 +13,16 @@ We recommend you follow the examples in the following order:
 
 1. [Using spf13/cobra](./cobra)
 1. [Serving Bubble Tea apps](./bubbletea)
+1. [Serving Bubble Tea programs](./bubbleteaprogram)
+1. [Reverse Port Forwarding](./forward)
+1. [Multichat](./multichat/
 
 ## SCP, SFTP, and Git
 
 1. [Serving a Git repository](./git)
+1. [SCP and SFTP](./scp)
+
+## Pseudo Terminals
+
+1. [Simple PTY example](./pty)
+1. [Running Bubble Tea, and executing another program on a PTY](./wish-exec)
