@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,7 +18,7 @@ import (
 
 const (
 	host = "localhost"
-	port = 23235
+	port = "23235"
 )
 
 func cmd() *cobra.Command {
@@ -46,30 +46,32 @@ func cmd() *cobra.Command {
 
 func main() {
 	s, err := wish.NewServer(
-		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
-		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
+		wish.WithAddress(net.JoinHostPort(host, port)),
+		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
-			func(h ssh.Handler) ssh.Handler {
-				return func(s ssh.Session) {
+			func(next ssh.Handler) ssh.Handler {
+				return func(sess ssh.Session) {
+					// Here we wire our command's args and IO to the user
+					// session's
 					rootCmd := cmd()
-					rootCmd.SetArgs(s.Command())
-					rootCmd.SetIn(s)
-					rootCmd.SetOut(s)
-					rootCmd.SetErr(s.Stderr())
+					rootCmd.SetArgs(sess.Command())
+					rootCmd.SetIn(sess)
+					rootCmd.SetOut(sess)
+					rootCmd.SetErr(sess.Stderr())
 					rootCmd.CompletionOptions.DisableDefaultCmd = true
 					if err := rootCmd.Execute(); err != nil {
-						_ = s.Exit(1)
+						_ = sess.Exit(1)
 						return
 					}
 
-					h(s)
+					next(sess)
 				}
 			},
 			logging.Middleware(),
 		),
 	)
 	if err != nil {
-		log.Error("could not start server", "error", err)
+		log.Error("Could not start server", "error", err)
 	}
 
 	done := make(chan os.Signal, 1)
@@ -77,7 +79,7 @@ func main() {
 	log.Info("Starting SSH server", "host", host, "port", port)
 	go func() {
 		if err = s.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-			log.Error("could not start server", "error", err)
+			log.Error("Could not start server", "error", err)
 			done <- nil
 		}
 	}()
@@ -87,6 +89,6 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer func() { cancel() }()
 	if err := s.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-		log.Error("could not stop server", "error", err)
+		log.Error("Could not stop server", "error", err)
 	}
 }

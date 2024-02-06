@@ -2,23 +2,21 @@
 package activeterm
 
 import (
-	"fmt"
-
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
 )
 
 // Middleware will exit 1 connections trying with no active terminals.
 func Middleware() wish.Middleware {
-	return func(sh ssh.Handler) ssh.Handler {
-		return func(s ssh.Session) {
-			_, _, active := s.Pty()
-			if !active {
-				fmt.Fprintln(s, "Requires an active PTY")
-				s.Exit(1) // nolint: errcheck
-				return    // unreachable
+	return func(next ssh.Handler) ssh.Handler {
+		return func(sess ssh.Session) {
+			_, _, active := sess.Pty()
+			if active {
+				next(sess)
+				return
 			}
-			sh(s)
+			wish.Println(sess, "Requires an active PTY")
+			_ = sess.Exit(1)
 		}
 	}
 }

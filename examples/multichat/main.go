@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"net"
 	"os"
 	"os/signal"
 	"strings"
@@ -14,16 +14,18 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
-	bm "github.com/charmbracelet/wish/bubbletea"
-	lm "github.com/charmbracelet/wish/logging"
+	"github.com/charmbracelet/wish/activeterm"
+	"github.com/charmbracelet/wish/bubbletea"
+	"github.com/charmbracelet/wish/logging"
 	"github.com/muesli/termenv"
 )
 
 const (
 	host = "localhost"
-	port = 23234
+	port = "23234"
 )
 
 // app contains a wish server and the list of running programs.
@@ -42,15 +44,16 @@ func (a *app) send(msg tea.Msg) {
 func newApp() *app {
 	a := new(app)
 	s, err := wish.NewServer(
-		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
-		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
+		wish.WithAddress(net.JoinHostPort(host, port)),
+		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
-			bm.MiddlewareWithProgramHandler(a.ProgramHandler, termenv.ANSI256),
-			lm.Middleware(),
+			bubbletea.MiddlewareWithProgramHandler(a.ProgramHandler, termenv.ANSI256),
+			activeterm.Middleware(),
+			logging.Middleware(),
 		),
 	)
 	if err != nil {
-		log.Fatalln(err)
+		log.Error("Could not start server", "error", err)
 	}
 
 	a.Server = s
@@ -61,32 +64,29 @@ func (a *app) Start() {
 	var err error
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	log.Printf("Starting SSH server on %s:%d", host, port)
+	log.Info("Starting SSH server", "host", host, "port", port)
 	go func() {
 		if err = a.ListenAndServe(); err != nil {
-			log.Fatalln(err)
+			log.Error("Could not start server", "error", err)
+			done <- nil
 		}
 	}()
 
 	<-done
-	log.Println("Stopping SSH server")
+	log.Info("Stopping SSH server")
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer func() { cancel() }()
 	if err := a.Shutdown(ctx); err != nil {
-		log.Fatalln(err)
+		log.Error("Could not stop server", "error", err)
 	}
 }
 
 func (a *app) ProgramHandler(s ssh.Session) *tea.Program {
-	if _, _, active := s.Pty(); !active {
-		wish.Fatalln(s, "terminal is not active")
-	}
-
 	model := initialModel()
 	model.app = a
 	model.id = s.User()
 
-	p := tea.NewProgram(model, bm.MakeOptions(s)...)
+	p := tea.NewProgram(model, bubbletea.MakeOptions(s)...)
 	a.progs = append(a.progs, p)
 
 	return p

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -23,22 +24,25 @@ import (
 
 const (
 	host = "localhost"
-	port = 23235
+	port = "23235"
 )
 
 func main() {
 	root, _ := filepath.Abs("./examples/scp/testdata")
 	handler := scp.NewFileSystemHandler(root)
 	s, err := wish.NewServer(
-		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
-		wish.WithHostKeyPath(".ssh/term_info_ed25519"),
+		wish.WithAddress(net.JoinHostPort(host, port)),
+		wish.WithHostKeyPath(".ssh/id_ed25519"),
+
+		// setup the sftp subsystem
 		wish.WithSubsystem("sftp", sftpSubsystem(root)),
 		wish.WithMiddleware(
+			// setup the scp middleware
 			scp.Middleware(handler, handler),
 		),
 	)
 	if err != nil {
-		log.Error("could not start server", "error", err)
+		log.Error("Could not start server", "error", err)
 	}
 
 	done := make(chan os.Signal, 1)
@@ -46,7 +50,7 @@ func main() {
 	log.Info("Starting SSH server", "host", host, "port", port)
 	go func() {
 		if err = s.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-			log.Error("could not start server", "error", err)
+			log.Error("Could not start server", "error", err)
 			done <- nil
 		}
 	}()
@@ -56,7 +60,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer func() { cancel() }()
 	if err := s.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-		log.Error("could not stop server", "error", err)
+		log.Error("Could not stop server", "error", err)
 	}
 }
 
@@ -80,7 +84,7 @@ func sftpSubsystem(root string) ssh.SubsystemHandler {
 
 // Example readonly handler implementation for sftp.
 //
-// other example implementations:
+// Other example implementations:
 // - https://github.com/gravitational/teleport/blob/f57dc2fe2a9900ec198779aae747ac4f833b278d/tool/teleport/common/sftp.go
 // - https://github.com/minio/minio/blob/c66c5828eacb4a7fa9a49b4c890c77dd8684b171/cmd/sftp-server.go
 type sftpHandler struct {
