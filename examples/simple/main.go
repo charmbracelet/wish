@@ -1,13 +1,8 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"net"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
@@ -48,32 +43,9 @@ func main() {
 		log.Error("Could not start server", "error", err)
 	}
 
-	// Before starting our server, we create a channel and listen for some
-	// common interrupt signals.
-	done := make(chan os.Signal, 1)
-	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	go func() {
-		log.Info("Starting SSH server", "host", host, "port", port)
-		if err = srv.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-			// We ignore ErrServerClosed because it is expected.
-			log.Error("Could not start server", "error", err)
-			done <- nil
-		}
-	}()
-
-	// Here we wait for the done signal.
-	// When it arrives, we create a context and start the shutdown.
-	<-done
-
-	// When we start the shutdown, the server will no longer accept new
-	// connections, but will wait as much as the given context allows for the
-	// active connections to finish.
-	// After the timeout, it shuts down anyway.
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer func() { cancel() }()
-	log.Info("Stopping SSH server")
-	if err := srv.Shutdown(ctx); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-		log.Error("Could not stop server", "error", err)
+	log.Info("Starting SSH server", "host", host, "port", port)
+	if err = srv.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
+		// We ignore ErrServerClosed because it is expected.
+		log.Error("Could not start server", "error", err)
 	}
 }

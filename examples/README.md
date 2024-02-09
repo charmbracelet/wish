@@ -5,6 +5,7 @@ We recommend you follow the examples in the following order:
 ## Basics
 
 1. [Simple](./simple)
+1. [Graceful Shutdown](./graceful-shutdown)
 1. [Server banner and middleware](./banner)
 1. [Identifying Users](./identity)
 1. [Multiple authentication types](./multi-auth)
