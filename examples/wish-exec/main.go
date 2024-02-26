@@ -36,7 +36,7 @@ func main() {
 		ssh.AllocatePty(),
 		wish.WithMiddleware(
 			// run our Bubble Tea handler
-			bubbletea.Middleware(teaHandler),
+			bubbletea.Middleware(teaHandler, tea.WithAltScreen()),
 
 			// ensure the user has requested a tty
 			activeterm.Middleware(),
@@ -66,18 +66,17 @@ func main() {
 	}
 }
 
-func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+func teaHandler(s ssh.Session, renderContext *tea.Context) tea.Model {
 	// Create a lipgloss.Renderer for the session
-	renderer := bubbletea.MakeRenderer(s)
+	renderer := renderContext.Renderer
 	// Set up the model with the current session and styles.
 	// We'll use the session to call wish.Command, which makes it compatible
 	// with tea.Command.
-	m := model{
+	return model{
 		sess:     s,
 		style:    renderer.NewStyle().Foreground(lipgloss.Color("8")),
 		errStyle: renderer.NewStyle().Foreground(lipgloss.Color("3")),
 	}
-	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
 
 type model struct {
@@ -105,7 +104,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 			// Creates a wish.Cmd from the exec.Cmd
-			wishCmd := wish.Command(m.sess, edit.Path, edit.Args...)
+			wishCmd := wish.Command(m.sess, edit.Args[0], edit.Args[1:]...)
 			// Runs the cmd through Bubble Tea.
 			// Bubble Tea should handle the IO to the program, and get it back
 			// once the program quits.
