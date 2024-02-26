@@ -47,7 +47,7 @@ func newApp() *app {
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
-			bubbletea.MiddlewareWithProgramHandler(a.ProgramHandler, termenv.ANSI256),
+			bubbletea.MiddlewareWithProgramHandler(a.Handler, a.ProgramHandler, termenv.Ascii),
 			activeterm.Middleware(),
 			logging.Middleware(),
 		),
@@ -81,12 +81,16 @@ func (a *app) Start() {
 	}
 }
 
-func (a *app) ProgramHandler(s ssh.Session) *tea.Program {
-	model := initialModel()
+func (a *app) Handler(sess ssh.Session, renderContext *tea.Context) tea.Model {
+	model := initialModel(renderContext)
 	model.app = a
-	model.id = s.User()
+	model.id = sess.User()
+	return model
+}
 
-	p := tea.NewProgram(model, bubbletea.MakeOptions(s)...)
+func (a *app) ProgramHandler(sess ssh.Session) *tea.Program {
+	r := bubbletea.MakeRenderer(sess)
+	p := tea.NewProgram(append(bubbletea.MakeOptions(sess), tea.WithRenderer(r), tea.WithAltScreen())...)
 	a.progs = append(a.progs, p)
 
 	return p
@@ -115,8 +119,8 @@ type model struct {
 	err         error
 }
 
-func initialModel() model {
-	ta := textarea.New()
+func initialModel(ctx *tea.Context) model {
+	ta := textarea.New(ctx)
 	ta.Placeholder = "Send a message..."
 	ta.Focus()
 
@@ -127,11 +131,11 @@ func initialModel() model {
 	ta.SetHeight(3)
 
 	// Remove cursor line styling
-	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
+	ta.FocusedStyle.CursorLine = ctx.Renderer.NewStyle()
 
 	ta.ShowLineNumbers = false
 
-	vp := viewport.New(30, 5)
+	vp := viewport.New(ctx, 30, 5)
 	vp.SetContent(`Welcome to the chat room!
 Type a message and press Enter to send.`)
 
@@ -141,7 +145,7 @@ Type a message and press Enter to send.`)
 		textarea:    ta,
 		messages:    []string{},
 		viewport:    vp,
-		senderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("5")),
+		senderStyle: ctx.Renderer.NewStyle().Foreground(lipgloss.Color("5")),
 		err:         nil,
 	}
 }
