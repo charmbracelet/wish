@@ -58,7 +58,11 @@ func MiddlewareWithColorProfile(handler Handler, profile termenv.Profile, option
 //
 // If the client's color profile has less colors than p, p will be forced.
 // Use with caution.
-func MiddlewareWithProgramHandler(handler Handler, phandler ProgramHandler, profile termenv.Profile) wish.Middleware {
+func MiddlewareWithProgramHandler(
+	handler Handler,
+	programHandler ProgramHandler,
+	profile termenv.Profile,
+) wish.Middleware {
 	return func(next ssh.Handler) ssh.Handler {
 		return func(sess ssh.Session) {
 			sess.Context().SetValue(minColorProfileKey, profile)
@@ -67,7 +71,7 @@ func MiddlewareWithProgramHandler(handler Handler, phandler ProgramHandler, prof
 				wish.Fatalln(sess, "no active terminal, skipping")
 				return
 			}
-			program := phandler(sess)
+			program := programHandler(sess)
 			if program == nil {
 				next(sess)
 				return

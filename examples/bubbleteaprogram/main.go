@@ -62,8 +62,8 @@ func main() {
 // You can write your own custom bubbletea middleware that wraps tea.Program.
 // Make sure you set the program input and output to ssh.Session.
 func myCustomBubbleteaMiddleware() wish.Middleware {
-	newProg := func(m tea.Model, opts ...tea.ProgramOption) *tea.Program {
-		p := tea.NewProgram(m, opts...)
+	newProg := func(opts ...tea.ProgramOption) *tea.Program {
+		p := tea.NewProgram(opts...)
 		go func() {
 			for {
 				<-time.After(1 * time.Second)
@@ -72,21 +72,23 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 		}()
 		return p
 	}
-	teaHandler := func(s ssh.Session) *tea.Program {
-		pty, _, active := s.Pty()
+	programHandler := func(sess ssh.Session) *tea.Program {
+		return newProg(append(bubbletea.MakeOptions(sess), tea.WithAltScreen())...)
+	}
+	handler := func(sess ssh.Session, _ *tea.Context) tea.Model {
+		pty, _, active := sess.Pty()
 		if !active {
-			wish.Fatalln(s, "no active terminal, skipping")
+			wish.Fatalln(sess, "no active terminal, skipping")
 			return nil
 		}
-		m := model{
+		return model{
 			term:   pty.Term,
 			width:  pty.Window.Width,
 			height: pty.Window.Height,
 			time:   time.Now(),
 		}
-		return newProg(m, append(bubbletea.MakeOptions(s), tea.WithAltScreen())...)
 	}
-	return bubbletea.MiddlewareWithProgramHandler(teaHandler, termenv.ANSI256)
+	return bubbletea.MiddlewareWithProgramHandler(handler, programHandler, termenv.ANSI256)
 }
 
 // Just a generic tea.Model to demo terminal information of ssh.
