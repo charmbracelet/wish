@@ -65,3 +65,7 @@ require (
 )
 
 replace github.com/charmbracelet/wish => ../
+
+replace github.com/charmbracelet/bubbletea => ../../bubbletea
+
+replace github.com/charmbracelet/bubbles => ../../bubbles

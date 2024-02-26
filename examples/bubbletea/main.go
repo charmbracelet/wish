@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
@@ -33,7 +34,7 @@ func main() {
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
-			bubbletea.Middleware(teaHandler),
+			bubbletea.Middleware(teaHandler, tea.WithAltScreen()),
 			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
 			logging.Middleware(),
 		),
@@ -65,7 +66,7 @@ func main() {
 // handles the incoming ssh.Session. Here we just grab the terminal info and
 // pass it to the new model. You can also return tea.ProgramOptions (such as
 // tea.WithAltScreen) on a session by session basis.
-func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+func teaHandler(s ssh.Session, renderContext *tea.Context) tea.Model {
 	// This should never fail, as we are using the activeterm middleware.
 	pty, _, _ := s.Pty()
 
@@ -78,9 +79,13 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	// use it to create the styles.
 	// The recommended way to use these styles is to then pass them down to
 	// your Bubble Tea model.
-	renderer := bubbletea.MakeRenderer(s)
-	txtStyle := renderer.NewStyle().Foreground(lipgloss.Color("10"))
-	quitStyle := renderer.NewStyle().Foreground(lipgloss.Color("8"))
+	txtStyle := renderContext.Renderer.NewStyle().Foreground(lipgloss.Color("10"))
+	quitStyle := renderContext.Renderer.NewStyle().Foreground(lipgloss.Color("8"))
+	area := textarea.New(renderContext)
+	area.Placeholder = "Tell me a story"
+	area.Focus()
+	area.FocusedStyle.LineNumber = renderContext.Renderer.NewStyle().Foreground(lipgloss.Color("9"))
+	area.FocusedStyle.CursorLineNumber = renderContext.Renderer.NewStyle().Foreground(lipgloss.Color("9"))
 
 	m := model{
 		term:      pty.Term,
@@ -88,8 +93,9 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		height:    pty.Window.Height,
 		txtStyle:  txtStyle,
 		quitStyle: quitStyle,
+		area:      area,
 	}
-	return m, []tea.ProgramOption{tea.WithAltScreen()}
+	return m
 }
 
 // Just a generic tea.Model to demo terminal information of ssh.
@@ -97,12 +103,13 @@ type model struct {
 	term      string
 	width     int
 	height    int
+	area      textarea.Model
 	txtStyle  lipgloss.Style
 	quitStyle lipgloss.Style
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return textarea.Blink
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -116,10 +123,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	}
-	return m, nil
+
+	area, cmd := m.area.Update(msg)
+	m.area = area
+	return m, cmd
 }
 
 func (m model) View() string {
 	s := fmt.Sprintf("Your term is %s\nYour window size is %dx%d", m.term, m.width, m.height)
-	return m.txtStyle.Render(s) + "\n\n" + m.quitStyle.Render("Press 'q' to quit\n")
+	return m.txtStyle.Render(s) +
+		"\n\n" +
+		m.area.View() +
+		"\n\n" +
+		m.quitStyle.Render("Press 'q' to quit\n")
 }

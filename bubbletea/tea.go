@@ -13,17 +13,10 @@ import (
 	"github.com/muesli/termenv"
 )
 
-// BubbleTeaHandler is the function Bubble Tea apps implement to hook into the
-// SSH Middleware. This will create a new tea.Program for every connection and
-// start it with the tea.ProgramOptions returned.
-//
-// Deprecated: use Handler instead.
-type BubbleTeaHandler = Handler // nolint: revive
-
 // Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and
 // start it with the tea.ProgramOptions returned.
-type Handler func(sess ssh.Session) (tea.Model, []tea.ProgramOption)
+type Handler func(sess ssh.Session, renderContext *tea.Context) tea.Model
 
 // ProgramHandler is the function Bubble Tea apps implement to hook into the SSH
 // Middleware. This should return a new tea.Program. This handler is different
@@ -39,8 +32,8 @@ type ProgramHandler func(sess ssh.Session) *tea.Program
 //
 // It also captures window resize events and sends them to the tea.Program
 // as tea.WindowSizeMsgs.
-func Middleware(handler Handler) wish.Middleware {
-	return MiddlewareWithProgramHandler(newDefaultProgramHandler(handler), termenv.Ascii)
+func Middleware(handler Handler, options ...tea.ProgramOption) wish.Middleware {
+	return MiddlewareWithProgramHandler(handler, newDefaultProgramHandler(options), termenv.Ascii)
 }
 
 // MiddlewareWithColorProfile allows you to specify the minimum number of colors
@@ -48,8 +41,8 @@ func Middleware(handler Handler) wish.Middleware {
 //
 // If the client's color profile has less colors than p, p will be forced.
 // Use with caution.
-func MiddlewareWithColorProfile(handler Handler, profile termenv.Profile) wish.Middleware {
-	return MiddlewareWithProgramHandler(newDefaultProgramHandler(handler), profile)
+func MiddlewareWithColorProfile(handler Handler, profile termenv.Profile, options []tea.ProgramOption) wish.Middleware {
+	return MiddlewareWithProgramHandler(handler, newDefaultProgramHandler(options), profile)
 }
 
 // MiddlewareWithProgramHandler allows you to specify the ProgramHandler to be
@@ -65,7 +58,7 @@ func MiddlewareWithColorProfile(handler Handler, profile termenv.Profile) wish.M
 //
 // If the client's color profile has less colors than p, p will be forced.
 // Use with caution.
-func MiddlewareWithProgramHandler(handler ProgramHandler, profile termenv.Profile) wish.Middleware {
+func MiddlewareWithProgramHandler(handler Handler, phandler ProgramHandler, profile termenv.Profile) wish.Middleware {
 	return func(next ssh.Handler) ssh.Handler {
 		return func(sess ssh.Session) {
 			sess.Context().SetValue(minColorProfileKey, profile)
@@ -74,7 +67,7 @@ func MiddlewareWithProgramHandler(handler ProgramHandler, profile termenv.Profil
 				wish.Fatalln(sess, "no active terminal, skipping")
 				return
 			}
-			program := handler(sess)
+			program := phandler(sess)
 			if program == nil {
 				next(sess)
 				return
@@ -91,7 +84,8 @@ func MiddlewareWithProgramHandler(handler ProgramHandler, profile termenv.Profil
 					}
 				}
 			}()
-			if _, err := program.Run(); err != nil {
+			model := handler(sess, program.RenderContext())
+			if _, err := program.Run(model); err != nil {
 				log.Error("app exit with error", "error", err)
 			}
 			// p.Kill() will force kill the program if it's still running,
@@ -148,12 +142,11 @@ func (e sshEnviron) Getenv(k string) string {
 	return ""
 }
 
-func newDefaultProgramHandler(handler Handler) ProgramHandler {
-	return func(s ssh.Session) *tea.Program {
-		m, opts := handler(s)
-		if m == nil {
-			return nil
-		}
-		return tea.NewProgram(m, append(opts, makeOpts(s)...)...)
+func newDefaultProgramHandler(options []tea.ProgramOption) ProgramHandler {
+	return func(sess ssh.Session) *tea.Program {
+		renderer := MakeRenderer(sess)
+		opts := append(options, makeOpts(sess)...)
+		opts = append(opts, tea.WithRenderer(renderer))
+		return tea.NewProgram(opts...)
 	}
 }
