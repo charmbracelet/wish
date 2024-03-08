@@ -18,8 +18,6 @@ type Middleware func(next ssh.Handler) ssh.Handler
 // public key.
 func NewServer(ops ...ssh.Option) (*ssh.Server, error) {
 	s := &ssh.Server{}
-	// Some sensible defaults
-	s.Version = "OpenSSH_7.6p1"
 	for _, op := range ops {
 		if err := s.SetOption(op); err != nil {
 			return nil, err
