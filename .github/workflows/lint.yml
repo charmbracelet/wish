@@ -13,7 +13,7 @@ jobs:
         with:
           go-version: ^1
           cache: true
-      - uses: golangci/golangci-lint-action@v4
+      - uses: golangci/golangci-lint-action@v5
         with:
           # Optional: golangci-lint command line arguments.
           args: --issues-exit-code=0
