@@ -82,10 +82,16 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	txtStyle := renderer.NewStyle().Foreground(lipgloss.Color("10"))
 	quitStyle := renderer.NewStyle().Foreground(lipgloss.Color("8"))
 
+	bg := "light"
+	if renderer.HasDarkBackground() {
+		bg = "dark"
+	}
+
 	m := model{
 		term:      pty.Term,
 		width:     pty.Window.Width,
 		height:    pty.Window.Height,
+		bg:        bg,
 		txtStyle:  txtStyle,
 		quitStyle: quitStyle,
 	}
@@ -97,6 +103,7 @@ type model struct {
 	term      string
 	width     int
 	height    int
+	bg        string
 	txtStyle  lipgloss.Style
 	quitStyle lipgloss.Style
 }
@@ -120,6 +127,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := fmt.Sprintf("Your term is %s\nYour window size is %dx%d", m.term, m.width, m.height)
+	s := fmt.Sprintf("Your term is %s\nYour window size is %dx%d\nBackground: %s", m.term, m.width, m.height, m.bg)
 	return m.txtStyle.Render(s) + "\n\n" + m.quitStyle.Render("Press 'q' to quit\n")
 }
