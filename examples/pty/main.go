@@ -36,12 +36,18 @@ func main() {
 			func(next ssh.Handler) ssh.Handler {
 				return func(sess ssh.Session) {
 					pty, _, _ := sess.Pty()
-					r := bubbletea.MakeRenderer(sess)
+					renderer := bubbletea.MakeRenderer(sess)
+
+					bg := "light"
+					if renderer.HasDarkBackground() {
+						bg = "dark"
+					}
+
 					wish.Printf(sess, "Hello, world!\r\n")
 					wish.Printf(sess, "Term: %s\r\n", pty.Term)
 					wish.Printf(sess, "PTY: %s\r\n", pty.Slave.Name())
 					wish.Printf(sess, "FD: %d\r\n", pty.Slave.Fd())
-					wish.Printf(sess, "Has dark background?: %v\r\n", r.HasDarkBackground())
+					wish.Printf(sess, "Background: %v\r\n", bg)
 					next(sess)
 				}
 			},
