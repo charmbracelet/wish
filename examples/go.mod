@@ -13,7 +13,7 @@ require (
 	github.com/muesli/termenv v0.15.2
 	github.com/pkg/sftp v1.13.6
 	github.com/spf13/cobra v1.8.0
-	golang.org/x/crypto v0.22.0
+	golang.org/x/crypto v0.23.0
 )
 
 require (
@@ -58,9 +58,9 @@ require (
 	golang.org/x/mod v0.13.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/term v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
+	golang.org/x/term v0.20.0 // indirect
+	golang.org/x/text v0.15.0 // indirect
 	golang.org/x/tools v0.14.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
