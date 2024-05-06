@@ -55,7 +55,7 @@ func WithBannerHandler(h ssh.BannerHandler) ssh.Option {
 // Notice that middlewares are composed from first to last, which means the last one is executed first.
 func WithMiddleware(mw ...Middleware) ssh.Option {
 	return func(s *ssh.Server) error {
-		h := func(s ssh.Session) {}
+		h := func(ssh.Session) {}
 		for _, m := range mw {
 			h = m(h)
 		}

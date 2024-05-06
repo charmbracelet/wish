@@ -100,7 +100,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			}
 
 			// read the trailing nil char
-			_, _ = r.ReadByte() // TODO: check if it is indeed a NULL?
+			_, _ = r.ReadByte()
 
 			mtime = 0
 			atime = 0

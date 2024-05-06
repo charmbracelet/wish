@@ -60,7 +60,7 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 	return r
 }
 
-// copied from x/exp/term
+// copied from x/exp/term.
 func queryBackgroundColor(s ssh.Session) (bg color.Color) {
 	_ = term.QueryTerminal(s, s, func(events []input.Event) bool {
 		for _, e := range events {
