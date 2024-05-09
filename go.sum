@@ -11,8 +11,8 @@ github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPd
 github.com/aymanbagabas/go-osc52/v2 v2.0.1 h1:HwpRHbFMcZLEVr42D4p7XBqjyuxQH5SMiErDT4WkJ2k=
 github.com/aymanbagabas/go-osc52/v2 v2.0.1/go.mod h1:uYgXzlJ7ZpABp8OJ+exZzJJhRNQ2ASbcXHWsFqH8hp8=
 github.com/bwesterb/go-ristretto v1.2.3/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=
-github.com/charmbracelet/bubbletea v0.26.1 h1:xujcQeF73rh4jwu3+zhfQsvV18x+7zIjlw7/CYbzGJ0=
-github.com/charmbracelet/bubbletea v0.26.1/go.mod h1:FzKr7sKoO8iFVcdIBM9J0sJOcQv5nDQaYwsee3kpbgo=
+github.com/charmbracelet/bubbletea v0.26.2 h1:Eeb+n75Om9gQ+I6YpbCXQRKHt5Pn4vMwusQpwLiEgJQ=
+github.com/charmbracelet/bubbletea v0.26.2/go.mod h1:6I0nZ3YHUrQj7YHIHlM8RySX4ZIthTliMY+W8X8b+Gs=
 github.com/charmbracelet/keygen v0.5.0 h1:XY0fsoYiCSM9axkrU+2ziE6u6YjJulo/b9Dghnw6MZc=
 github.com/charmbracelet/keygen v0.5.0/go.mod h1:DfvCgLHxZ9rJxdK0DGw3C/LkV4SgdGbnliHcObV3L+8=
 github.com/charmbracelet/lipgloss v0.10.0 h1:KWeXFSexGcfahHX+54URiZGkBFazf70JNMtwg/AFW3s=
