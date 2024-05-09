@@ -1,25 +1,6 @@
 
 # Truecolor Over SSH With Wish
 
-## Noteworthy environment variables (for debugging)
-
-`TERM` - provides information about your terminal emulator's capabilities.
-
-`COLORTERM` - provides information about your terminal emulator's color
-capabilities. Used primarily to specify if your emulator has `truecolor`
-support.
-
-`NO_COLOR` - turns colors on and off. `NO_COLOR=1` for non-colored text
-outputs, `NO_COLOR=0` for colored text outputs.
-
-`CLICOLOR` - turns colors on and off. `CLICOLOR=1` for colored text outputs,
-`CLICOLOR=0` for non-colored text outputs.
-
-`CLICOLOR_FORCE` - overrides `CLICOLOR`.
-
-NO_COLOR vs CLICOLOR: if NO_COLOR is set or CLICOLOR=0 then the output should
-not be colored. Otherwise, the output can include ansi sequences.
-
 ## Color profiles? What, like it's hard?
 
 In an SSH session, the client only sends the `TERM` environment variable, which
@@ -37,6 +18,10 @@ config`][truecolor-ssh]. By default, the OpenSSH client (what you're using when
 you run `ssh`) will only send the `TERM` to the remote, so other variables must
 be configured. In the future, we hope to solve this problem by querying the
 terminal for support if `COLORTERM` is not detected.
+
+> [!NOTE]
+> Wish uses [termenv][termenv] under the hood, which will set truecolor for a few
+> terminal emulators that are known to support truecolor.
 
 You can learn more about [checking for `COLORTERM`][colorterm-issue].
 
@@ -161,9 +146,31 @@ TODO: are there any performance differences between these two options?
 > easier to pass a custom renderer to `tea` Programs, but the launch date is
 > still TBD.
 
+## Noteworthy environment variables (for debugging)
+
+`TERM` - provides information about your terminal emulator's capabilities. This
+is the only environment variable out of this list that is sent in an SSH
+session. The rest are included for debugging purposes only.
+
+`COLORTERM` - provides information about your terminal emulator's color
+capabilities. Used primarily to specify if your emulator has `truecolor`
+support.
+
+`NO_COLOR` - turns colors on and off. `NO_COLOR=1` for non-colored text
+outputs, `NO_COLOR=0` for colored text outputs.
+
+`CLICOLOR` - turns colors on and off. `CLICOLOR=1` for colored text outputs,
+`CLICOLOR=0` for non-colored text outputs.
+
+`CLICOLOR_FORCE` - overrides `CLICOLOR`.
+
+NO_COLOR vs CLICOLOR: if NO_COLOR is set or CLICOLOR=0 then the output should
+not be colored. Otherwise, the output can include ansi sequences.
+
 [termstandard]: https://github.com/termstandard/colors
 [supported-emulators]: https://github.com/termstandard/colors?tab=readme-ov-file#terminal-emulators
 [truecolor-ssh]: https://fixnum.org/2023-03-22-helix-truecolor-ssh-screen/
 [colorterm-issue]: https://github.com/termstandard/colors?tab=readme-ov-file#truecolor-detection
 [examples-bubbletea]: https://github.com/charmbracelet/wish/blob/main/examples/bubbletea/main.go#L35
 [soft]: https://github.com/charmbracelet/soft-serve
+[termenv]: https://github.com/muesli/termenv/blob/345783024a348cbb893bf6f08f1d7ab79d2e22ff/termenv_unix.go#L53
