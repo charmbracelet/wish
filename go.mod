@@ -14,7 +14,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/matryer/is v1.4.1
-	github.com/muesli/termenv v0.15.2
+	github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5
 	golang.org/x/crypto v0.23.0
 	golang.org/x/sync v0.7.0
 	golang.org/x/time v0.5.0
@@ -38,7 +38,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/mattn/go-isatty v0.0.18 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/muesli/ansi v0.0.0-20230316100256-276c6243b2f6 // indirect
