@@ -89,6 +89,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 
 	m := model{
 		term:      pty.Term,
+		profile:   renderer.ColorProfile().Name(),
 		width:     pty.Window.Width,
 		height:    pty.Window.Height,
 		bg:        bg,
@@ -101,6 +102,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 // Just a generic tea.Model to demo terminal information of ssh.
 type model struct {
 	term      string
+	profile   string
 	width     int
 	height    int
 	bg        string
@@ -127,6 +129,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	s := fmt.Sprintf("Your term is %s\nYour window size is %dx%d\nBackground: %s", m.term, m.width, m.height, m.bg)
+	s := fmt.Sprintf("Your term is %s\nYour window size is %dx%d\nBackground: %s\nColor Profile: %s", m.term, m.width, m.height, m.bg, m.profile)
 	return m.txtStyle.Render(s) + "\n\n" + m.quitStyle.Render("Press 'q' to quit\n")
 }
