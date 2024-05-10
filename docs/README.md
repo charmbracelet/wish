@@ -1,13 +1,13 @@
 # Wish Docs
 
 Welcome to the Wish official documentation. If you're new to the project, make
-sure you check out the [README][README] for a high-level overview of the
-project and how to get started. From there, take a look at the
-[examples][examples]. They're ordered by complexity and will show you how to
-use Wish. If you're looking for additional functionality not shown in the
-examples, I'd highly recommend checking out the [godoc at
-pkg.go.dev][pkg.go.dev]. The godoc showcases all of the functionality available
-to you with Wish with descriptions on what those functions do. 
+sure you check out the [README][README] for a high-level overview of the project
+and how to get started. From there, take a look at the [examples][examples].
+They're ordered by complexity and will show you how to use Wish. If you're
+looking for additional functionality not shown in the examples, I'd highly
+recommend checking out the [godoc][pkg.go.dev]. The godoc showcases all of the
+functionality available to you with Wish alongside descriptions on what those
+functions do.
 
 If you want *more* examples from projects of various sizes,
 [sourcegraph][sourcegraph] is a great code search tool that can help you find

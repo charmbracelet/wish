@@ -116,10 +116,11 @@ Host localhost
 ## How it works?
 
 Wish uses [gliderlabs/ssh][gliderlabs/ssh] to implement its SSH server, and
-OpenSSH is never used nor needed — you can even uninstall it if you want to.
+OpenSSH's server process, `sshd`, is never used nor needed — you can even
+uninstall it if you want to.
 
 Incidentally, there's no risk of accidentally sharing a shell because there's no
-default behavior that does that on Wish.
+default behavior that does that with Wish.
 
 ## Running with SystemD
 
@@ -161,6 +162,8 @@ useradd --system --user-group --create-home myapp
 ```
 
 That should do it.
+
+###
 
 ## Feedback
 
