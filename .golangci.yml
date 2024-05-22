@@ -15,11 +15,13 @@ issues:
 linters:
   enable:
     - bodyclose
+    - depguard
     - dupl
     - exportloopref
     - goconst
     - godot
     - godox
+    - gofumpt
     - goimports
     - goprintffuncname
     - gosec
@@ -31,7 +33,6 @@ linters:
     - unconvert
     - unparam
     - whitespace
-    - depguard
 
 linters-settings:
   depguard:
