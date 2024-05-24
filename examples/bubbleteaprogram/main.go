@@ -99,11 +99,11 @@ type model struct {
 
 type timeMsg time.Time
 
-func (m model) Init() tea.Cmd {
-	return nil
+func (m model) Init(tea.Context) (tea.Model, tea.Cmd) {
+	return m, nil
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(_ tea.Context, msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case timeMsg:
 		m.time = time.Time(msg)
@@ -119,7 +119,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) View() string {
+func (m model) View(tea.Context) string {
 	s := "Your term is %s\n"
 	s += "Your window size is x: %d y: %d\n"
 	s += "Time: " + m.time.Format(time.RFC1123) + "\n\n"

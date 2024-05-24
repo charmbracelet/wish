@@ -82,9 +82,10 @@ func (a *app) Start() {
 }
 
 func (a *app) ProgramHandler(s ssh.Session) *tea.Program {
-	model := initialModel()
-	model.app = a
-	model.id = s.User()
+	model := model{
+		app: a,
+		id:  s.User(),
+	}
 
 	p := tea.NewProgram(model, bubbletea.MakeOptions(s)...)
 	a.progs = append(a.progs, p)
@@ -115,8 +116,8 @@ type model struct {
 	err         error
 }
 
-func initialModel() model {
-	ta := textarea.New()
+func (m model) Init(ctx tea.Context) (tea.Model, tea.Cmd) {
+	ta := textarea.New(ctx)
 	ta.Placeholder = "Send a message..."
 	ta.Focus()
 
@@ -127,44 +128,37 @@ func initialModel() model {
 	ta.SetHeight(3)
 
 	// Remove cursor line styling
-	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
+	ta.FocusedStyle.CursorLine = ctx.NewStyle()
 
 	ta.ShowLineNumbers = false
 
-	vp := viewport.New(30, 5)
+	vp := viewport.New(ctx, 30, 5)
 	vp.SetContent(`Welcome to the chat room!
 Type a message and press Enter to send.`)
 
 	ta.KeyMap.InsertNewline.SetEnabled(false)
 
-	return model{
-		textarea:    ta,
-		messages:    []string{},
-		viewport:    vp,
-		senderStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("5")),
-		err:         nil,
-	}
+	m.textarea = ta
+	m.viewport = vp
+	m.senderStyle = ctx.NewStyle().Foreground(lipgloss.Color("5"))
+	return m, textarea.Blink
 }
 
-func (m model) Init() tea.Cmd {
-	return textarea.Blink
-}
-
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(ctx tea.Context, msg tea.Msg) (tea.Model, tea.Cmd) {
 	var (
 		tiCmd tea.Cmd
 		vpCmd tea.Cmd
 	)
 
-	m.textarea, tiCmd = m.textarea.Update(msg)
-	m.viewport, vpCmd = m.viewport.Update(msg)
+	m.textarea, tiCmd = m.textarea.Update(ctx, msg)
+	m.viewport, vpCmd = m.viewport.Update(ctx, msg)
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
+		switch msg.String() {
+		case "ctrl+c", "esc":
 			return m, tea.Quit
-		case tea.KeyEnter:
+		case "enter":
 			m.app.send(chatMsg{
 				id:   m.id,
 				text: m.textarea.Value(),
@@ -186,10 +180,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(tiCmd, vpCmd)
 }
 
-func (m model) View() string {
+func (m model) View(ctx tea.Context) string {
 	return fmt.Sprintf(
 		"%s\n\n%s",
-		m.viewport.View(),
-		m.textarea.View(),
+		m.viewport.View(ctx),
+		m.textarea.View(ctx),
 	) + "\n\n"
 }

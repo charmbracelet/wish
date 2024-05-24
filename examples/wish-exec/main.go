@@ -67,16 +67,7 @@ func main() {
 }
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-	// Create a lipgloss.Renderer for the session
-	renderer := bubbletea.MakeRenderer(s)
-	// Set up the model with the current session and styles.
-	// We'll use the session to call wish.Command, which makes it compatible
-	// with tea.Command.
-	m := model{
-		sess:     s,
-		style:    renderer.NewStyle().Foreground(lipgloss.Color("8")),
-		errStyle: renderer.NewStyle().Foreground(lipgloss.Color("3")),
-	}
+	m := model{sess: s}
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
 
@@ -87,13 +78,15 @@ type model struct {
 	errStyle lipgloss.Style
 }
 
-func (m model) Init() tea.Cmd {
-	return nil
+func (m model) Init(ctx tea.Context) (tea.Model, tea.Cmd) {
+	m.style = ctx.NewStyle().Foreground(lipgloss.Color("8"))
+	m.errStyle = ctx.NewStyle().Foreground(lipgloss.Color("3"))
+	return m, nil
 }
 
 type cmdFinishedMsg struct{ err error }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(_ tea.Context, msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -142,7 +135,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) View() string {
+func (m model) View(tea.Context) string {
 	if m.err != nil {
 		return m.errStyle.Render(m.err.Error() + "\n")
 	}

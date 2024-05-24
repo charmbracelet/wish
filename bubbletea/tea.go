@@ -3,10 +3,8 @@ package bubbletea
 
 import (
 	"context"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/log"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish"
@@ -106,46 +104,10 @@ func MiddlewareWithProgramHandler(handler ProgramHandler, profile termenv.Profil
 
 var minColorProfileKey struct{}
 
-var profileNames = [4]string{"TrueColor", "ANSI256", "ANSI", "Ascii"}
-
-// MakeRenderer returns a lipgloss renderer for the current session.
-// This function handle PTYs as well, and should be used to style your application.
-func MakeRenderer(sess ssh.Session) *lipgloss.Renderer {
-	cp, ok := sess.Context().Value(minColorProfileKey).(termenv.Profile)
-	if !ok {
-		cp = termenv.Ascii
-	}
-	r := newRenderer(sess)
-	if r.ColorProfile() > cp {
-		wish.Printf(sess, "Warning: Client's terminal is %q, forcing %q\r\n", profileNames[r.ColorProfile()], profileNames[cp])
-		r.SetColorProfile(cp)
-	}
-	return r
-}
-
 // MakeOptions returns the tea.WithInput and tea.WithOutput program options
 // taking into account possible Emulated or Allocated PTYs.
 func MakeOptions(sess ssh.Session) []tea.ProgramOption {
 	return makeOpts(sess)
-}
-
-type sshEnviron []string
-
-var _ termenv.Environ = sshEnviron(nil)
-
-// Environ implements termenv.Environ.
-func (e sshEnviron) Environ() []string {
-	return e
-}
-
-// Getenv implements termenv.Environ.
-func (e sshEnviron) Getenv(k string) string {
-	for _, v := range e {
-		if strings.HasPrefix(v, k+"=") {
-			return v[len(k)+1:]
-		}
-	}
-	return ""
 }
 
 func newDefaultProgramHandler(handler Handler) ProgramHandler {
