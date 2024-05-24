@@ -14,7 +14,7 @@ func makeOpts(s ssh.Session) []tea.ProgramOption {
 		return []tea.ProgramOption{
 			tea.WithInput(s),
 			tea.WithOutput(s),
-			tea.WithEnvironment(s.Environ()),
+			tea.WithEnvironment(append(s.Environ(), "CLICOLOR_FORCE=1")),
 		}
 	}
 

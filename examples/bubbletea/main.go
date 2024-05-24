@@ -100,7 +100,7 @@ func (m model) Init(ctx tea.Context) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) Update(ctx tea.Context, msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) Update(_ tea.Context, msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.height = msg.Height
@@ -115,6 +115,13 @@ func (m model) Update(ctx tea.Context, msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View(tea.Context) string {
-	s := fmt.Sprintf("Your term is %s\nYour window size is %dx%d\nBackground: %s\nColor Profile: %s", m.term, m.width, m.height, m.bg, m.profile)
+	s := fmt.Sprintf(
+		"Your term is %s\nYour window size is %dx%d\nBackground: %s\nColor Profile: %s",
+		m.term,
+		m.width,
+		m.height,
+		m.bg,
+		m.profile,
+	)
 	return m.txtStyle.Render(s) + "\n\n" + m.quitStyle.Render("Press 'q' to quit\n")
 }
