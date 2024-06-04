@@ -15,18 +15,22 @@ func makeOpts(s ssh.Session) []tea.ProgramOption {
 		environ = append(environ, "TERM="+pty.Term)
 	}
 
-	opts := []tea.ProgramOption{
-		tea.WithInput(s),
-		tea.WithOutput(s),
-		tea.WithEnvironment(environ),
-	}
-
 	if !ok {
-		return opts
+		return []tea.ProgramOption{
+			tea.WithInput(s),
+			tea.WithOutput(s),
+			tea.WithEnvironment(environ),
+		}
 	}
 
+	// XXX: This is a hack to make the output colorized in PTY sessions.
+	environ = append(environ, "CLICOLOR_FORCE=1")
 	if s.EmulatedPty() {
-		return append(opts, tea.WithEnvironment(append(environ, "CLICOLOR_FORCE=1")))
+		return []tea.ProgramOption{
+			tea.WithInput(s),
+			tea.WithOutput(s),
+			tea.WithEnvironment(environ),
+		}
 	}
 
 	return []tea.ProgramOption{
