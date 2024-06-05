@@ -10,17 +10,32 @@ import (
 
 func makeOpts(s ssh.Session) []tea.ProgramOption {
 	pty, _, ok := s.Pty()
-	if !ok || s.EmulatedPty() {
+	environ := s.Environ()
+	if !ok {
 		return []tea.ProgramOption{
 			tea.WithInput(s),
 			tea.WithOutput(s),
-			tea.WithEnvironment(append(s.Environ(), "CLICOLOR_FORCE=1")),
+			tea.WithEnvironment(environ),
+		}
+	}
+
+	if pty.Term != "" {
+		environ = append(environ, "TERM="+pty.Term)
+	}
+
+	// XXX: This is a hack to make the output colorized in PTY sessions.
+	environ = append(environ, "CLICOLOR_FORCE=1")
+	if s.EmulatedPty() {
+		return []tea.ProgramOption{
+			tea.WithInput(s),
+			tea.WithOutput(s),
+			tea.WithEnvironment(environ),
 		}
 	}
 
 	return []tea.ProgramOption{
 		tea.WithInput(pty.Slave),
 		tea.WithOutput(pty.Slave),
-		tea.WithEnvironment(s.Environ()),
+		tea.WithEnvironment(environ),
 	}
 }
