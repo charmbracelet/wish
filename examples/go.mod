@@ -12,7 +12,7 @@ require (
 	github.com/charmbracelet/x/editor v0.0.0-20240202113029-6ff29cf0473e
 	github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5
 	github.com/pkg/sftp v1.13.6
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	golang.org/x/crypto v0.24.0
 )
 
