@@ -33,6 +33,9 @@ func makeOpts(s ssh.Session) []tea.ProgramOption {
 
 func newRenderer(s ssh.Session) *lipgloss.Renderer {
 	pty, _, ok := s.Pty()
+	if !ok || pty.Term == "" || pty.Term == "dumb" {
+		return lipgloss.NewRenderer(s, termenv.WithProfile(termenv.Ascii))
+	}
 	env := sshEnviron(append(s.Environ(), "TERM="+pty.Term))
 	var r *lipgloss.Renderer
 	var bg color.Color
@@ -52,10 +55,12 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 		)
 		bg = queryBackgroundColor(s)
 	}
-	c, ok := colorful.MakeColor(bg)
-	if ok {
-		_, _, l := c.Hsl()
-		r.SetHasDarkBackground(l < 0.5)
+	if bg != nil {
+		c, ok := colorful.MakeColor(bg)
+		if ok {
+			_, _, l := c.Hsl()
+			r.SetHasDarkBackground(l < 0.5)
+		}
 	}
 	return r
 }
