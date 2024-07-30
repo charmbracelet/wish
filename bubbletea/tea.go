@@ -69,14 +69,14 @@ func MiddlewareWithProgramHandler(handler ProgramHandler, profile termenv.Profil
 	return func(next ssh.Handler) ssh.Handler {
 		return func(sess ssh.Session) {
 			sess.Context().SetValue(minColorProfileKey, profile)
-			_, windowChanges, ok := sess.Pty()
-			if !ok {
-				wish.Fatalln(sess, "no active terminal, skipping")
-				return
-			}
 			program := handler(sess)
 			if program == nil {
 				next(sess)
+				return
+			}
+			_, windowChanges, ok := sess.Pty()
+			if !ok {
+				wish.Fatalln(sess, "no active terminal, skipping")
 				return
 			}
 			ctx, cancel := context.WithCancel(sess.Context())
