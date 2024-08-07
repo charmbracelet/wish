@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/ssh v0.0.0-20240725163421-eb71b85b27aa
 	github.com/charmbracelet/wish v0.5.0
-	github.com/charmbracelet/x/editor v0.0.0-20240202113029-6ff29cf0473e
+	github.com/charmbracelet/x/editor v0.0.0-20240807160011-7b9bd9980386
 	github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5
 	github.com/pkg/sftp v1.13.6
 	github.com/spf13/cobra v1.8.1
