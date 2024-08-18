@@ -5,13 +5,14 @@ package bubbletea
 
 import (
 	"image/color"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/x/exp/term"
-	"github.com/charmbracelet/x/exp/term/ansi"
-	"github.com/charmbracelet/x/exp/term/input"
+	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/x/input"
+	"github.com/charmbracelet/x/term"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/muesli/termenv"
 )
@@ -45,7 +46,7 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 			termenv.WithEnvironment(env),
 			termenv.WithColorCache(true),
 		)
-		bg = term.BackgroundColor(pty.Slave, pty.Slave)
+		bg, _ = term.QueryBackgroundColor(pty.Slave, pty.Slave)
 	} else {
 		r = lipgloss.NewRenderer(
 			s,
@@ -67,7 +68,7 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 
 // copied from x/exp/term.
 func queryBackgroundColor(s ssh.Session) (bg color.Color) {
-	_ = term.QueryTerminal(s, s, func(events []input.Event) bool {
+	_ = term.QueryTerminal(s, s, time.Second, func(events []input.Event) bool {
 		for _, e := range events {
 			switch e := e.(type) {
 			case input.BackgroundColorEvent:
