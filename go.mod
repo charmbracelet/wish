@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.12.1
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/ssh v0.0.0-20240725163421-eb71b85b27aa
-	github.com/charmbracelet/x/ansi v0.1.4
+	github.com/charmbracelet/x/ansi v0.2.1
 	github.com/charmbracelet/x/input v0.1.3
 	github.com/charmbracelet/x/term v0.1.1
 	github.com/go-git/go-git/v5 v5.12.0
