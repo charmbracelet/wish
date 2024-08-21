@@ -12,7 +12,6 @@ import (
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/input"
-	"github.com/charmbracelet/x/term"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/muesli/termenv"
 )
@@ -46,7 +45,7 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 			termenv.WithEnvironment(env),
 			termenv.WithColorCache(true),
 		)
-		bg, _ = term.QueryBackgroundColor(pty.Slave, pty.Slave)
+		bg, _ = queryBackgroundColor(pty.Slave, pty.Slave)
 	} else {
 		r = lipgloss.NewRenderer(
 			s,
@@ -54,7 +53,7 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 			termenv.WithUnsafe(),
 			termenv.WithColorCache(true),
 		)
-		bg = queryBackgroundColor(s)
+		bg = querySessionBackgroundColor(s)
 	}
 	if bg != nil {
 		c, ok := colorful.MakeColor(bg)
@@ -66,9 +65,9 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 	return r
 }
 
-// copied from x/exp/term.
-func queryBackgroundColor(s ssh.Session) (bg color.Color) {
-	_ = term.QueryTerminal(s, s, time.Second, func(events []input.Event) bool {
+// copied from x/term@v0.1.3.
+func querySessionBackgroundColor(s ssh.Session) (bg color.Color) {
+	_ = queryTerminal(s, s, time.Second, func(events []input.Event) bool {
 		for _, e := range events {
 			switch e := e.(type) {
 			case input.BackgroundColorEvent:
