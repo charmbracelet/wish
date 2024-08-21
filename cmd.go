@@ -53,7 +53,7 @@ func (c *Cmd) SetDir(dir string) {
 func (c *Cmd) Run() error {
 	ppty, winCh, ok := c.sess.Pty()
 	if !ok {
-		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.sess, c.sess, c.sess
+		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.sess, c.sess, c.sess.Stderr()
 		return c.cmd.Run()
 	}
 	return c.doRun(ppty, winCh)
