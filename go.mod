@@ -10,6 +10,7 @@ require (
 	github.com/charmbracelet/ssh v0.0.0-20240725163421-eb71b85b27aa
 	github.com/charmbracelet/x/ansi v0.4.0
 	github.com/charmbracelet/x/input v0.2.0
+	github.com/charmbracelet/x/term v0.2.0
 	github.com/go-git/go-git/v5 v5.12.0
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
@@ -29,7 +30,6 @@ require (
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/charmbracelet/x/conpty v0.1.0 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240508181413-e8d8b6e2de86 // indirect
-	github.com/charmbracelet/x/term v0.2.0 // indirect
 	github.com/charmbracelet/x/termios v0.1.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/creack/pty v1.1.21 // indirect

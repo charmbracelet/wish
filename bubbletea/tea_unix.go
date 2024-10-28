@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/input"
+	"github.com/charmbracelet/x/term"
 	"github.com/lucasb-eyer/go-colorful"
 	"github.com/muesli/termenv"
 )
@@ -45,7 +46,11 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 			termenv.WithEnvironment(env),
 			termenv.WithColorCache(true),
 		)
-		bg, _ = queryBackgroundColor(pty.Slave, pty.Slave)
+		state, err := term.MakeRaw(pty.Slave.Fd())
+		if err == nil {
+			bg, _ = queryBackgroundColor(pty.Slave, pty.Slave)
+			term.Restore(pty.Slave.Fd(), state)
+		}
 	} else {
 		r = lipgloss.NewRenderer(
 			s,
