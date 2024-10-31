@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/charmbracelet/bubbletea v1.1.2
 	github.com/charmbracelet/keygen v0.5.1
-	github.com/charmbracelet/lipgloss v0.13.1
+	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/ssh v0.0.0-20240725163421-eb71b85b27aa
 	github.com/charmbracelet/x/ansi v0.4.2
