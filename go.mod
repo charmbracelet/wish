@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/keygen v0.5.1
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/log v0.4.0
-	github.com/charmbracelet/ssh v0.0.0-20240725163421-eb71b85b27aa
+	github.com/charmbracelet/ssh v0.0.0-20241211182756-4fe22b0f1b7c
 	github.com/charmbracelet/x/ansi v0.4.5
 	github.com/charmbracelet/x/input v0.2.0
 	github.com/charmbracelet/x/term v0.2.1
@@ -17,7 +17,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/matryer/is v1.4.1
 	github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/sync v0.10.0
 	golang.org/x/time v0.8.0
 )
