@@ -59,7 +59,7 @@ func queryTerminal(
 	filter QueryTerminalFilter,
 	query string,
 ) error {
-	rd, err := input.NewDriver(in, "", 0)
+	rd, err := input.NewReader(in, "", 0)
 	if err != nil {
 		return err
 	}
