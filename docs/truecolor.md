@@ -26,7 +26,7 @@ func main() {
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
-            bubbletea.MiddlewareWithColorProfile(teaHandler, termenv.TrueColor) // Force truecolor.
+      bubbletea.MiddlewareWithColorProfile(teaHandler, termenv.TrueColor) // Force truecolor.
 			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
 			logging.Middleware(),
 		),
@@ -37,8 +37,48 @@ func main() {
 
 [see more][examples-bubbletea]
 
-This *may* cause issues for users accessing your Wish app through a terminal
+This _may_ cause issues for users accessing your Wish app through a terminal
 emulator that is not `truecolor` compatible (e.g. Apple's Terminal app).
+
+## Lipgloss Renderer aka "no colors when run in a server"
+
+[Lipgloss][], which we use to create styles, will have its "runtime renderer",
+which is based on the current system environment.
+
+This is perfectly fine for CLI apps running locally.
+
+On the case of Wish apps, though, the runtime is the server, but we want the
+profile to match the one of the client.
+
+To do this, we can a create a custom renderer from the session, and use it to
+create styles, for example:
+
+```go
+import (
+  // ...
+	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/wish/bubbletea"
+)
+
+// ...
+
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+	renderer := bubbletea.MakeRenderer(s)
+
+  // ...
+
+  m := &model{}
+  m.initStyles(renderer)
+  return m, nil
+}
+
+func (m *model) initStyles(r *lipgloss.Renderer) {
+	m.txtStyle = r.NewStyle().Foreground(lipgloss.Color("10"))
+}
+```
+
+This is one strategy you can use, but you can adapt it to whatever makes more
+sense for your app.
 
 ## Color profiles? What, like it's hard?
 
@@ -47,7 +87,7 @@ SSH session, the client only sends the `TERM` environment variable, which can
 only detect `256 color` support. If you run `echo $COLORTERM` in your shell
 you'll likely see `truecolor` as the result, which is what you want for ultra
 colorful terminal outputs. If you don't see that as a result, it might be time
-to try a new [terminal emulator][supported-emulators]. 
+to try a new [terminal emulator][supported-emulators].
 
 Unfortunately, there is no standard way for terminals to detect `truecolor`
 support in an SSH session, hence why it defaults to `256 color`. Most terminals
@@ -63,7 +103,7 @@ You can learn more about [checking for `COLORTERM`][colorterm-issue].
 
 Because of this, the color options are limited and your experience running the
 app locally will differ to how it presents over SSH. You're probably wondering
-*how much* of a difference this makes. Well, `256 color` support uses a palette
+_how much_ of a difference this makes. Well, `256 color` support uses a palette
 with 256 colors available. By contrast, `truecolor` supports a whopping 16
 **million** different colors.
 
@@ -77,7 +117,7 @@ the user, then call the next middleware.
 
 Wish uses the SSH protocol to authenticate users, then allows the developer to
 specify how to handle these connections. We've used Wish to serve both TUIs
-(textual UIs) *and* CLIs. If you've hosted your own [Soft Serve][soft] git
+(textual UIs) _and_ CLIs. If you've hosted your own [Soft Serve][soft] git
 server, then you'll have seen this first hand. Soft Serve uses a middleware to
 serve the TUI and another middleware for its CLI, allowing users to interact
 with the server through either interface. In this case, the CLI is useful for
@@ -121,3 +161,4 @@ not be colored. Otherwise, the output can include ansi sequences.
 [examples-bubbletea]: https://github.com/charmbracelet/wish/blob/main/examples/bubbletea/main.go#L35
 [soft]: https://github.com/charmbracelet/soft-serve
 [termenv]: https://github.com/muesli/termenv/blob/345783024a348cbb893bf6f08f1d7ab79d2e22ff/termenv_unix.go#L53
+[lipgloss]: https://github.com/charmbracelet/lipgloss
