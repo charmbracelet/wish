@@ -3,9 +3,9 @@ package recover
 import (
 	"runtime/debug"
 
-	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/v2"
 )
 
 // Middleware is a wish middleware that recovers from panics and log to stderr.

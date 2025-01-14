@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/v2"
 )
 
 // MiddlewareWithFormat returns a middleware that logs the elapsed time of the

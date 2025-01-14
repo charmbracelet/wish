@@ -2,7 +2,7 @@ package comment
 
 import (
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/v2"
 )
 
 // Middleware prints a comment at the end of the session.

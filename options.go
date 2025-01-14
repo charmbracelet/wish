@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/charmbracelet/keygen"
-	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
