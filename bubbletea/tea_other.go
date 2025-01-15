@@ -9,8 +9,16 @@ import (
 )
 
 func makeOpts(s ssh.Session) []tea.ProgramOption {
+	pty, _, ok := s.Pty()
+	envs := s.Environ()
+	if ok {
+		envs = append(envs, "TERM="+pty.Term)
+	}
+	//nolint:godox
+	// TODO: Support Windows PTYs
 	return []tea.ProgramOption{
 		tea.WithInput(s),
 		tea.WithOutput(s),
+		tea.WithEnvironment(envs),
 	}
 }
