@@ -10,17 +10,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/bubbles/v2/textarea"
+	"github.com/charmbracelet/bubbles/v2/viewport"
+	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/activeterm"
-	"github.com/charmbracelet/wish/bubbletea"
-	"github.com/charmbracelet/wish/logging"
-	"github.com/muesli/termenv"
+	"github.com/charmbracelet/wish/v2"
+	"github.com/charmbracelet/wish/v2/activeterm"
+	"github.com/charmbracelet/wish/v2/bubbletea"
+	"github.com/charmbracelet/wish/v2/logging"
 )
 
 const (
@@ -47,7 +46,7 @@ func newApp() *app {
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
-			bubbletea.MiddlewareWithProgramHandler(a.ProgramHandler, termenv.ANSI256),
+			bubbletea.MiddlewareWithProgramHandler(a.ProgramHandler),
 			activeterm.Middleware(),
 			logging.Middleware(),
 		),
@@ -127,11 +126,11 @@ func initialModel() model {
 	ta.SetHeight(3)
 
 	// Remove cursor line styling
-	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
+	ta.Styles.Focused.CursorLine = lipgloss.NewStyle()
 
 	ta.ShowLineNumbers = false
 
-	vp := viewport.New(30, 5)
+	vp := viewport.New(viewport.WithWidth(30), viewport.WithHeight(5))
 	vp.SetContent(`Welcome to the chat room!
 Type a message and press Enter to send.`)
 
@@ -146,8 +145,8 @@ Type a message and press Enter to send.`)
 	}
 }
 
-func (m model) Init() tea.Cmd {
-	return textarea.Blink
+func (m model) Init() (tea.Model, tea.Cmd) {
+	return m, textarea.Blink
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -161,8 +160,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
+		switch msg.Key().Mod {
+		case tea.ModCtrl: // We're only interested in ctrl+<key>
+			switch msg.Key().Code {
+			case 'c':
+				return m, tea.Quit
+			}
+		}
+		switch msg.Key().Code {
+		case tea.KeyEsc:
 			return m, tea.Quit
 		case tea.KeyEnter:
 			m.app.send(chatMsg{

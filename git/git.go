@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/v2"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 )

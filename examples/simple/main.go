@@ -4,10 +4,10 @@ import (
 	"errors"
 	"net"
 
-	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/logging"
+	"github.com/charmbracelet/wish/v2"
+	"github.com/charmbracelet/wish/v2/logging"
 )
 
 const (

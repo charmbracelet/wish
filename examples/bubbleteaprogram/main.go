@@ -13,13 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
+	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/bubbletea"
-	"github.com/charmbracelet/wish/logging"
-	"github.com/muesli/termenv"
+	"github.com/charmbracelet/wish/v2"
+	"github.com/charmbracelet/wish/v2/bubbletea"
+	"github.com/charmbracelet/wish/v2/logging"
 )
 
 const (
@@ -86,7 +85,7 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 		}
 		return newProg(m, append(bubbletea.MakeOptions(s), tea.WithAltScreen())...)
 	}
-	return bubbletea.MiddlewareWithProgramHandler(teaHandler, termenv.ANSI256)
+	return bubbletea.MiddlewareWithProgramHandler(teaHandler)
 }
 
 // Just a generic tea.Model to demo terminal information of ssh.
@@ -99,8 +98,8 @@ type model struct {
 
 type timeMsg time.Time
 
-func (m model) Init() tea.Cmd {
-	return nil
+func (m model) Init() (tea.Model, tea.Cmd) {
+	return m, nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

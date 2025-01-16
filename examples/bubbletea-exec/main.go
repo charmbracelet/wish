@@ -10,14 +10,14 @@ import (
 	"syscall"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
+	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/activeterm"
-	"github.com/charmbracelet/wish/bubbletea"
-	"github.com/charmbracelet/wish/logging"
+	"github.com/charmbracelet/wish/v2"
+	"github.com/charmbracelet/wish/v2/activeterm"
+	"github.com/charmbracelet/wish/v2/bubbletea"
+	"github.com/charmbracelet/wish/v2/logging"
 	"github.com/charmbracelet/x/editor"
 )
 
@@ -67,15 +67,11 @@ func main() {
 }
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-	// Create a lipgloss.Renderer for the session
-	renderer := bubbletea.MakeRenderer(s)
 	// Set up the model with the current session and styles.
 	// We'll use the session to call wish.Command, which makes it compatible
 	// with tea.Command.
 	m := model{
-		sess:     s,
-		style:    renderer.NewStyle().Foreground(lipgloss.Color("8")),
-		errStyle: renderer.NewStyle().Foreground(lipgloss.Color("3")),
+		sess: s,
 	}
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
@@ -87,8 +83,10 @@ type model struct {
 	errStyle lipgloss.Style
 }
 
-func (m model) Init() tea.Cmd {
-	return nil
+func (m model) Init() (tea.Model, tea.Cmd) {
+	m.style = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
+	m.errStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+	return m, nil
 }
 
 type cmdFinishedMsg struct{ err error }
