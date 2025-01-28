@@ -7,7 +7,7 @@ require (
 	github.com/charmbracelet/keygen v0.5.1
 	github.com/charmbracelet/lipgloss v1.0.0
 	github.com/charmbracelet/log v0.4.0
-	github.com/charmbracelet/ssh v0.0.0-20241211182756-4fe22b0f1b7c
+	github.com/charmbracelet/ssh v0.0.0-20250128162118-5c80fc6f20a9
 	github.com/charmbracelet/x/ansi v0.8.0
 	github.com/charmbracelet/x/input v0.3.1
 	github.com/charmbracelet/x/term v0.2.1

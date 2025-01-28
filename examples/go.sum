@@ -25,8 +25,8 @@ github.com/charmbracelet/lipgloss v1.0.0 h1:O7VkGDvqEdGi93X+DeqsQ7PKHDgtQfF8j8/O
 github.com/charmbracelet/lipgloss v1.0.0/go.mod h1:U5fy9Z+C38obMs+T+tJqst9VGzlOYGj4ri9reL3qUlo=
 github.com/charmbracelet/log v0.4.0 h1:G9bQAcx8rWA2T3pWvx7YtPTPwgqpk7D68BX21IRW8ZM=
 github.com/charmbracelet/log v0.4.0/go.mod h1:63bXt/djrizTec0l11H20t8FDSvA4CRZJ1KH22MdptM=
-github.com/charmbracelet/ssh v0.0.0-20241211182756-4fe22b0f1b7c h1:treQxMBdI2PaD4eOYfFux8stfCkUxhuUxaqGcxKqVpI=
-github.com/charmbracelet/ssh v0.0.0-20241211182756-4fe22b0f1b7c/go.mod h1:CY1xbl2z+ZeBmNWItKZyxx0zgDgnhmR57+DTsHOobJ4=
+github.com/charmbracelet/ssh v0.0.0-20250128162118-5c80fc6f20a9 h1:lM9IyTrLgdJoa6N/aFz8z0blOicXqp47dCBLzSd0Qsk=
+github.com/charmbracelet/ssh v0.0.0-20250128162118-5c80fc6f20a9/go.mod h1:hg+I6gvlMl16nS9ZzQNgBIrrCasGwEw0QiLsDcP01Ko=
 github.com/charmbracelet/x/ansi v0.8.0 h1:9GTq3xq9caJW8ZrBTe0LIe2fvfLR/bYXKTx2llXn7xE=
 github.com/charmbracelet/x/ansi v0.8.0/go.mod h1:wdYl/ONOLHLIVmQaxbIYEC/cRKOQyjTkowiI4blgS9Q=
 github.com/charmbracelet/x/conpty v0.1.0 h1:4zc8KaIcbiL4mghEON8D72agYtSeIgq8FSThSPQIb+U=
