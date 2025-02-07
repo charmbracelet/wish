@@ -3,8 +3,8 @@ module github.com/charmbracelet/wish/v2
 go 1.21
 
 require (
-	github.com/charmbracelet/bubbletea/v2 v2.0.0-alpha.2.0.20250114183556-4f0e1e15a2b2
-	github.com/charmbracelet/colorprofile v0.1.8
+	github.com/charmbracelet/bubbletea/v2 v2.0.0-alpha.2.0.20250206213209-b08648f203e0
+	github.com/charmbracelet/colorprofile v0.2.0
 	github.com/charmbracelet/keygen v0.5.1
 	github.com/charmbracelet/log/v2 v2.0.0-20250114165231-978e92235d71
 	github.com/charmbracelet/ssh v0.0.0-20241211182756-4fe22b0f1b7c
@@ -22,16 +22,14 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v1.1.3 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
-	github.com/charmbracelet/lipgloss/v2 v2.0.0-alpha.2.0.20250114171829-b67eb015d607 // indirect
-	github.com/charmbracelet/x/ansi v0.7.0 // indirect
-	github.com/charmbracelet/x/cellbuf v0.0.6 // indirect
+	github.com/charmbracelet/lipgloss/v2 v2.0.0-alpha.2.0.20250205171250-634dfe44b14e // indirect
+	github.com/charmbracelet/x/ansi v0.8.0 // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.9-0.20250206210616-ac5dd4e7ff44 // indirect
 	github.com/charmbracelet/x/conpty v0.1.0 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240508181413-e8d8b6e2de86 // indirect
-	github.com/charmbracelet/x/input v0.3.1-0.20250113133550-1814328524c0 // indirect
+	github.com/charmbracelet/x/input v0.3.2 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/charmbracelet/x/termios v0.1.0 // indirect
-	github.com/charmbracelet/x/vt v0.0.0-20241121165045-a3720547cbb4 // indirect
-	github.com/charmbracelet/x/wcwidth v0.0.0-20241113152101-0af7d04e9f32 // indirect
 	github.com/charmbracelet/x/windows v0.2.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/creack/pty v1.1.21 // indirect
@@ -44,6 +42,7 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
@@ -54,8 +53,7 @@ require (
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
