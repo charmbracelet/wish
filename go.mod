@@ -17,7 +17,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/matryer/is v1.4.1
 	github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5
-	golang.org/x/crypto v0.32.0
+	golang.org/x/crypto v0.33.0
 	golang.org/x/sync v0.11.0
 	golang.org/x/time v0.10.0
 )
@@ -58,7 +58,7 @@ require (
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
