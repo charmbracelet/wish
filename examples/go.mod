@@ -13,7 +13,7 @@ require (
 	github.com/muesli/termenv v0.15.3-0.20240509142007-81b8f94111d5
 	github.com/pkg/sftp v1.13.7
 	github.com/spf13/cobra v1.8.1
-	golang.org/x/crypto v0.32.0
+	golang.org/x/crypto v0.33.0
 )
 
 require (
@@ -27,7 +27,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.8.0 // indirect
 	github.com/charmbracelet/x/conpty v0.1.0 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240508181413-e8d8b6e2de86 // indirect
-	github.com/charmbracelet/x/input v0.3.1 // indirect
+	github.com/charmbracelet/x/input v0.3.2 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/charmbracelet/x/termios v0.1.0 // indirect
 	github.com/charmbracelet/x/windows v0.2.0 // indirect
@@ -62,8 +62,8 @@ require (
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.34.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
