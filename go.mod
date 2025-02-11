@@ -9,7 +9,7 @@ require (
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/ssh v0.0.0-20250128164007-98fd5ae11894
 	github.com/charmbracelet/x/ansi v0.8.0
-	github.com/charmbracelet/x/input v0.3.2
+	github.com/charmbracelet/x/input v0.3.3
 	github.com/charmbracelet/x/term v0.2.1
 	github.com/go-git/go-git/v5 v5.13.2
 	github.com/google/go-cmp v0.6.0
