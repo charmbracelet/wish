@@ -1,11 +1,13 @@
 module examples
 
-go 1.21
+go 1.22
+
+toolchain go1.23.4
 
 require (
-	github.com/charmbracelet/bubbles/v2 v2.0.0-alpha.2.0.20250114183437-fbe642df174c
-	github.com/charmbracelet/bubbletea/v2 v2.0.0-alpha.2.0.20250114183556-4f0e1e15a2b2
-	github.com/charmbracelet/lipgloss/v2 v2.0.0-alpha.2.0.20250114171829-b67eb015d607
+	github.com/charmbracelet/bubbles/v2 v2.0.0-alpha.2.0.20250207161347-c5b76847ca66
+	github.com/charmbracelet/bubbletea/v2 v2.0.0-alpha.2.0.20250212220348-3fc1c224d4b3
+	github.com/charmbracelet/lipgloss/v2 v2.0.0-alpha.2.0.20250205171250-634dfe44b14e
 	github.com/charmbracelet/log/v2 v2.0.0-20250114165231-978e92235d71
 	github.com/charmbracelet/ssh v0.0.0-20241211182756-4fe22b0f1b7c
 	github.com/charmbracelet/wish/v2 v2.0.0-00010101000000-000000000000
@@ -21,17 +23,15 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.3 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
-	github.com/charmbracelet/colorprofile v0.1.8 // indirect
+	github.com/charmbracelet/colorprofile v0.2.0 // indirect
 	github.com/charmbracelet/keygen v0.5.1 // indirect
-	github.com/charmbracelet/x/ansi v0.7.0 // indirect
-	github.com/charmbracelet/x/cellbuf v0.0.6 // indirect
+	github.com/charmbracelet/x/ansi v0.8.0 // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.12-0.20250212155406-f75055277088 // indirect
 	github.com/charmbracelet/x/conpty v0.1.0 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240508181413-e8d8b6e2de86 // indirect
-	github.com/charmbracelet/x/input v0.3.1-0.20250113133550-1814328524c0 // indirect
+	github.com/charmbracelet/x/input v0.3.3 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/charmbracelet/x/termios v0.1.0 // indirect
-	github.com/charmbracelet/x/vt v0.0.0-20241121165045-a3720547cbb4 // indirect
-	github.com/charmbracelet/x/wcwidth v0.0.0-20241113152101-0af7d04e9f32 // indirect
 	github.com/charmbracelet/x/windows v0.2.0 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/creack/pty v1.1.21 // indirect
@@ -59,9 +59,8 @@ require (
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
-	golang.org/x/text v0.21.0 // indirect
+	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/tools v0.23.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )

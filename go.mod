@@ -3,7 +3,7 @@ module github.com/charmbracelet/wish/v2
 go 1.21
 
 require (
-	github.com/charmbracelet/bubbletea/v2 v2.0.0-alpha.2.0.20250206213209-b08648f203e0
+	github.com/charmbracelet/bubbletea/v2 v2.0.0-alpha.2.0.20250212220348-3fc1c224d4b3
 	github.com/charmbracelet/colorprofile v0.2.0
 	github.com/charmbracelet/keygen v0.5.1
 	github.com/charmbracelet/log/v2 v2.0.0-20250114165231-978e92235d71
@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/matryer/is v1.4.1
 	golang.org/x/crypto v0.32.0
-	golang.org/x/sync v0.10.0
+	golang.org/x/sync v0.11.0
 	golang.org/x/time v0.9.0
 )
 
@@ -24,10 +24,10 @@ require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-alpha.2.0.20250205171250-634dfe44b14e // indirect
 	github.com/charmbracelet/x/ansi v0.8.0 // indirect
-	github.com/charmbracelet/x/cellbuf v0.0.9-0.20250206210616-ac5dd4e7ff44 // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.12-0.20250212155406-f75055277088 // indirect
 	github.com/charmbracelet/x/conpty v0.1.0 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240508181413-e8d8b6e2de86 // indirect
-	github.com/charmbracelet/x/input v0.3.2 // indirect
+	github.com/charmbracelet/x/input v0.3.3 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/charmbracelet/x/termios v0.1.0 // indirect
 	github.com/charmbracelet/x/windows v0.2.0 // indirect
