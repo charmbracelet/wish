@@ -20,5 +20,6 @@ func makeOpts(s ssh.Session) []tea.ProgramOption {
 		tea.WithInput(s),
 		tea.WithOutput(s),
 		tea.WithEnvironment(envs),
+		tea.WithWindowSize(pty.Window.Width, pty.Window.Height),
 	}
 }

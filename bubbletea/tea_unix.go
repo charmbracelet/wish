@@ -33,6 +33,7 @@ func makeOpts(s ssh.Session) []tea.ProgramOption {
 			// best we can do ;)
 			tea.WithColorProfile(colorprofile.Env(envs)),
 			tea.WithEnvironment(envs),
+			tea.WithWindowSize(pty.Window.Width, pty.Window.Height),
 		}
 	}
 
@@ -44,5 +45,6 @@ func makeOpts(s ssh.Session) []tea.ProgramOption {
 		tea.WithInput(pty.Slave),
 		tea.WithOutput(pty.Slave),
 		tea.WithEnvironment(envs),
+		tea.WithWindowSize(pty.Window.Width, pty.Window.Height),
 	}
 }
