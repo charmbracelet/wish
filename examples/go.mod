@@ -1,6 +1,7 @@
 module examples
 
 go 1.21
+toolchain go1.23.6
 
 require (
 	github.com/charmbracelet/bubbles v0.20.0
@@ -13,7 +14,7 @@ require (
 	github.com/muesli/termenv v0.16.0
 	github.com/pkg/sftp v1.13.7
 	github.com/spf13/cobra v1.9.1
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.34.0
 )
 
 require (
