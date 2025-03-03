@@ -1,6 +1,7 @@
 module github.com/charmbracelet/wish
 
 go 1.21
+toolchain go1.23.6
 
 require (
 	github.com/charmbracelet/bubbletea v1.3.3
@@ -17,7 +18,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0
 	github.com/matryer/is v1.4.1
 	github.com/muesli/termenv v0.16.0
-	golang.org/x/crypto v0.33.0
+	golang.org/x/crypto v0.35.0
 	golang.org/x/sync v0.11.0
 	golang.org/x/time v0.10.0
 )
