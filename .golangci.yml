@@ -17,7 +17,6 @@ linters:
     - bodyclose
     - depguard
     - dupl
-    - exportloopref
     - goconst
     - godot
     - godox

@@ -49,7 +49,7 @@ func newRenderer(s ssh.Session) *lipgloss.Renderer {
 		state, err := term.MakeRaw(pty.Slave.Fd())
 		if err == nil {
 			bg, _ = queryBackgroundColor(pty.Slave, pty.Slave)
-			term.Restore(pty.Slave.Fd(), state)
+			_ = term.Restore(pty.Slave.Fd(), state)
 		}
 	} else {
 		r = lipgloss.NewRenderer(
