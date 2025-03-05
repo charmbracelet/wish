@@ -86,7 +86,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			written, err := handler.Write(s, &FileEntry{
 				Name:     name,
 				Filepath: filepath.Join(path, name),
-				Mode:     fs.FileMode(mode),
+				Mode:     fs.FileMode(mode), //nolint:gosec
 				Size:     size,
 				Mtime:    mtime,
 				Atime:    atime,
@@ -124,7 +124,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if err := handler.Mkdir(s, &DirEntry{
 				Name:     name,
 				Filepath: path,
-				Mode:     fs.FileMode(mode),
+				Mode:     fs.FileMode(mode), //nolint:gosec
 				Mtime:    mtime,
 				Atime:    atime,
 			}); err != nil {

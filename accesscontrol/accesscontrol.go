@@ -23,7 +23,7 @@ func Middleware(cmds ...string) wish.Middleware {
 					return
 				}
 			}
-			fmt.Fprintln(s, "Command is not allowed: "+s.Command()[0])
+			_, _ = fmt.Fprintln(s, "Command is not allowed: "+s.Command()[0])
 			s.Exit(1) // nolint: errcheck
 		}
 	}
