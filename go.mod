@@ -2,12 +2,12 @@ module github.com/charmbracelet/wish
 
 go 1.23.0
 
-toolchain go1.23.7
+toolchain go1.24.1
 
 require (
 	github.com/charmbracelet/bubbletea v1.3.4
 	github.com/charmbracelet/keygen v0.5.3
-	github.com/charmbracelet/lipgloss v1.0.0
+	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/log v0.4.0
 	github.com/charmbracelet/ssh v0.0.0-20250128164007-98fd5ae11894
 	github.com/charmbracelet/x/ansi v0.8.0
@@ -30,6 +30,8 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.5 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
+	github.com/charmbracelet/colorprofile v0.2.3-0.20250311203215-f60798e515dc // indirect
+	github.com/charmbracelet/x/cellbuf v0.0.13-0.20250311204145-2c3ea96c31dd // indirect
 	github.com/charmbracelet/x/conpty v0.1.0 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240508181413-e8d8b6e2de86 // indirect
 	github.com/charmbracelet/x/termios v0.1.0 // indirect
