@@ -13,7 +13,7 @@ require (
 	github.com/charmbracelet/wish v0.5.0
 	github.com/charmbracelet/x/editor v0.1.0
 	github.com/muesli/termenv v0.16.0
-	github.com/pkg/sftp v1.13.7
+	github.com/pkg/sftp v1.13.8
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/crypto v0.36.0
 )
