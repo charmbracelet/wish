@@ -28,6 +28,7 @@ const (
 
 func main() {
 	s, err := wish.NewServer(
+		ssh.AllocatePty(),
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
@@ -83,7 +84,7 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 			height: pty.Window.Height,
 			time:   time.Now(),
 		}
-		return newProg(m, append(bubbletea.MakeOptions(s), tea.WithAltScreen())...)
+		return newProg(m, bubbletea.MakeOptions(s)...)
 	}
 	return bubbletea.MiddlewareWithProgramHandler(teaHandler)
 }
@@ -98,8 +99,8 @@ type model struct {
 
 type timeMsg time.Time
 
-func (m model) Init() (tea.Model, tea.Cmd) {
-	return m, nil
+func (m model) Init() tea.Cmd {
+	return tea.EnterAltScreen
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

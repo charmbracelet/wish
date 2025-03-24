@@ -68,11 +68,14 @@ func main() {
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	pty, _, _ := s.Pty()
 	m := model{
-		term:   pty.Term,
-		width:  pty.Window.Width,
-		height: pty.Window.Height,
+		term:      pty.Term,
+		width:     pty.Window.Width,
+		height:    pty.Window.Height,
+		txtStyle:  lipgloss.NewStyle().Foreground(lipgloss.Color("10")),
+		quitStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("8")),
+		bg:        "light",
 	}
-	return m, []tea.ProgramOption{tea.WithAltScreen()}
+	return m, []tea.ProgramOption{}
 }
 
 // Just a generic tea.Model to demo terminal information of ssh.
@@ -86,13 +89,11 @@ type model struct {
 	quitStyle lipgloss.Style
 }
 
-func (m model) Init() (tea.Model, tea.Cmd) {
+func (m model) Init() tea.Cmd {
 	// default values
-	m.txtStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("10"))
-	m.quitStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	m.bg = "light"
-	return m, tea.Batch(
+	return tea.Batch(
 		tea.RequestBackgroundColor,
+		tea.EnterAltScreen,
 	)
 }
 

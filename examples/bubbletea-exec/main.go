@@ -71,7 +71,9 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 	// We'll use the session to call wish.Command, which makes it compatible
 	// with tea.Command.
 	m := model{
-		sess: s,
+		sess:     s,
+		style:    lipgloss.NewStyle().Foreground(lipgloss.Color("8")),
+		errStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("3")),
 	}
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
@@ -83,10 +85,8 @@ type model struct {
 	errStyle lipgloss.Style
 }
 
-func (m model) Init() (tea.Model, tea.Cmd) {
-	m.style = lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	m.errStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-	return m, nil
+func (m model) Init() tea.Cmd {
+	return nil
 }
 
 type cmdFinishedMsg struct{ err error }
@@ -118,7 +118,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// We can also execute a shell and give it over to the user.
 			// Note that this session won't have control, so it can't run tasks
 			// in background, suspend, etc.
-			c := wish.Command(m.sess, "bash", "-im")
+			c := wish.Command(m.sess, "htop")
 			if runtime.GOOS == "windows" {
 				c = wish.Command(m.sess, "powershell")
 			}
