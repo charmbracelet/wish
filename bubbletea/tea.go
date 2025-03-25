@@ -3,6 +3,7 @@ package bubbletea
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -115,9 +116,18 @@ func MakeRenderer(sess ssh.Session) *lipgloss.Renderer {
 	if !ok {
 		cp = termenv.Ascii
 	}
+
 	r := newRenderer(sess)
+
+	// We only force the color profile if the requested session is a PTY.
+	_, _, ok = sess.Pty()
+	if !ok {
+		return r
+	}
+
 	if r.ColorProfile() > cp {
-		wish.Printf(sess, "Warning: Client's terminal is %q, forcing %q\r\n", profileNames[r.ColorProfile()], profileNames[cp])
+		_, _ = fmt.Fprintf(sess.Stderr(), "Warning: Client's terminal is %q, forcing %q\r\n",
+			profileNames[r.ColorProfile()], profileNames[cp])
 		r.SetColorProfile(cp)
 	}
 	return r
