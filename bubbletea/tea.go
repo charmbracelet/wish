@@ -126,7 +126,7 @@ func MakeRenderer(sess ssh.Session) *lipgloss.Renderer {
 	}
 
 	if r.ColorProfile() > cp {
-		fmt.Fprintf(sess.Stderr(), "Warning: Client's terminal is %q, forcing %q\r\n", //nolint:errcheck
+		_, _ = fmt.Fprintf(sess.Stderr(), "Warning: Client's terminal is %q, forcing %q\r\n",
 			profileNames[r.ColorProfile()], profileNames[cp])
 		r.SetColorProfile(cp)
 	}
