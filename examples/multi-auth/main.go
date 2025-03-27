@@ -40,12 +40,12 @@ func main() {
 		// You can SSH into the server like so:
 		//		ssh -o PreferredAuthentications=none -p 23234 localhost
 		//		ssh -o PreferredAuthentications=password -p 23234 localhost
-		//		ssh -o PreferredAuthentications=public-key -p 23234 localhost
+		//		ssh -o PreferredAuthentications=publickey -p 23234 localhost
 		//		ssh -o PreferredAuthentications=keyboard-interactive -p 23234 localhost
 
 		// First, public-key authentication:
 		wish.WithPublicKeyAuth(func(_ ssh.Context, key ssh.PublicKey) bool {
-			log.Info("public-key")
+			log.Info("publickey")
 			for _, pubkey := range users {
 				parsed, _, _, _, _ := ssh.ParseAuthorizedKey(
 					[]byte(pubkey),
@@ -87,6 +87,7 @@ func main() {
 			func(next ssh.Handler) ssh.Handler {
 				return func(sess ssh.Session) {
 					wish.Println(sess, "Authorized!")
+					wish.Println(sess, sess.PublicKey())
 				}
 			},
 		),
