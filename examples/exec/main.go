@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/charmbracelet/log"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/activeterm"
-	"github.com/charmbracelet/wish/logging"
+	"github.com/charmbracelet/wish/v2"
+	"github.com/charmbracelet/wish/v2/activeterm"
+	"github.com/charmbracelet/wish/v2/logging"
 )
 
 const (

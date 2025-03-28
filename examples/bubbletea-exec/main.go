@@ -10,14 +10,14 @@ import (
 	"syscall"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
+	tea "github.com/charmbracelet/bubbletea/v2"
+	"github.com/charmbracelet/lipgloss/v2"
+	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/activeterm"
-	"github.com/charmbracelet/wish/bubbletea"
-	"github.com/charmbracelet/wish/logging"
+	"github.com/charmbracelet/wish/v2"
+	"github.com/charmbracelet/wish/v2/activeterm"
+	"github.com/charmbracelet/wish/v2/bubbletea"
+	"github.com/charmbracelet/wish/v2/logging"
 	"github.com/charmbracelet/x/editor"
 )
 
@@ -67,15 +67,13 @@ func main() {
 }
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-	// Create a lipgloss.Renderer for the session
-	renderer := bubbletea.MakeRenderer(s)
 	// Set up the model with the current session and styles.
 	// We'll use the session to call wish.Command, which makes it compatible
 	// with tea.Command.
 	m := model{
 		sess:     s,
-		style:    renderer.NewStyle().Foreground(lipgloss.Color("8")),
-		errStyle: renderer.NewStyle().Foreground(lipgloss.Color("3")),
+		style:    lipgloss.NewStyle().Foreground(lipgloss.Color("8")),
+		errStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("3")),
 	}
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
@@ -120,7 +118,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// We can also execute a shell and give it over to the user.
 			// Note that this session won't have control, so it can't run tasks
 			// in background, suspend, etc.
-			c := wish.Command(m.sess, "bash", "-im")
+			c := wish.Command(m.sess, "htop")
 			if runtime.GOOS == "windows" {
 				c = wish.Command(m.sess, "powershell")
 			}

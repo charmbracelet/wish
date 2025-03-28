@@ -3,7 +3,7 @@ package activeterm
 
 import (
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
+	"github.com/charmbracelet/wish/v2"
 )
 
 // Middleware will exit 1 connections trying with no active terminals.
