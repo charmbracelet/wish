@@ -90,7 +90,12 @@ func MiddlewareWithProgramHandler(handler ProgramHandler) wish.Middleware {
 // MakeOptions returns the tea.WithInput and tea.WithOutput program options
 // taking into account possible Emulated or Allocated PTYs.
 func MakeOptions(sess ssh.Session) []tea.ProgramOption {
-	return makeOpts(sess)
+	return append(makeOpts(sess), tea.WithFilter(func(_ tea.Model, msg tea.Msg) tea.Msg {
+		if _, ok := msg.(tea.SuspendMsg); ok {
+			return tea.ResumeMsg{}
+		}
+		return msg
+	}))
 }
 
 func newDefaultProgramHandler(handler Handler) ProgramHandler {
