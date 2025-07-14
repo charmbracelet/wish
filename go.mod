@@ -11,7 +11,7 @@ require (
 	github.com/charmbracelet/log v0.4.2
 	github.com/charmbracelet/ssh v0.0.0-20250128164007-98fd5ae11894
 	github.com/charmbracelet/x/ansi v0.9.3
-	github.com/charmbracelet/x/input v0.3.4
+	github.com/charmbracelet/x/input v0.3.7
 	github.com/charmbracelet/x/term v0.2.1
 	github.com/go-git/go-git/v5 v5.16.2
 	github.com/google/go-cmp v0.7.0
@@ -35,7 +35,7 @@ require (
 	github.com/charmbracelet/x/conpty v0.1.0 // indirect
 	github.com/charmbracelet/x/errors v0.0.0-20240508181413-e8d8b6e2de86 // indirect
 	github.com/charmbracelet/x/termios v0.1.0 // indirect
-	github.com/charmbracelet/x/windows v0.2.0 // indirect
+	github.com/charmbracelet/x/windows v0.2.1 // indirect
 	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/creack/pty v1.1.21 // indirect
 	github.com/cyphar/filepath-securejoin v0.4.1 // indirect
