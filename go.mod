@@ -20,7 +20,7 @@ require (
 	github.com/matryer/is v1.4.1
 	github.com/muesli/termenv v0.16.0
 	golang.org/x/crypto v0.39.0
-	golang.org/x/sync v0.15.0
+	golang.org/x/sync v0.16.0
 	golang.org/x/time v0.12.0
 )
 
