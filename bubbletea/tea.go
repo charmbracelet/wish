@@ -104,6 +104,6 @@ func newDefaultProgramHandler(handler Handler) ProgramHandler {
 		if m == nil {
 			return nil
 		}
-		return tea.NewProgram(m, append(opts, makeOpts(s)...)...)
+		return tea.NewProgram(m, append(opts, MakeOptions(s)...)...)
 	}
 }
