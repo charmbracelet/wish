@@ -1,11 +1,11 @@
 module github.com/charmbracelet/wish
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.24.1
 
 require (
-	github.com/charmbracelet/bubbletea v1.3.6
+	github.com/charmbracelet/bubbletea v1.3.7
 	github.com/charmbracelet/keygen v0.5.3
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/charmbracelet/log v0.4.2
@@ -20,8 +20,8 @@ require (
 	github.com/matryer/is v1.4.1
 	github.com/muesli/termenv v0.16.0
 	golang.org/x/crypto v0.41.0
-	golang.org/x/sync v0.16.0
-	golang.org/x/time v0.12.0
+	golang.org/x/sync v0.17.0
+	golang.org/x/time v0.13.0
 )
 
 require (
