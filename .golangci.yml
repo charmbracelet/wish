@@ -1,42 +1,44 @@
+version: "2"
 run:
   tests: false
-
-issues:
-  include:
-    - EXC0001
-    - EXC0005
-    - EXC0011
-    - EXC0012
-    - EXC0013
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
-
 linters:
   enable:
     - bodyclose
-    - depguard
-    - dupl
+    - exhaustive
     - goconst
     - godot
-    - godox
-    - gofumpt
-    - goimports
+    - gomoddirectives
     - goprintffuncname
     - gosec
     - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - noctx
+    - nolintlint
     - prealloc
     - revive
     - rowserrcheck
     - sqlclosecheck
+    - tparallel
     - unconvert
     - unparam
     - whitespace
-
-linters-settings:
-  depguard:
+    - wrapcheck
+  exclusions:
     rules:
-      main:
-        deny:
-          - pkg: "github.com/gliderlabs/ssh"
-            desc: "use github.com/charmbracelet/ssh instead"
+      - text: '(slog|log)\.\w+'
+        linters:
+          - noctx
+    generated: lax
+    presets:
+      - common-false-positives
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  exclusions:
+    generated: lax
