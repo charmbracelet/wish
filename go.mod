@@ -13,7 +13,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.10.2
 	github.com/charmbracelet/x/input v0.3.7
 	github.com/charmbracelet/x/term v0.2.1
-	github.com/go-git/go-git/v5 v5.16.2
+	github.com/go-git/go-git/v5 v5.16.3
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/lucasb-eyer/go-colorful v1.3.0
