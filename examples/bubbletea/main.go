@@ -13,8 +13,8 @@ import (
 	"syscall"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/v2"
@@ -93,7 +93,6 @@ func (m model) Init() tea.Cmd {
 	// default values
 	return tea.Batch(
 		tea.RequestBackgroundColor,
-		tea.EnterAltScreen,
 	)
 }
 
@@ -117,7 +116,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) View() string {
+func (m model) View() tea.View {
 	s := fmt.Sprintf("Your term is %s\nYour window size is %dx%d\nBackground: %s\nColor Profile: %s", m.term, m.width, m.height, m.bg, m.profile)
-	return m.txtStyle.Render(s) + "\n\n" + m.quitStyle.Render("Press 'q' to quit\n")
+	v := tea.NewView(m.txtStyle.Render(s) + "\n\n" + m.quitStyle.Render("Press 'q' to quit\n"))
+	v.AltScreen = true
+	return v
 }

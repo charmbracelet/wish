@@ -45,13 +45,15 @@ func middleware(sh ssh.Handler) ssh.Handler {
 
 func main() {
 	s, err := wish.NewServer(
+		// We need to allocate PTYs to read input from the user. Otherwise, we
+		// won't be able to read input from the user.
+		ssh.AllocatePty(),
 		wish.WithHostKeyPath("id_cat"),
 		wish.WithAddress(":2022"),
 		wish.WithMiddleware(
 			logging.MiddlewareWithLogger(log.Default()),
 			middleware,
 		),
-		ssh.AllocatePty(),
 	)
 	if err != nil {
 		log.Fatalf("failed to create server: %v", err)

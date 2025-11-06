@@ -134,7 +134,7 @@ func (s *sftpHandler) Fileread(r *sftp.Request) (io.ReaderAt, error) {
 		flags |= os.O_WRONLY
 	}
 
-	f, err := os.OpenFile(filepath.Join(s.root, r.Filepath), flags, 0600)
+	f, err := os.OpenFile(filepath.Join(s.root, r.Filepath), flags, 0o600)
 	if err != nil {
 		return nil, err
 	}

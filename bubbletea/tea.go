@@ -4,7 +4,7 @@ package bubbletea
 import (
 	"context"
 
-	tea "github.com/charmbracelet/bubbletea/v2"
+	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/v2"

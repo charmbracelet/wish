@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/charmbracelet/bubbles/v2/textarea"
-	"github.com/charmbracelet/bubbles/v2/viewport"
-	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
+	"charm.land/bubbles/v2/textarea"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/v2"
@@ -109,7 +109,7 @@ type model struct {
 	viewport    viewport.Model
 	messages    []string
 	id          string
-	textarea    textarea.Model
+	textarea    *textarea.Model
 	senderStyle lipgloss.Style
 	err         error
 }
@@ -126,7 +126,9 @@ func initialModel() model {
 	ta.SetHeight(3)
 
 	// Remove cursor line styling
-	ta.Styles.Focused.CursorLine = lipgloss.NewStyle()
+	taStyles := ta.Styles()
+	taStyles.Focused.CursorLine = lipgloss.NewStyle()
+	ta.SetStyles(taStyles)
 
 	ta.ShowLineNumbers = false
 
@@ -192,10 +194,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(tiCmd, vpCmd)
 }
 
-func (m model) View() string {
-	return fmt.Sprintf(
+func (m model) View() tea.View {
+	v := tea.NewView(fmt.Sprintf(
 		"%s\n\n%s",
 		m.viewport.View(),
 		m.textarea.View(),
-	) + "\n\n"
+	) + "\n\n")
+	return v
 }

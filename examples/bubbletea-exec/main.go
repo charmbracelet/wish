@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea/v2"
-	"github.com/charmbracelet/lipgloss/v2"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/v2"
@@ -75,7 +75,7 @@ func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
 		style:    lipgloss.NewStyle().Foreground(lipgloss.Color("8")),
 		errStyle: lipgloss.NewStyle().Foreground(lipgloss.Color("3")),
 	}
-	return m, []tea.ProgramOption{tea.WithAltScreen()}
+	return m, []tea.ProgramOption{}
 }
 
 type model struct {
@@ -140,9 +140,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) View() string {
+func (m model) View() tea.View {
+	var v tea.View
 	if m.err != nil {
-		return m.errStyle.Render(m.err.Error() + "\n")
+		v.SetContent(m.errStyle.Render(m.err.Error() + "\n"))
+		return v
 	}
-	return m.style.Render("Press 'e' to edit, 's' to hop into a shell, or 'q' to quit...\n")
+
+	v.SetContent(m.style.Render("Press 'e' to edit, 's' to hop into a shell, or 'q' to quit...\n"))
+	return v
 }

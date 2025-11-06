@@ -13,7 +13,7 @@ import (
 	"syscall"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea/v2"
+	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
 	"github.com/charmbracelet/wish/v2"
@@ -100,7 +100,7 @@ type model struct {
 type timeMsg time.Time
 
 func (m model) Init() tea.Cmd {
-	return tea.EnterAltScreen
+	return nil
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -119,10 +119,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) View() string {
+func (m model) View() tea.View {
 	s := "Your term is %s\n"
 	s += "Your window size is x: %d y: %d\n"
 	s += "Time: " + m.time.Format(time.RFC1123) + "\n\n"
 	s += "Press 'q' to quit\n"
-	return fmt.Sprintf(s, m.term, m.width, m.height)
+	content := fmt.Sprintf(s, m.term, m.width, m.height)
+	v := tea.NewView(content)
+	v.AltScreen = true
+	return v
 }
