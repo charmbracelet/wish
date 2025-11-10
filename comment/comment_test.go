@@ -3,8 +3,8 @@ package comment
 import (
 	"testing"
 
+	"charm.land/wish/v2/testsession"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish/v2/testsession"
 	gossh "golang.org/x/crypto/ssh"
 )
 

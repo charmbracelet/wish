@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"charm.land/wish/v2/testsession"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish/v2/testsession"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/time/rate"
 )

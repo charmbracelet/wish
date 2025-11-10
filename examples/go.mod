@@ -6,9 +6,9 @@ require (
 	charm.land/bubbles/v2 v2.0.0-beta.1.0.20251106192719-c2b822795a69
 	charm.land/bubbletea/v2 v2.0.0-rc.1.0.20251106192006-06c0cda318b3
 	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106192539-4b304240aab7
+	charm.land/wish/v2 v2.0.0-00010101000000-000000000000
 	github.com/charmbracelet/log/v2 v2.0.0-20251106192421-eb64aaa963a0
 	github.com/charmbracelet/ssh v0.0.0-20241211182756-4fe22b0f1b7c
-	github.com/charmbracelet/wish/v2 v2.0.0-00010101000000-000000000000
 	github.com/charmbracelet/x/editor v0.1.0
 	github.com/pkg/sftp v1.13.7
 	github.com/spf13/cobra v1.8.1
@@ -63,4 +63,4 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
-replace github.com/charmbracelet/wish/v2 => ../
+replace charm.land/wish/v2 => ../

@@ -1,4 +1,4 @@
-module github.com/charmbracelet/wish/v2
+module charm.land/wish/v2
 
 go 1.24.2
 

@@ -9,9 +9,9 @@ import (
 	"sync"
 	"testing"
 
+	"charm.land/wish/v2"
 	"github.com/charmbracelet/keygen"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish/v2"
 )
 
 func TestGitMiddleware(t *testing.T) {
