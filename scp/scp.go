@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	"charm.land/wish/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish/v2"
 )
 
 // CopyToClientHandler is a handler that can be implemented to handle files

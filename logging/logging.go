@@ -3,9 +3,9 @@ package logging
 import (
 	"time"
 
+	"charm.land/wish/v2"
 	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish/v2"
 )
 
 // Middleware provides basic connection logging.
