@@ -15,9 +15,9 @@ import (
 	"syscall"
 	"time"
 
+	"charm.land/log/v2"
 	"charm.land/wish/v2"
 	"charm.land/wish/v2/scp"
-	"github.com/charmbracelet/log/v2"
 	"github.com/charmbracelet/ssh"
 	"github.com/pkg/sftp"
 )

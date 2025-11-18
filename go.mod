@@ -4,6 +4,7 @@ go 1.24.2
 
 require (
 	charm.land/bubbletea/v2 v2.0.0-rc.1.0.20251106192006-06c0cda318b3
+	charm.land/log/v2 v2.0.0-20251110204020-529bb77f35da
 	github.com/charmbracelet/colorprofile v0.3.3
 	github.com/charmbracelet/keygen v0.5.4
 	github.com/charmbracelet/log/v2 v2.0.0-20251106192421-eb64aaa963a0
@@ -21,7 +22,7 @@ require (
 	charm.land/lipgloss/v2 v2.0.0-beta.3.0.20251106192539-4b304240aab7 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/ProtonMail/go-crypto v1.1.5 // indirect
+	github.com/ProtonMail/go-crypto v1.1.6 // indirect
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/charmbracelet/ultraviolet v0.0.0-20251110160311-9f855fac07a4 // indirect
 	github.com/charmbracelet/x/ansi v0.11.0 // indirect

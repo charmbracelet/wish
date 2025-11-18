@@ -162,7 +162,11 @@ useradd --system --user-group --create-home myapp
 
 That should do it.
 
-###
+## Contributing
+
+See [contributing][contribute].
+
+[contribute]: https://github.com/charmbracelet/wish/contribute
 
 ## Feedback
 
