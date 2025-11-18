@@ -21,8 +21,6 @@ github.com/charmbracelet/colorprofile v0.3.3 h1:DjJzJtLP6/NZ8p7Cgjno0CKGr7wwRJGx
 github.com/charmbracelet/colorprofile v0.3.3/go.mod h1:nB1FugsAbzq284eJcjfah2nhdSLppN2NqvfotkfRYP4=
 github.com/charmbracelet/keygen v0.5.4 h1:XQYgf6UEaTGgQSSmiPpIQ78WfseNQp4Pz8N/c1OsrdA=
 github.com/charmbracelet/keygen v0.5.4/go.mod h1:t4oBRr41bvK7FaJsAaAQhhkUuHslzFXVjOBwA55CZNM=
-github.com/charmbracelet/log/v2 v2.0.0-20251106192421-eb64aaa963a0 h1:lxHzxsHd4P7o7+5D5OcEItYkQ1xY3ovNg8Dc5ftd3rI=
-github.com/charmbracelet/log/v2 v2.0.0-20251106192421-eb64aaa963a0/go.mod h1:Q7oMtlboDPnnrYiJDXNwdWmJblOmuOnycPKczlVju6I=
 github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309 h1:dCVbCRRtg9+tsfiTXTp0WupDlHruAXyp+YoxGVofHHc=
 github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309/go.mod h1:R9cISUs5kAH4Cq/rguNbSwcR+slE5Dfm8FEs//uoIGE=
 github.com/charmbracelet/ultraviolet v0.0.0-20251110160311-9f855fac07a4 h1:AsCU8EwrCzZ8nVCEf8U1qmUzP+a8K2c05Acq82XF+DQ=
