@@ -3,8 +3,8 @@ package elapsed
 import (
 	"time"
 
+	"charm.land/wish/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
 )
 
 // MiddlewareWithFormat returns a middleware that logs the elapsed time of the

@@ -13,13 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/log"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/log/v2"
+	"charm.land/wish/v2"
+	"charm.land/wish/v2/bubbletea"
+	"charm.land/wish/v2/logging"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/bubbletea"
-	"github.com/charmbracelet/wish/logging"
-	"github.com/muesli/termenv"
 )
 
 const (
@@ -29,6 +28,7 @@ const (
 
 func main() {
 	s, err := wish.NewServer(
+		ssh.AllocatePty(),
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
@@ -84,9 +84,9 @@ func myCustomBubbleteaMiddleware() wish.Middleware {
 			height: pty.Window.Height,
 			time:   time.Now(),
 		}
-		return newProg(m, append(bubbletea.MakeOptions(s), tea.WithAltScreen())...)
+		return newProg(m, bubbletea.MakeOptions(s)...)
 	}
-	return bubbletea.MiddlewareWithProgramHandler(teaHandler, termenv.ANSI256)
+	return bubbletea.MiddlewareWithProgramHandler(teaHandler)
 }
 
 // Just a generic tea.Model to demo terminal information of ssh.
@@ -119,10 +119,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) View() string {
+func (m model) View() tea.View {
 	s := "Your term is %s\n"
 	s += "Your window size is x: %d y: %d\n"
 	s += "Time: " + m.time.Format(time.RFC1123) + "\n\n"
 	s += "Press 'q' to quit\n"
-	return fmt.Sprintf(s, m.term, m.width, m.height)
+	content := fmt.Sprintf(s, m.term, m.width, m.height)
+	v := tea.NewView(content)
+	v.AltScreen = true
+	return v
 }

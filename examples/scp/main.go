@@ -15,10 +15,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
+	"charm.land/wish/v2"
+	"charm.land/wish/v2/scp"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/scp"
 	"github.com/pkg/sftp"
 )
 
@@ -134,7 +134,7 @@ func (s *sftpHandler) Fileread(r *sftp.Request) (io.ReaderAt, error) {
 		flags |= os.O_WRONLY
 	}
 
-	f, err := os.OpenFile(filepath.Join(s.root, r.Filepath), flags, 0600)
+	f, err := os.OpenFile(filepath.Join(s.root, r.Filepath), flags, 0o600)
 	if err != nil {
 		return nil, err
 	}

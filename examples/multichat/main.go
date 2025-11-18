@@ -10,17 +10,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/charmbracelet/bubbles/textarea"
-	"github.com/charmbracelet/bubbles/viewport"
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/log"
+	"charm.land/bubbles/v2/textarea"
+	"charm.land/bubbles/v2/viewport"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+	"charm.land/log/v2"
+	"charm.land/wish/v2"
+	"charm.land/wish/v2/activeterm"
+	"charm.land/wish/v2/bubbletea"
+	"charm.land/wish/v2/logging"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/activeterm"
-	"github.com/charmbracelet/wish/bubbletea"
-	"github.com/charmbracelet/wish/logging"
-	"github.com/muesli/termenv"
 )
 
 const (
@@ -47,7 +46,7 @@ func newApp() *app {
 		wish.WithAddress(net.JoinHostPort(host, port)),
 		wish.WithHostKeyPath(".ssh/id_ed25519"),
 		wish.WithMiddleware(
-			bubbletea.MiddlewareWithProgramHandler(a.ProgramHandler, termenv.ANSI256),
+			bubbletea.MiddlewareWithProgramHandler(a.ProgramHandler),
 			activeterm.Middleware(),
 			logging.Middleware(),
 		),
@@ -110,7 +109,7 @@ type model struct {
 	viewport    viewport.Model
 	messages    []string
 	id          string
-	textarea    textarea.Model
+	textarea    *textarea.Model
 	senderStyle lipgloss.Style
 	err         error
 }
@@ -127,11 +126,13 @@ func initialModel() model {
 	ta.SetHeight(3)
 
 	// Remove cursor line styling
-	ta.FocusedStyle.CursorLine = lipgloss.NewStyle()
+	taStyles := ta.Styles()
+	taStyles.Focused.CursorLine = lipgloss.NewStyle()
+	ta.SetStyles(taStyles)
 
 	ta.ShowLineNumbers = false
 
-	vp := viewport.New(30, 5)
+	vp := viewport.New(viewport.WithWidth(30), viewport.WithHeight(5))
 	vp.SetContent(`Welcome to the chat room!
 Type a message and press Enter to send.`)
 
@@ -161,8 +162,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.Type {
-		case tea.KeyCtrlC, tea.KeyEsc:
+		switch msg.Key().Mod {
+		case tea.ModCtrl: // We're only interested in ctrl+<key>
+			switch msg.Key().Code {
+			case 'c':
+				return m, tea.Quit
+			}
+		}
+		switch msg.Key().Code {
+		case tea.KeyEsc:
 			return m, tea.Quit
 		case tea.KeyEnter:
 			m.app.send(chatMsg{
@@ -186,10 +194,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(tiCmd, vpCmd)
 }
 
-func (m model) View() string {
-	return fmt.Sprintf(
+func (m model) View() tea.View {
+	v := tea.NewView(fmt.Sprintf(
 		"%s\n\n%s",
 		m.viewport.View(),
 		m.textarea.View(),
-	) + "\n\n"
+	) + "\n\n")
+	return v
 }
