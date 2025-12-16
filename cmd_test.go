@@ -98,12 +98,52 @@ func TestCommandPtyError(t *testing.T) {
 	}
 }
 
+// TestCommandSetStdio verifies that SetStdin, SetStdout, SetStderr methods
+// properly store custom I/O handles. This is important for tea.Exec integration
+// where Bubble Tea sets these to share I/O with the child process.
+func TestCommandSetStdio(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows requires all stdio to be set")
+	}
+	srv := &ssh.Server{
+		Handler: func(s ssh.Session) {
+			cmd := Command(s, "echo", "custom")
+			var buf bytes.Buffer
+			cmd.SetStdout(&buf)
+			if err := cmd.Run(); err != nil {
+				Fatal(s, err)
+			}
+			// Verify that output went to our custom buffer
+			if !strings.Contains(buf.String(), "custom") {
+				Fatal(s, "expected output in custom buffer")
+			}
+			// Write success marker to session
+			_, _ = s.Write([]byte("SUCCESS"))
+		},
+	}
+	if err := ssh.AllocatePty()(srv); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	sess := testsession.New(t, srv, nil)
+	if err := sess.RequestPty("xterm", 500, 200, nil); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	var stdout bytes.Buffer
+	sess.Stdout = &stdout
+	if err := sess.Run(""); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	expectContains(t, stdout.String(), "SUCCESS")
+}
+
 func runEcho(s ssh.Session, str string) {
 	cmd := Command(s, "echo", str)
 	if runtime.GOOS == "windows" {
 		cmd = Command(s, "cmd", "/C", "echo", str)
 	}
-	// these should do nothing...
+	// Setting nil should be safe and not change behavior
 	cmd.SetStderr(nil)
 	cmd.SetStdin(nil)
 	cmd.SetStdout(nil)
