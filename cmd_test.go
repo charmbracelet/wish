@@ -102,14 +102,14 @@ func TestCommandPtyError(t *testing.T) {
 // properly store custom I/O handles. This is important for tea.Exec integration
 // where Bubble Tea sets these to share I/O with the child process.
 func TestCommandSetStdio(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("Windows requires all stdio to be set")
-	}
 	srv := &ssh.Server{
 		Handler: func(s ssh.Session) {
 			cmd := Command(s, "echo", "custom")
 			var buf bytes.Buffer
+			// Set all stdio handles (required for custom stdio path)
+			cmd.SetStdin(strings.NewReader(""))
 			cmd.SetStdout(&buf)
+			cmd.SetStderr(&buf)
 			if err := cmd.Run(); err != nil {
 				Fatal(s, err)
 			}
