@@ -6,28 +6,17 @@ package wish
 import "github.com/charmbracelet/ssh"
 
 func (c *Cmd) doRun(ppty ssh.Pty, _ <-chan ssh.Window) error {
-	// If custom stdio was set (e.g., by tea.Exec), use it instead of PTY slave.
+	// If ALL custom stdio are set (e.g., by tea.Exec), use them instead of PTY.
 	// This ensures proper sequencing of alt screen escape sequences when using
 	// tea.Exec with bubbletea.Middleware.
-	if c.stdin != nil || c.stdout != nil || c.stderr != nil {
-		if c.stdin != nil {
-			c.cmd.Stdin = c.stdin
-		} else {
-			c.cmd.Stdin = ppty.Slave
-		}
-		if c.stdout != nil {
-			c.cmd.Stdout = c.stdout
-		} else {
-			c.cmd.Stdout = ppty.Slave
-		}
-		if c.stderr != nil {
-			c.cmd.Stderr = c.stderr
-		} else {
-			c.cmd.Stderr = ppty.Slave
-		}
+	// We require all three to be set to avoid deadlocks with partial PTY usage.
+	if c.stdin != nil && c.stdout != nil && c.stderr != nil {
+		c.cmd.Stdin = c.stdin
+		c.cmd.Stdout = c.stdout
+		c.cmd.Stderr = c.stderr
 		return c.cmd.Run()
 	}
-	// Original behavior: use PTY slave for all stdio via ppty.Start()
+	// Original behavior: use PTY for all stdio via ppty.Start()
 	if err := ppty.Start(c.cmd); err != nil {
 		return err
 	}

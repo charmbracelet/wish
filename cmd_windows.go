@@ -4,10 +4,10 @@
 package wish
 
 import (
-	"fmt"
-	"time"
+	"context"
 
 	"github.com/charmbracelet/ssh"
+	"github.com/charmbracelet/x/xpty"
 )
 
 func (c *Cmd) doRun(ppty ssh.Pty, _ <-chan ssh.Window) error {
@@ -22,20 +22,11 @@ func (c *Cmd) doRun(ppty ssh.Pty, _ <-chan ssh.Window) error {
 		c.cmd.Stderr = c.stderr
 		return c.cmd.Run()
 	}
-	// Original behavior: use PTY slave for all stdio via ppty.Start()
+	// Original behavior: use PTY for all stdio via ppty.Start()
 	if err := ppty.Start(c.cmd); err != nil {
 		return err
 	}
-
-	start := time.Now()
-	for c.cmd.ProcessState == nil {
-		if time.Since(start) > time.Second*10 {
-			return fmt.Errorf("could not start process")
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	if !c.cmd.ProcessState.Success() {
-		return fmt.Errorf("process failed: exit %d", c.cmd.ProcessState.ExitCode())
-	}
-	return nil
+	// Use xpty.WaitProcess for cross-platform process waiting.
+	// On Windows, cmd.Wait() doesn't work correctly with ConPTY.
+	return xpty.WaitProcess(context.Background(), c.cmd)
 }
