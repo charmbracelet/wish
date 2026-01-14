@@ -8,6 +8,7 @@ require (
 	github.com/charmbracelet/colorprofile v0.3.3
 	github.com/charmbracelet/keygen v0.5.4
 	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
+	github.com/charmbracelet/x/xpty v0.1.3
 	github.com/go-git/go-git/v5 v5.13.1
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7

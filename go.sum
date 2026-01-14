@@ -39,6 +39,8 @@ github.com/charmbracelet/x/termios v0.1.1 h1:o3Q2bT8eqzGnGPOYheoYS8eEleT5ZVNYNy8
 github.com/charmbracelet/x/termios v0.1.1/go.mod h1:rB7fnv1TgOPOyyKRJ9o+AsTU/vK5WHJ2ivHeut/Pcwo=
 github.com/charmbracelet/x/windows v0.2.2 h1:IofanmuvaxnKHuV04sC0eBy/smG6kIKrWG2/jYn2GuM=
 github.com/charmbracelet/x/windows v0.2.2/go.mod h1:/8XtdKZzedat74NQFn0NGlGL4soHB0YQZrETF96h75k=
+github.com/charmbracelet/x/xpty v0.1.3 h1:eGSitii4suhzrISYH50ZfufV3v085BXQwIytcOdFSsw=
+github.com/charmbracelet/x/xpty v0.1.3/go.mod h1:poPYpWuLDBFCKmKLDnhBp51ATa0ooD8FhypRwEFtH3Y=
 github.com/clipperhouse/displaywidth v0.5.0 h1:AIG5vQaSL2EKqzt0M9JMnvNxOCRTKUc4vUnLWGgP89I=
 github.com/clipperhouse/displaywidth v0.5.0/go.mod h1:R+kHuzaYWFkTm7xoMmK1lFydbci4X2CicfbGstSGg0o=
 github.com/clipperhouse/stringish v0.1.1 h1:+NSqMOr3GR6k1FdRhhnXrLfztGzuG+VuFDfatpWHKCs=
