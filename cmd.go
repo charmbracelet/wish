@@ -15,7 +15,7 @@ import (
 // itself.
 func CommandContext(ctx context.Context, s ssh.Session, name string, args ...string) *Cmd {
 	cmd := exec.CommandContext(ctx, name, args...)
-	return &Cmd{s, cmd}
+	return &Cmd{sess: s, cmd: cmd}
 }
 
 // Command sets stdin, stdout, and stderr to the current session's PTY.
@@ -30,8 +30,11 @@ func Command(s ssh.Session, name string, args ...string) *Cmd {
 
 // Cmd wraps a *exec.Cmd and a ssh.Pty so a command can be properly run.
 type Cmd struct {
-	sess ssh.Session
-	cmd  *exec.Cmd
+	sess   ssh.Session
+	cmd    *exec.Cmd
+	stdin  io.Reader
+	stdout io.Writer
+	stderr io.Writer
 }
 
 // SetDir set the underlying exec.Cmd env.
@@ -62,10 +65,16 @@ func (c *Cmd) Run() error {
 var _ tea.ExecCommand = &Cmd{}
 
 // SetStderr conforms with tea.ExecCommand.
-func (*Cmd) SetStderr(io.Writer) {}
+func (c *Cmd) SetStderr(w io.Writer) {
+	c.stderr = w
+}
 
 // SetStdin conforms with tea.ExecCommand.
-func (*Cmd) SetStdin(io.Reader) {}
+func (c *Cmd) SetStdin(r io.Reader) {
+	c.stdin = r
+}
 
 // SetStdout conforms with tea.ExecCommand.
-func (*Cmd) SetStdout(io.Writer) {}
+func (c *Cmd) SetStdout(w io.Writer) {
+	c.stdout = w
+}
