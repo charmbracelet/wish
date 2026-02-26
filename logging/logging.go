@@ -3,9 +3,9 @@ package logging
 import (
 	"time"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
+	"charm.land/wish/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
 )
 
 // Middleware provides basic connection logging.
@@ -13,7 +13,7 @@ import (
 // window dimensions, client version, and if the auth was public key based.
 // Disconnect will log the remote address and connection duration.
 //
-// It will use charmbracelet/log.StandardLog() by default.
+// It will use charm.land/log.StandardLog() by default.
 func Middleware() wish.Middleware {
 	return MiddlewareWithLogger(log.StandardLog())
 }
@@ -59,7 +59,7 @@ func MiddlewareWithLogger(logger Logger) wish.Middleware {
 // window dimensions, client version, and if the auth was public key based.
 // Disconnect will log the remote address and connection duration.
 //
-// It will use the charmbracelet/log.Default() and Info level by default.
+// It will use the charm.land/log.Default() and Info level by default.
 func StructuredMiddleware() wish.Middleware {
 	return StructuredMiddlewareWithLogger(log.Default(), log.InfoLevel)
 }

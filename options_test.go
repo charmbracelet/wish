@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"charm.land/wish/v2/testsession"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish/testsession"
 	gossh "golang.org/x/crypto/ssh"
 )
 

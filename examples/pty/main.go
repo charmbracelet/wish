@@ -11,12 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
+	"charm.land/wish/v2"
+	"charm.land/wish/v2/activeterm"
+	"charm.land/wish/v2/logging"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/activeterm"
-	"github.com/charmbracelet/wish/bubbletea"
-	"github.com/charmbracelet/wish/logging"
 )
 
 const (
@@ -36,18 +35,11 @@ func main() {
 			func(next ssh.Handler) ssh.Handler {
 				return func(sess ssh.Session) {
 					pty, _, _ := sess.Pty()
-					renderer := bubbletea.MakeRenderer(sess)
-
-					bg := "light"
-					if renderer.HasDarkBackground() {
-						bg = "dark"
-					}
 
 					wish.Printf(sess, "Hello, world!\r\n")
 					wish.Printf(sess, "Term: %s\r\n", pty.Term)
 					wish.Printf(sess, "PTY: %s\r\n", pty.Slave.Name())
 					wish.Printf(sess, "FD: %d\r\n", pty.Slave.Fd())
-					wish.Printf(sess, "Background: %v\r\n", bg)
 					next(sess)
 				}
 			},

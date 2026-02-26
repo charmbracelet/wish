@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"charm.land/wish/v2/testsession"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish/testsession"
 )
 
 func TestCommandNoPty(t *testing.T) {
