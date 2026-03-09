@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	charm.land/bubbletea/v2 v2.0.2
-	charm.land/log/v2 v2.0.0-20260226140535-70af10b757e1
+	charm.land/log/v2 v2.0.0
 	github.com/charmbracelet/colorprofile v0.4.2
 	github.com/charmbracelet/keygen v0.5.4
 	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
