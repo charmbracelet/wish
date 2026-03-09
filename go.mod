@@ -4,7 +4,7 @@ go 1.25.8
 
 require (
 	charm.land/bubbletea/v2 v2.0.2
-	charm.land/log/v2 v2.0.0-20260226140535-70af10b757e1
+	charm.land/log/v2 v2.0.0
 	github.com/charmbracelet/colorprofile v0.4.2
 	github.com/charmbracelet/keygen v0.5.4
 	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
@@ -18,7 +18,7 @@ require (
 )
 
 require (
-	charm.land/lipgloss/v2 v2.0.0 // indirect
+	charm.land/lipgloss/v2 v2.0.1 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
@@ -53,6 +53,6 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 	golang.org/x/net v0.49.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
