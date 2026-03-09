@@ -1,5 +1,5 @@
 // Package comment provides a middleware that prints a comment at the end of a session.
-package comment //nolint:revive
+package comment
 
 import (
 	"charm.land/wish/v2"
