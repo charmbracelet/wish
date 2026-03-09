@@ -3,15 +3,15 @@ module examples
 go 1.25.8
 
 require (
-	charm.land/bubbles/v2 v2.0.0-beta.1.0.20251106192719-c2b822795a69
+	charm.land/bubbles/v2 v2.0.0
 	charm.land/bubbletea/v2 v2.0.2
-	charm.land/lipgloss/v2 v2.0.0
+	charm.land/lipgloss/v2 v2.0.1
 	charm.land/log/v2 v2.0.0-20260226140535-70af10b757e1
 	charm.land/wish/v2 v2.0.0-00010101000000-000000000000
 	github.com/charmbracelet/ssh v0.0.0-20250826160808-ebfa259c7309
-	github.com/charmbracelet/x/editor v0.1.0
-	github.com/pkg/sftp v1.13.7
-	github.com/spf13/cobra v1.8.1
+	github.com/charmbracelet/x/editor v0.2.0
+	github.com/pkg/sftp v1.13.10
+	github.com/spf13/cobra v1.10.2
 	golang.org/x/crypto v0.48.0
 )
 
@@ -46,7 +46,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
-	github.com/mattn/go-runewidth v0.0.19 // indirect
+	github.com/mattn/go-runewidth v0.0.20 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/pjbgf/sha1cd v0.3.2 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
@@ -57,8 +57,8 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 	golang.org/x/net v0.49.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
