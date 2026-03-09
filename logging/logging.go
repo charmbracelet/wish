@@ -1,3 +1,4 @@
+// Package logging provides basic connection logging middleware.
 package logging
 
 import (

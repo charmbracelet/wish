@@ -39,9 +39,10 @@ func Listen(tb testing.TB, srv *ssh.Server) string {
 
 func newLocalListener(tb testing.TB) net.Listener {
 	tb.Helper()
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	lc := &net.ListenConfig{}
+	l, err := lc.Listen(tb.Context(), "tcp", "127.0.0.1:0")
 	if err != nil {
-		if l, err = net.Listen("tcp6", "[::1]:0"); err != nil {
+		if l, err = lc.Listen(tb.Context(), "tcp6", "[::1]:0"); err != nil {
 			tb.Fatalf("failed to listen on a port: %v", err)
 		}
 	}
@@ -62,15 +63,15 @@ func NewClientSession(tb testing.TB, addr string, config *gossh.ClientConfig) (*
 		}
 	}
 	if config.HostKeyCallback == nil {
-		config.HostKeyCallback = gossh.InsecureIgnoreHostKey() // nolint: gosec
+		config.HostKeyCallback = gossh.InsecureIgnoreHostKey() //nolint:gosec
 	}
 	client, err := gossh.Dial("tcp", addr, config)
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 	session, err := client.NewSession()
 	if err != nil {
-		return nil, err
+		return nil, err //nolint:wrapcheck
 	}
 	tb.Cleanup(func() {
 		_ = session.Close()

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -64,13 +65,13 @@ func WithMiddleware(mw ...Middleware) ssh.Option {
 	}
 }
 
-// WithHostKeyFile returns an ssh.Option that sets the path to the private key.
+// WithHostKeyPath returns an ssh.Option that sets the path to the private key.
 func WithHostKeyPath(path string) ssh.Option {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		_, err := keygen.New(path, keygen.WithKeyType(keygen.Ed25519), keygen.WithWrite())
 		if err != nil {
 			return func(*ssh.Server) error {
-				return err
+				return fmt.Errorf("generate host key: %w", err)
 			}
 		}
 	}
@@ -86,7 +87,7 @@ func WithHostKeyPEM(pem []byte) ssh.Option {
 func WithAuthorizedKeys(path string) ssh.Option {
 	return func(s *ssh.Server) error {
 		if _, err := os.Stat(path); err != nil {
-			return err
+			return fmt.Errorf("stat %s: %w", path, err)
 		}
 		return WithPublicKeyAuth(func(_ ssh.Context, key ssh.PublicKey) bool {
 			return isAuthorized(path, func(k ssh.PublicKey) bool {
@@ -102,7 +103,7 @@ func WithAuthorizedKeys(path string) ssh.Option {
 func WithTrustedUserCAKeys(path string) ssh.Option {
 	return func(s *ssh.Server) error {
 		if _, err := os.Stat(path); err != nil {
-			return err
+			return fmt.Errorf("stat %s: %w", path, err)
 		}
 		return WithPublicKeyAuth(func(ctx ssh.Context, key ssh.PublicKey) bool {
 			cert, ok := key.(*gossh.Certificate)
@@ -139,7 +140,7 @@ func isAuthorized(path string, checker func(k ssh.PublicKey) bool) bool {
 		log.Warn("failed to parse", "path", path, "error", err)
 		return false
 	}
-	defer f.Close() // nolint: errcheck
+	defer f.Close() //nolint:errcheck
 
 	rd := bufio.NewReader(f)
 	for {

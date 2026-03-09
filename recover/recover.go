@@ -1,3 +1,4 @@
+// Package recover provides a middleware that recovers from panics.
 package recover
 
 import (

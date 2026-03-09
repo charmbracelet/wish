@@ -15,7 +15,7 @@ import (
 // start it with the tea.ProgramOptions returned.
 //
 // Deprecated: use Handler instead.
-type BubbleTeaHandler = Handler // nolint: revive
+type BubbleTeaHandler = Handler //nolint:revive
 
 // Handler is the function Bubble Tea apps implement to hook into the
 // SSH Middleware. This will create a new tea.Program for every connection and

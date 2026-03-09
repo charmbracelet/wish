@@ -148,7 +148,7 @@ func (e *FileEntry) Write(w io.Writer) error {
 // RootEntry is a root entry that can only have children.
 type RootEntry []Entry
 
-// Appennd the given entry to a child directory, or the the itself if
+// Append the given entry to a child directory, or the the itself if
 // none matches.
 func (e *RootEntry) Append(entry Entry) {
 	parent := normalizePath(filepath.Dir(entry.path()))
@@ -176,7 +176,7 @@ func (e *RootEntry) Append(entry Entry) {
 func (e *RootEntry) Write(w io.Writer) error {
 	for _, child := range *e {
 		if err := child.Write(w); err != nil {
-			return err
+			return err //nolint:wrapcheck
 		}
 	}
 	return nil
@@ -209,7 +209,7 @@ func (e *DirEntry) Write(w io.Writer) error {
 
 	for _, child := range e.Children {
 		if err := child.Write(w); err != nil {
-			return err
+			return err //nolint:wrapcheck
 		}
 	}
 
@@ -219,7 +219,7 @@ func (e *DirEntry) Write(w io.Writer) error {
 	return nil
 }
 
-// Appends an entry to the folder or their children.
+// Append adds an entry to the folder or their children.
 func (e *DirEntry) Append(entry Entry) {
 	parent := normalizePath(filepath.Dir(entry.path()))
 

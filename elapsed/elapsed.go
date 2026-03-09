@@ -1,3 +1,4 @@
+// Package elapsed provides a middleware that logs the elapsed time of a session.
 package elapsed
 
 import (
