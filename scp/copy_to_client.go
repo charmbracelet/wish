@@ -10,7 +10,7 @@ import (
 func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 	matches, err := handler.Glob(s, info.Path)
 	if err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
 	if len(matches) == 0 {
 		return fmt.Errorf("no files matching %q", info.Path)
@@ -27,7 +27,7 @@ func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 			entry, closer, err := handler.NewFileEntry(s, match)
 			closers = append(closers, closer)
 			if err != nil {
-				return err
+				return err //nolint:wrapcheck
 			}
 			rootEntry.Append(entry)
 			continue
@@ -41,13 +41,13 @@ func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 			if d.IsDir() {
 				entry, err := handler.NewDirEntry(s, path)
 				if err != nil {
-					return err
+					return err //nolint:wrapcheck
 				}
 				rootEntry.Append(entry)
 			} else {
 				entry, closer, err := handler.NewFileEntry(s, path)
 				if err != nil {
-					return err
+					return err //nolint:wrapcheck
 				}
 				closers = append(closers, closer)
 				rootEntry.Append(entry)
@@ -55,7 +55,7 @@ func copyToClient(s ssh.Session, info Info, handler CopyToClientHandler) error {
 
 			return nil
 		}); err != nil {
-			return err
+			return err //nolint:wrapcheck
 		}
 	}
 

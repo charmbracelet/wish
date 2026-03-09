@@ -1,3 +1,4 @@
+// Package git provides git server functionality for wish.
 package git
 
 import (
@@ -8,9 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
+	"charm.land/wish/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 )
@@ -47,7 +48,7 @@ const (
 // Implementers return the appropriate AccessLevel.
 //
 // Deprecated: use Hooks instead.
-type GitHooks = Hooks // nolint: revive
+type GitHooks = Hooks //nolint:revive
 
 // Hooks is an interface that allows for custom authorization
 // implementations and post push/fetch notifications. Prior to git access,
@@ -81,7 +82,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				access := gh.AuthRepo(repo, pk)
 				switch gc {
 				case "git-receive-pack":
-					switch access {
+					switch access { //nolint:exhaustive
 					case ReadWriteAccess, AdminAccess:
 						err := gitPack(s, gc, repoDir, repo)
 						if err != nil {
@@ -94,7 +95,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 					}
 					return
 				case "git-upload-archive", "git-upload-pack":
-					switch access {
+					switch access { //nolint:exhaustive
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
 						err := gitPack(s, gc, repoDir, repo)
 						switch err {
@@ -158,7 +159,7 @@ func fileExists(path string) (bool, error) {
 	if os.IsNotExist(err) {
 		return false, nil
 	}
-	return true, err
+	return true, fmt.Errorf("stat %s: %w", path, err)
 }
 
 // Fatal prints to the session's STDOUT as a git response and exit 1.
@@ -167,7 +168,7 @@ func Fatal(s ssh.Session, v ...interface{}) {
 	// hex length includes 4 byte length prefix and ending newline
 	pktLine := fmt.Sprintf("%04x%s\n", len(msg)+5, msg)
 	_, _ = wish.WriteString(s, pktLine)
-	s.Exit(1) // nolint: errcheck
+	_ = s.Exit(1)
 }
 
 // EnsureRepo makes sure the given repo exists within the given dir, and that
@@ -183,7 +184,7 @@ func EnsureRepo(dir, repo string) error {
 	if !exists {
 		err = os.MkdirAll(dir, os.ModeDir|os.FileMode(0o700))
 		if err != nil {
-			return err
+			return fmt.Errorf("mkdir %s: %w", dir, err)
 		}
 	}
 	rp := filepath.Join(dir, repo)
@@ -194,7 +195,7 @@ func EnsureRepo(dir, repo string) error {
 	if !exists {
 		_, err := git.PlainInit(rp, true)
 		if err != nil {
-			return err
+			return fmt.Errorf("git init %s: %w", rp, err)
 		}
 	}
 	return nil
@@ -206,7 +207,7 @@ func runGit(s ssh.Session, dir string, args ...string) error {
 	usi.Stdout = s
 	usi.Stdin = s
 	if err := usi.Run(); err != nil {
-		return err
+		return fmt.Errorf("git %v: %w", args, err)
 	}
 	return nil
 }
@@ -214,16 +215,16 @@ func runGit(s ssh.Session, dir string, args ...string) error {
 func ensureDefaultBranch(s ssh.Session, repoPath string) error {
 	r, err := git.PlainOpen(repoPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("open repo %s: %w", repoPath, err)
 	}
 	brs, err := r.Branches()
 	if err != nil {
-		return err
+		return fmt.Errorf("list branches: %w", err)
 	}
 	defer brs.Close()
 	fb, err := brs.Next()
 	if err != nil {
-		return err
+		return fmt.Errorf("next branch: %w", err)
 	}
 	// Rename the default branch to the first branch available
 	_, err = r.Head()

@@ -49,20 +49,20 @@ func (h *fileSystemHandler) prefixed(path string) string {
 func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
 	matches, err := filepath.Glob(h.prefixed(s))
 	if err != nil {
-		return []string{}, err
+		return []string{}, err //nolint:wrapcheck
 	}
 
 	for i, match := range matches {
 		matches[i], err = filepath.Rel(h.root, match)
 		if err != nil {
-			return []string{}, err
+			return []string{}, err //nolint:wrapcheck
 		}
 	}
 	return matches, nil
 }
 
 func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
-	return filepath.WalkDir(h.prefixed(path), func(path string, d fs.DirEntry, err error) error {
+	return filepath.WalkDir(h.prefixed(path), func(path string, d fs.DirEntry, err error) error { //nolint:wrapcheck
 		// if h.root is ./foo/bar, we don't want to server `bar` as the root,
 		// but instead its contents.
 		if path == h.root {

@@ -20,17 +20,17 @@ func NewServer(ops ...ssh.Option) (*ssh.Server, error) {
 	s := &ssh.Server{}
 	for _, op := range ops {
 		if err := s.SetOption(op); err != nil {
-			return nil, err
+			return nil, err //nolint:wrapcheck
 		}
 	}
 	if len(s.HostSigners) == 0 {
 		k, err := keygen.New("id_ed25519", keygen.WithKeyType(keygen.Ed25519), keygen.WithWrite())
 		if err != nil {
-			return nil, err
+			return nil, err //nolint:wrapcheck
 		}
 		err = s.SetOption(WithHostKeyPEM(k.RawPrivateKey()))
 		if err != nil {
-			return nil, err
+			return nil, err //nolint:wrapcheck
 		}
 	}
 	return s, nil
@@ -72,7 +72,7 @@ func Errorf(s ssh.Session, f string, v ...interface{}) {
 	_, _ = fmt.Fprintf(s.Stderr(), f, v...)
 }
 
-// Errorf formats according to the default format and prints to the session's STDERR.
+// Errorln formats according to the default format and prints to the session's STDERR.
 func Errorln(s ssh.Session, v ...interface{}) {
 	_, _ = fmt.Fprintln(s.Stderr(), v...)
 }
@@ -94,5 +94,5 @@ func Println(s ssh.Session, v ...interface{}) {
 
 // WriteString writes the given string to the session's STDOUT.
 func WriteString(s ssh.Session, v string) (int, error) {
-	return io.WriteString(s, v)
+	return io.WriteString(s, v) //nolint:wrapcheck
 }

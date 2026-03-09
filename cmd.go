@@ -1,11 +1,13 @@
+// Package wish provides utilities for building SSH servers.
 package wish
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os/exec"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/ssh"
 )
 
@@ -34,7 +36,7 @@ type Cmd struct {
 	cmd  *exec.Cmd
 }
 
-// SetDir set the underlying exec.Cmd env.
+// SetEnv sets the underlying exec.Cmd env.
 func (c *Cmd) SetEnv(env []string) {
 	c.cmd.Env = env
 }
@@ -54,7 +56,10 @@ func (c *Cmd) Run() error {
 	ppty, winCh, ok := c.sess.Pty()
 	if !ok {
 		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.sess, c.sess, c.sess.Stderr()
-		return c.cmd.Run()
+		if err := c.cmd.Run(); err != nil {
+			return fmt.Errorf("run command: %w", err)
+		}
+		return nil
 	}
 	return c.doRun(ppty, winCh)
 }

@@ -7,7 +7,7 @@ import "github.com/charmbracelet/ssh"
 
 func (c *Cmd) doRun(ppty ssh.Pty, _ <-chan ssh.Window) error {
 	if err := ppty.Start(c.cmd); err != nil {
-		return err
+		return err //nolint:wrapcheck
 	}
-	return c.cmd.Wait()
+	return c.cmd.Wait() //nolint:wrapcheck
 }

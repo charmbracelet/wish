@@ -18,11 +18,11 @@ func NewFSReadHandler(fsys fs.FS) CopyToClientHandler {
 }
 
 func (h *fsHandler) Glob(_ ssh.Session, s string) ([]string, error) {
-	return fs.Glob(h.fsys, s)
+	return fs.Glob(h.fsys, s) //nolint:wrapcheck
 }
 
 func (h *fsHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
-	return fs.WalkDir(h.fsys, path, fn)
+	return fs.WalkDir(h.fsys, path, fn) //nolint:wrapcheck
 }
 
 func (h *fsHandler) NewDirEntry(_ ssh.Session, path string) (*DirEntry, error) {

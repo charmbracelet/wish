@@ -12,11 +12,11 @@ import (
 
 	_ "embed"
 
-	"github.com/charmbracelet/log"
+	"charm.land/log/v2"
+	"charm.land/wish/v2"
+	"charm.land/wish/v2/elapsed"
+	"charm.land/wish/v2/logging"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
-	"github.com/charmbracelet/wish/elapsed"
-	"github.com/charmbracelet/wish/logging"
 )
 
 const (

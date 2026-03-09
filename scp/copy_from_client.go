@@ -68,44 +68,11 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if len(matches) != 1 || len(matches[0]) != 4 {
 				return parseError{line}
 			}
-
-			mode, err := strconv.ParseUint(matches[0][1], 8, 32)
-			if err != nil {
-				return parseError{line}
+			if err := handleNewFile(s, r, handler, path, line, matches[0], mtime, atime); err != nil {
+				return err
 			}
-
-			size, err := strconv.ParseInt(matches[0][2], 10, 64)
-			if err != nil {
-				return parseError{line}
-			}
-			name := matches[0][3]
-
-			// accepts the header
-			_, _ = s.Write(NULL)
-
-			written, err := handler.Write(s, &FileEntry{
-				Name:     name,
-				Filepath: filepath.Join(path, name),
-				Mode:     fs.FileMode(mode), //nolint:gosec
-				Size:     size,
-				Mtime:    mtime,
-				Atime:    atime,
-				Reader:   newLimitReader(r, int(size)),
-			})
-			if err != nil {
-				return fmt.Errorf("failed to write file: %q: %w", name, err)
-			}
-			if written != size {
-				return fmt.Errorf("failed to write the file: %q: written %d out of %d bytes", name, written, size)
-			}
-
-			// read the trailing nil char
-			_, _ = r.ReadByte()
-
 			mtime = 0
 			atime = 0
-			// says 'hey im done'
-			_, _ = s.Write(NULL)
 			continue
 		}
 
@@ -124,7 +91,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if err := handler.Mkdir(s, &DirEntry{
 				Name:     name,
 				Filepath: path,
-				Mode:     fs.FileMode(mode), //nolint:gosec
+				Mode:     fs.FileMode(mode),
 				Mtime:    mtime,
 				Atime:    atime,
 			}); err != nil {
@@ -149,6 +116,45 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 		return fmt.Errorf("unhandled input: %q", line)
 	}
 
+	_, _ = s.Write(NULL)
+	return nil
+}
+
+func handleNewFile(s ssh.Session, r *bufio.Reader, handler CopyFromClientHandler, path, line string, match []string, mtime, atime int64) error {
+	mode, err := strconv.ParseUint(match[1], 8, 32)
+	if err != nil {
+		return parseError{line}
+	}
+
+	size, err := strconv.ParseInt(match[2], 10, 64)
+	if err != nil {
+		return parseError{line}
+	}
+	name := match[3]
+
+	// accepts the header
+	_, _ = s.Write(NULL)
+
+	written, err := handler.Write(s, &FileEntry{
+		Name:     name,
+		Filepath: filepath.Join(path, name),
+		Mode:     fs.FileMode(mode),
+		Size:     size,
+		Mtime:    mtime,
+		Atime:    atime,
+		Reader:   newLimitReader(r, int(size)),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to write file: %q: %w", name, err)
+	}
+	if written != size {
+		return fmt.Errorf("failed to write the file: %q: written %d out of %d bytes", name, written, size)
+	}
+
+	// read the trailing nil char
+	_, _ = r.ReadByte()
+
+	// says 'hey im done'
 	_, _ = s.Write(NULL)
 	return nil
 }

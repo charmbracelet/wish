@@ -4,8 +4,8 @@ package accesscontrol
 import (
 	"fmt"
 
+	"charm.land/wish/v2"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish"
 )
 
 // Middleware will exit 1 connections trying to execute commands that are not allowed.
@@ -24,7 +24,7 @@ func Middleware(cmds ...string) wish.Middleware {
 				}
 			}
 			_, _ = fmt.Fprintln(s, "Command is not allowed: "+s.Command()[0])
-			s.Exit(1) // nolint: errcheck
+			_ = s.Exit(1)
 		}
 	}
 }

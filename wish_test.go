@@ -1,4 +1,3 @@
-// go:generate mockgen -package mocks -destination mocks/session.go github.com/charmbracelet/ssh Session
 package wish
 
 import (
@@ -9,8 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"charm.land/wish/v2/testsession"
 	"github.com/charmbracelet/ssh"
-	"github.com/charmbracelet/wish/testsession"
 )
 
 func TestNewServer(t *testing.T) {
