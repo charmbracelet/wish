@@ -62,12 +62,12 @@ The `MakeRenderer` function is gone. Bubble Tea v2 handles color profile detecti
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
     renderer := bubbletea.MakeRenderer(s)
     txtStyle := renderer.NewStyle().Foreground(lipgloss.Color("10"))
-    
+
     bg := "light"
     if renderer.HasDarkBackground() {
         bg = "dark"
     }
-    
+
     m := model{
         txtStyle: txtStyle,
         bg:       bg,
@@ -347,7 +347,7 @@ func main() {
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
     renderer := bubbletea.MakeRenderer(s)
     style := renderer.NewStyle().Foreground(lipgloss.Color("10"))
-    
+
     m := model{style: style}
     return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
@@ -448,6 +448,81 @@ func (m model) View() tea.View {
 - [ ] Handle background color via `tea.BackgroundColorMsg`
 - [ ] Handle color profile via `tea.ColorProfileMsg`
 - [ ] Test your SSH app with various terminals
+
+## Accessing SSH Client Environment Variables
+
+In Bubble Tea v2, you can access the SSH client's environment variables in two ways:
+
+**Important:** Wish automatically passes the client's environment to Bubble Tea when you use `bubbletea.MakeOptions()`. This means `tea.EnvMsg` will contain the _client's_ environment, not the server's!
+
+### Method 1: Use tea.EnvMsg (Recommended)
+
+Bubble Tea v2 automatically sends an `EnvMsg` with the client's environment:
+
+```go
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+    return model{}, bubbletea.MakeOptions(s) // Passes client environment
+}
+
+type model struct {
+    envMsg tea.EnvMsg
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    switch msg := msg.(type) {
+    case tea.EnvMsg:
+        m.envMsg = msg
+
+        // Access specific CLIENT variables
+        term := msg.Getenv("TERM")
+        lang := msg.Getenv("LANG")
+        user := msg.Getenv("USER")
+
+        fmt.Printf("Client TERM: %s\n", term)
+    }
+    return m, nil
+}
+```
+
+### Method 2: Pass from Handler
+
+If you need environment variables before `Init()` runs, extract them in the handler:
+
+```go
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+    // Get client environment variables from the SSH session
+    env := make(map[string]string)
+    for _, e := range s.Environ() {
+        parts := strings.SplitN(e, "=", 2)
+        if len(parts) == 2 {
+            env[parts[0]] = parts[1]
+        }
+    }
+
+    m := model{
+        env: env,  // Pass to model
+    }
+    return m, bubbletea.MakeOptions(s)
+}
+
+type model struct {
+    env map[string]string
+}
+
+func (m model) View() tea.View {
+    // Access client's environment
+    term := m.env["TERM"]    // Client's TERM
+    lang := m.env["LANG"]    // Client's LANG
+    user := m.env["USER"]    // Client's USER
+
+    return tea.NewView(fmt.Sprintf("Your TERM: %s", term))
+}
+```
+
+> [!WARNING]
+> **Never use `os.Getenv()` in SSH apps**—it returns the _server's_ environment! Always use `tea.EnvMsg` (recommended) or `ssh.Session.Environ()`.
+
+**Key Point:** These are the _client's_ environment variables, not the server's. This is especially important for SSH apps where `os.Getenv()` would give you incorrect server values.
 
 ## Need Help?
 
