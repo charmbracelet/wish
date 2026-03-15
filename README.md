@@ -39,7 +39,7 @@ It is a cryptographic network protocol for operating network services securely o
 That means, among other things, that we can write custom SSH servers without touching `openssh-server`,
 so we can securely do more things than just providing a shell.
 
-Wish is a library that helps writing these kind of apps using Go.
+Wish is a library that helps writing these kinds of apps using Go.
 
 ## Middleware
 
