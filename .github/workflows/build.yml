@@ -21,6 +21,6 @@ jobs:
           go-version: "stable"
           cache: true
       - run: go test -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt ./... -timeout 5m
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v6
         with:
           file: ./coverage.txt
