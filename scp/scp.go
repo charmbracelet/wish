@@ -148,7 +148,7 @@ func (e *FileEntry) Write(w io.Writer) error {
 // RootEntry is a root entry that can only have children.
 type RootEntry []Entry
 
-// Append the given entry to a child directory, or the the itself if
+// Append the given entry to a child directory, or the root entry itself if
 // none matches.
 func (e *RootEntry) Append(entry Entry) {
 	parent := normalizePath(filepath.Dir(entry.path()))
