@@ -280,9 +280,15 @@ func GetInfo(cmd []string) Info {
 		case "-r":
 			info.Recursive = true
 		case "-f":
+			if i+1 >= len(cmd) {
+				return info
+			}
 			info.Op = OpCopyToClient
 			info.Path = cmd[i+1]
 		case "-t":
+			if i+1 >= len(cmd) {
+				return info
+			}
 			info.Op = OpCopyFromClient
 			info.Path = cmd[i+1]
 		}
@@ -302,4 +308,12 @@ func normalizePath(p string) string {
 		return strings.ReplaceAll(p, "\\", "/")
 	}
 	return p
+}
+
+func validateName(name string) error {
+	if name == "" || name == "." || name == ".." ||
+		strings.ContainsAny(name, "/\\") {
+		return fmt.Errorf("invalid filename: %q", name)
+	}
+	return nil
 }

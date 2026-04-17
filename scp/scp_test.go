@@ -52,6 +52,16 @@ func TestGetInfo(t *testing.T) {
 		is.Equal(info.Op, OpCopyFromClient)
 		is.Equal("file", info.Path)
 	})
+
+	t.Run("missing path after -f", func(t *testing.T) {
+		info := GetInfo([]string{"scp", "-f"})
+		is.New(t).Equal(info.Ok, false)
+	})
+
+	t.Run("missing path after -t", func(t *testing.T) {
+		info := GetInfo([]string{"scp", "-t"})
+		is.New(t).Equal(info.Ok, false)
+	})
 }
 
 func TestNoDirRootEntry(t *testing.T) {
