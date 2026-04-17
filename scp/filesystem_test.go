@@ -198,7 +198,7 @@ func TestFilesystem(t *testing.T) {
 				h := &fileSystemHandler{t.TempDir()}
 				matches, err := h.Glob(nil, "[asda")
 				is.True(err != nil) // should err
-				is.Equal([]string{}, matches)
+				is.Equal(0, len(matches))
 			})
 		})
 

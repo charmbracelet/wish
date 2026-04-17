@@ -58,11 +58,11 @@ func (h *fileSystemHandler) prefixed(path string) (string, error) {
 func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
 	p, err := h.prefixed(s)
 	if err != nil {
-		return []string{}, err
+		return nil, err
 	}
 	matches, err := filepath.Glob(p)
 	if err != nil {
-		return []string{}, err //nolint:wrapcheck
+		return nil, err //nolint:wrapcheck
 	}
 
 	var safe []string
@@ -72,7 +72,7 @@ func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
 		}
 		rel, err := filepath.Rel(h.root, match)
 		if err != nil {
-			return []string{}, err //nolint:wrapcheck
+			return nil, err //nolint:wrapcheck
 		}
 		safe = append(safe, rel)
 	}
