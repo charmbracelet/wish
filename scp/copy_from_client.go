@@ -85,7 +85,10 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if err != nil {
 				return parseError{line}
 			}
-			name := matches[0][2]
+				name := matches[0][2]
+			if err := validateName(name); err != nil {
+				return err
+			}
 
 			path = filepath.Join(path, name)
 			if err := handler.Mkdir(s, &DirEntry{
@@ -131,6 +134,9 @@ func handleNewFile(s ssh.Session, r *bufio.Reader, handler CopyFromClientHandler
 		return parseError{line}
 	}
 	name := match[3]
+	if err := validateName(name); err != nil {
+		return err
+	}
 
 	// accepts the header
 	_, _ = s.Write(NULL)

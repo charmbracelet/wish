@@ -28,8 +28,12 @@ func (h *fileSystemHandler) chtimes(path string, mtime, atime int64) error {
 	if mtime == 0 || atime == 0 {
 		return nil
 	}
+	p, err := h.prefixed(path)
+	if err != nil {
+		return err
+	}
 	if err := os.Chtimes(
-		h.prefixed(path),
+		p,
 		time.Unix(atime, 0),
 		time.Unix(mtime, 0),
 	); err != nil {
@@ -38,31 +42,49 @@ func (h *fileSystemHandler) chtimes(path string, mtime, atime int64) error {
 	return nil
 }
 
-func (h *fileSystemHandler) prefixed(path string) string {
-	path = filepath.Clean(path)
-	if strings.HasPrefix(path, h.root) {
-		return path
+func (h *fileSystemHandler) prefixed(path string) (string, error) {
+	clean := filepath.Clean(path)
+	if clean == h.root || strings.HasPrefix(clean, h.root+string(filepath.Separator)) {
+		return clean, nil
 	}
-	return filepath.Join(h.root, path)
+	safe := filepath.Clean("/" + path)
+	joined := filepath.Join(h.root, safe)
+	if joined != h.root && !strings.HasPrefix(joined, h.root+string(filepath.Separator)) {
+		return "", fmt.Errorf("path traversal detected: %q resolves outside root", path)
+	}
+	return joined, nil
 }
 
 func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
-	matches, err := filepath.Glob(h.prefixed(s))
+	p, err := h.prefixed(s)
+	if err != nil {
+		return []string{}, err
+	}
+	matches, err := filepath.Glob(p)
 	if err != nil {
 		return []string{}, err //nolint:wrapcheck
 	}
 
-	for i, match := range matches {
-		matches[i], err = filepath.Rel(h.root, match)
+	var safe []string
+	for _, match := range matches {
+		if match != h.root && !strings.HasPrefix(match, h.root+string(filepath.Separator)) {
+			continue
+		}
+		rel, err := filepath.Rel(h.root, match)
 		if err != nil {
 			return []string{}, err //nolint:wrapcheck
 		}
+		safe = append(safe, rel)
 	}
-	return matches, nil
+	return safe, nil
 }
 
 func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFunc) error {
-	return filepath.WalkDir(h.prefixed(path), func(path string, d fs.DirEntry, err error) error { //nolint:wrapcheck
+	p, err := h.prefixed(path)
+	if err != nil {
+		return err
+	}
+	return filepath.WalkDir(p, func(path string, d fs.DirEntry, err error) error { //nolint:wrapcheck
 		// if h.root is ./foo/bar, we don't want to server `bar` as the root,
 		// but instead its contents.
 		if path == h.root {
@@ -73,7 +95,10 @@ func (h *fileSystemHandler) WalkDir(_ ssh.Session, path string, fn fs.WalkDirFun
 }
 
 func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, error) {
-	path := h.prefixed(name)
+	path, err := h.prefixed(name)
+	if err != nil {
+		return nil, err
+	}
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open dir: %q: %w", path, err)
@@ -89,7 +114,10 @@ func (h *fileSystemHandler) NewDirEntry(_ ssh.Session, name string) (*DirEntry, 
 }
 
 func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry, func() error, error) {
-	path := h.prefixed(name)
+	path, err := h.prefixed(name)
+	if err != nil {
+		return nil, nil, err
+	}
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to stat %q: %w", path, err)
@@ -110,14 +138,22 @@ func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry
 }
 
 func (h *fileSystemHandler) Mkdir(_ ssh.Session, entry *DirEntry) error {
-	if err := os.Mkdir(h.prefixed(entry.Filepath), entry.Mode); err != nil {
+	p, err := h.prefixed(entry.Filepath)
+	if err != nil {
+		return err
+	}
+	if err := os.Mkdir(p, entry.Mode); err != nil {
 		return fmt.Errorf("failed to create dir: %q: %w", entry.Filepath, err)
 	}
 	return h.chtimes(entry.Filepath, entry.Mtime, entry.Atime)
 }
 
 func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error) {
-	f, err := os.OpenFile(h.prefixed(entry.Filepath), os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
+	p, err := h.prefixed(entry.Filepath)
+	if err != nil {
+		return 0, err
+	}
+	f, err := os.OpenFile(p, os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)
 	}

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"testing/iotest"
 	"time"
@@ -258,6 +259,166 @@ func TestFilesystem(t *testing.T) {
 				is.True(err != nil) // should err
 			})
 		})
+	})
+}
+
+func TestPrefixedPathTraversal(t *testing.T) {
+	root := t.TempDir()
+	h := &fileSystemHandler{root: filepath.Clean(root)}
+
+	cases := []struct {
+		name      string
+		path      string
+		want      string
+		wantInRoot bool
+	}{
+		{"relative traversal", "../../../etc/passwd", filepath.Join(root, "etc/passwd"), false},
+		{"nested relative traversal", "foo/../../etc/passwd", filepath.Join(root, "etc/passwd"), false},
+		{"deep relative traversal", "../../../tmp/pwned", filepath.Join(root, "tmp/pwned"), false},
+		{"absolute path outside root", "/etc/passwd", filepath.Join(root, "etc/passwd"), false},
+		{"root-prefixed traversal", root + "/../../../etc/shadow", "", true},
+		{"valid relative path", "subdir/file.txt", filepath.Join(root, "subdir/file.txt"), false},
+		{"valid path under root", filepath.Join(root, "file.txt"), filepath.Join(root, "file.txt"), false},
+		{"root slash", "/", root, false},
+		{"dot", ".", root, false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			is := is.New(t)
+			p, err := h.prefixed(tc.path)
+			is.NoErr(err)
+			if tc.wantInRoot {
+				is.True(p == root || strings.HasPrefix(p, root+string(filepath.Separator)))
+			} else {
+				is.Equal(tc.want, p)
+			}
+		})
+	}
+}
+
+func TestValidateName(t *testing.T) {
+	cases := []struct {
+		name    string
+		invalid bool
+	}{
+		{"normal.txt", false},
+		{"file-with-dashes", false},
+		{".hidden", false},
+		{"..", true},
+		{".", true},
+		{"", true},
+		{"../etc/passwd", true},
+		{"sub/dir", true},
+		{"back\\slash", true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateName(tc.name)
+			if tc.invalid {
+				is.New(t).True(err != nil)
+			} else {
+				is.New(t).NoErr(err)
+			}
+		})
+	}
+}
+
+func TestPathTraversalEndToEnd(t *testing.T) {
+	t.Run("write file", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		secret := t.TempDir()
+		h := NewFileSystemHandler(root)
+
+		var in bytes.Buffer
+		in.WriteString("C0644 5 ../" + filepath.Base(secret) + "/pwned\n")
+		in.WriteString("hello")
+		in.Write(NULL)
+
+		session := setup(t, nil, h)
+		session.Stdin = &in
+		_, err := session.CombinedOutput("scp -t .")
+		is.True(err != nil)
+		_, statErr := os.Stat(filepath.Join(secret, "pwned"))
+		is.True(os.IsNotExist(statErr))
+	})
+
+	t.Run("write dir", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		h := NewFileSystemHandler(root)
+
+		var in bytes.Buffer
+		in.WriteString("D0755 0 ../../evil_dir\n")
+		in.WriteString("C0644 7 payload\n")
+		in.WriteString("payload")
+		in.Write(NULL)
+		in.WriteString("E\n")
+
+		session := setup(t, nil, h)
+		session.Stdin = &in
+		_, err := session.CombinedOutput("scp -r -t .")
+		is.True(err != nil)
+		_, statErr := os.Stat(filepath.Join(root, "../../evil_dir"))
+		is.True(os.IsNotExist(statErr))
+	})
+
+	t.Run("read file", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		secret := t.TempDir()
+		is.NoErr(os.WriteFile(filepath.Join(secret, "secret.txt"), []byte("super-secret"), 0o644))
+		h := NewFileSystemHandler(root)
+
+		session := setup(t, h, nil)
+		_, err := session.CombinedOutput("scp -f ../" + filepath.Base(secret) + "/secret.txt")
+		is.True(err != nil)
+	})
+
+	t.Run("read glob", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		secret := t.TempDir()
+		is.NoErr(os.WriteFile(filepath.Join(secret, "secret.txt"), []byte("super-secret"), 0o644))
+		h := NewFileSystemHandler(root)
+
+		session := setup(t, h, nil)
+		_, err := session.CombinedOutput("scp -f ../" + filepath.Base(secret) + "/secret*")
+		is.True(err != nil)
+	})
+
+	t.Run("filename with slash", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		h := NewFileSystemHandler(root)
+
+		var in bytes.Buffer
+		in.WriteString("C0644 5 sub/file\n")
+		in.WriteString("hello")
+		in.Write(NULL)
+
+		session := setup(t, nil, h)
+		session.Stdin = &in
+		_, err := session.CombinedOutput("scp -t .")
+		is.True(err != nil)
+	})
+
+	t.Run("filename with dotdot", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		h := NewFileSystemHandler(root)
+
+		var in bytes.Buffer
+		in.WriteString("C0644 5 ..\n")
+		in.WriteString("hello")
+		in.Write(NULL)
+
+		session := setup(t, nil, h)
+		session.Stdin = &in
+		_, err := session.CombinedOutput("scp -t .")
+		is.True(err != nil)
 	})
 }
 
