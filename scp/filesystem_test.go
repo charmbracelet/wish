@@ -267,9 +267,9 @@ func TestPrefixedPathTraversal(t *testing.T) {
 	h := &fileSystemHandler{root: filepath.Clean(root)}
 
 	cases := []struct {
-		name      string
-		path      string
-		want      string
+		name       string
+		path       string
+		want       string
 		wantInRoot bool
 	}{
 		{"relative traversal", "../../../etc/passwd", filepath.Join(root, "etc/passwd"), false},

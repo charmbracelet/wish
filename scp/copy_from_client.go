@@ -85,7 +85,7 @@ func copyFromClient(s ssh.Session, info Info, handler CopyFromClientHandler) err
 			if err != nil {
 				return parseError{line}
 			}
-				name := matches[0][2]
+			name := matches[0][2]
 			if err := validateName(name); err != nil {
 				return err
 			}
