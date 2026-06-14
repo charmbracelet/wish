@@ -214,7 +214,7 @@ func getBytes(tb testing.TB, path string) []byte {
 	return bts
 }
 
-func requireEqual(tb testing.TB, a, b interface{}) {
+func requireEqual(tb testing.TB, a, b any) {
 	tb.Helper()
 	if a != b {
 		tb.Fatalf("expected %v, got %v", a, b)
