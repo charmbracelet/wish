@@ -109,7 +109,7 @@ type model struct {
 	viewport    viewport.Model
 	messages    []string
 	id          string
-	textarea    *textarea.Model
+	textarea    textarea.Model
 	senderStyle lipgloss.Style
 	err         error
 }
