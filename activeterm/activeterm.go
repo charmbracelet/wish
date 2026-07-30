@@ -2,8 +2,8 @@
 package activeterm
 
 import (
-	"charm.land/wish/v2"
 	"charm.land/ssh"
+	"charm.land/wish/v2"
 )
 
 // Middleware will exit 1 connections trying with no active terminals.

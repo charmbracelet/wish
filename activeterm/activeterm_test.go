@@ -3,9 +3,9 @@ package activeterm_test
 import (
 	"testing"
 
+	"charm.land/ssh"
 	"charm.land/wish/v2/activeterm"
 	"charm.land/wish/v2/testsession"
-	"charm.land/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 

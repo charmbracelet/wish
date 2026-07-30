@@ -16,9 +16,9 @@ import (
 	"time"
 
 	"charm.land/log/v2"
+	"charm.land/ssh"
 	"charm.land/wish/v2"
 	"charm.land/wish/v2/scp"
-	"charm.land/ssh"
 	"github.com/pkg/sftp"
 )
 

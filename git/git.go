@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"charm.land/log/v2"
-	"charm.land/wish/v2"
 	"charm.land/ssh"
+	"charm.land/wish/v2"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 )
@@ -82,7 +82,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 				access := gh.AuthRepo(repo, pk)
 				switch gc {
 				case "git-receive-pack":
-					switch access { //nolint:exhaustive
+					switch access {
 					case ReadWriteAccess, AdminAccess:
 						err := gitPack(s, gc, repoDir, repo)
 						if err != nil {
@@ -95,7 +95,7 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 					}
 					return
 				case "git-upload-archive", "git-upload-pack":
-					switch access { //nolint:exhaustive
+					switch access {
 					case ReadOnlyAccess, ReadWriteAccess, AdminAccess:
 						err := gitPack(s, gc, repoDir, repo)
 						switch err {

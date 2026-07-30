@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"charm.land/wish/v2/testsession"
 	"charm.land/ssh"
+	"charm.land/wish/v2/testsession"
 	gossh "golang.org/x/crypto/ssh"
 )
 

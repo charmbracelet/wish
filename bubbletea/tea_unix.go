@@ -5,8 +5,8 @@ package bubbletea
 
 import (
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/colorprofile"
 	"charm.land/ssh"
+	"github.com/charmbracelet/colorprofile"
 )
 
 func makeOpts(s ssh.Session) []tea.ProgramOption {

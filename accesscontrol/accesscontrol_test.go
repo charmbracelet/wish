@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"charm.land/ssh"
 	"charm.land/wish/v2/accesscontrol"
 	"charm.land/wish/v2/testsession"
-	"charm.land/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 

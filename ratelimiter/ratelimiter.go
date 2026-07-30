@@ -8,8 +8,8 @@ import (
 	"net"
 
 	"charm.land/log/v2"
-	"charm.land/wish/v2"
 	"charm.land/ssh"
+	"charm.land/wish/v2"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"golang.org/x/time/rate"
 )

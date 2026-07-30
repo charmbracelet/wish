@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"charm.land/log/v2"
+	"charm.land/ssh"
 	"charm.land/wish/v2"
 	"charm.land/wish/v2/logging"
-	"charm.land/ssh"
 	"github.com/spf13/cobra"
 )
 

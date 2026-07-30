@@ -6,8 +6,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/log/v2"
-	"charm.land/wish/v2"
 	"charm.land/ssh"
+	"charm.land/wish/v2"
 )
 
 // BubbleTeaHandler is the function Bubble Tea apps implement to hook into the

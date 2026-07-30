@@ -5,8 +5,8 @@ import (
 	"runtime/debug"
 
 	"charm.land/log/v2"
-	"charm.land/wish/v2"
 	"charm.land/ssh"
+	"charm.land/wish/v2"
 )
 
 // Middleware is a wish middleware that recovers from panics and log to stderr.

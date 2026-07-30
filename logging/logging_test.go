@@ -3,10 +3,10 @@ package logging_test
 import (
 	"testing"
 
+	"charm.land/ssh"
 	"charm.land/wish/v2"
 	"charm.land/wish/v2/logging"
 	"charm.land/wish/v2/testsession"
-	"charm.land/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 

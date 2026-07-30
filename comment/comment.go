@@ -2,8 +2,8 @@
 package comment
 
 import (
-	"charm.land/wish/v2"
 	"charm.land/ssh"
+	"charm.land/wish/v2"
 )
 
 // Middleware prints a comment at the end of the session.

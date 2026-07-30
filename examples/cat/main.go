@@ -6,9 +6,9 @@ import (
 	"io"
 	"log"
 
+	"charm.land/ssh"
 	"charm.land/wish/v2"
 	"charm.land/wish/v2/logging"
-	"charm.land/ssh"
 )
 
 // This is a simple example of a wish server that reads input from the user and

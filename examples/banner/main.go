@@ -13,10 +13,10 @@ import (
 	_ "embed"
 
 	"charm.land/log/v2"
+	"charm.land/ssh"
 	"charm.land/wish/v2"
 	"charm.land/wish/v2/elapsed"
 	"charm.land/wish/v2/logging"
-	"charm.land/ssh"
 )
 
 const (

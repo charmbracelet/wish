@@ -4,8 +4,8 @@ package accesscontrol
 import (
 	"fmt"
 
-	"charm.land/wish/v2"
 	"charm.land/ssh"
+	"charm.land/wish/v2"
 )
 
 // Middleware will exit 1 connections trying to execute commands that are not allowed.
