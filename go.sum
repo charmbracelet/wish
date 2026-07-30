@@ -1,7 +1,7 @@
 charm.land/bubbletea/v2 v2.0.8 h1:SxTJMhCAI3lbPmy4SgX5LWZ24AdINr4I6UEqzZvYJuY=
 charm.land/bubbletea/v2 v2.0.8/go.mod h1:2SkdgoTXluXJHOUwAoRlRXF/28vklb1rFl6GcgV1/ss=
-charm.land/lipgloss/v2 v2.0.3 h1:yM2zJ4Cf5Y51b7RHIwioil4ApI/aypFXXVHSwlM6RzU=
-charm.land/lipgloss/v2 v2.0.3/go.mod h1:7myLU9iG/3xluAWzpY/fSxYYHCgoKTie7laxk6ATwXA=
+charm.land/lipgloss/v2 v2.0.5 h1:kbNxgeeUOYv5J0YdpxFjfvf3dFvqH8Aci4zB6xqFtrY=
+charm.land/lipgloss/v2 v2.0.5/go.mod h1:9oqhxt4yxIMe6q5A4kHr44DremZk7J9UNh74GlWa5nc=
 charm.land/log/v2 v2.0.0 h1:SY3Cey7ipx86/MBXQHwsguOT6X1exT94mmJRdzTNs+s=
 charm.land/log/v2 v2.0.0/go.mod h1:c3cZSRqm20qUVVAR1WmS/7ab8bgha3C6G7DjPcaVZz0=
 charm.land/ssh v0.4.1 h1:vDb2hzUX4IYx+6Y+58aVlap8CGyIu+bJT7Awchpz+ow=
