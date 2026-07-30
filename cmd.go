@@ -56,9 +56,22 @@ func (c *Cmd) SetDir(dir string) {
 
 // Run runs the program and waits for it to finish.
 func (c *Cmd) Run() error {
+	if c.hasCustomStdio() {
+		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.stdin, c.stdout, c.stderr
+		return c.cmd.Run() //nolint:wrapcheck
+	}
 	ppty, winCh, ok := c.sess.Pty()
 	if !ok {
 		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.sess, c.sess, c.sess.Stderr()
+		if c.stdin != nil {
+			c.cmd.Stdin = c.stdin
+		}
+		if c.stdout != nil {
+			c.cmd.Stdout = c.stdout
+		}
+		if c.stderr != nil {
+			c.cmd.Stderr = c.stderr
+		}
 		if err := c.cmd.Run(); err != nil {
 			return fmt.Errorf("run command: %w", err)
 		}
@@ -67,19 +80,30 @@ func (c *Cmd) Run() error {
 	return c.doRun(ppty, winCh)
 }
 
+// hasCustomStdio reports whether all three stdio handles were set, e.g. by
+// tea.Exec. The gate is all-or-nothing: a partial set keeps the default
+// session/PTY wiring, since ppty.Start cannot mix custom handles with the
+// PTY slave.
+func (c *Cmd) hasCustomStdio() bool {
+	return c.stdin != nil && c.stdout != nil && c.stderr != nil
+}
+
 var _ tea.ExecCommand = &Cmd{}
 
-// SetStderr conforms with tea.ExecCommand.
+// SetStderr conforms with tea.ExecCommand. It must be called before Run;
+// Cmd is not safe for concurrent use.
 func (c *Cmd) SetStderr(w io.Writer) {
 	c.stderr = w
 }
 
-// SetStdin conforms with tea.ExecCommand.
+// SetStdin conforms with tea.ExecCommand. It must be called before Run;
+// Cmd is not safe for concurrent use.
 func (c *Cmd) SetStdin(r io.Reader) {
 	c.stdin = r
 }
 
-// SetStdout conforms with tea.ExecCommand.
+// SetStdout conforms with tea.ExecCommand. It must be called before Run;
+// Cmd is not safe for concurrent use.
 func (c *Cmd) SetStdout(w io.Writer) {
 	c.stdout = w
 }
