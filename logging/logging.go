@@ -21,7 +21,7 @@ func Middleware() wish.Middleware {
 
 // Logger is the interface that wraps the basic Log method.
 type Logger interface {
-	Printf(format string, v ...interface{})
+	Printf(format string, v ...any)
 }
 
 // MiddlewareWithLogger provides basic connection logging.
