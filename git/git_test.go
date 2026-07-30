@@ -11,7 +11,7 @@ import (
 
 	"charm.land/wish/v2"
 	"github.com/charmbracelet/keygen"
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 func TestGitMiddleware(t *testing.T) {

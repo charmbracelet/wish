@@ -6,7 +6,7 @@ import (
 
 	"charm.land/log/v2"
 	"charm.land/wish/v2"
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 // Middleware is a wish middleware that recovers from panics and log to stderr.

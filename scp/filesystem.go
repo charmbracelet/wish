@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 // fileSystemHandler is a Handler implementation for a given root path.

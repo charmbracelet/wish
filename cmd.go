@@ -8,7 +8,7 @@ import (
 	"os/exec"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 // CommandContext is like Command but includes a context.

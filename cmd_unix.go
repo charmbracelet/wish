@@ -3,7 +3,7 @@
 
 package wish
 
-import "github.com/charmbracelet/ssh"
+import "charm.land/ssh"
 
 func (c *Cmd) doRun(ppty ssh.Pty, _ <-chan ssh.Window) error {
 	if err := ppty.Start(c.cmd); err != nil {

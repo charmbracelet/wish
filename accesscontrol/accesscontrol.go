@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"charm.land/wish/v2"
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 // Middleware will exit 1 connections trying to execute commands that are not allowed.

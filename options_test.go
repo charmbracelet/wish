@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"charm.land/wish/v2/testsession"
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 	gossh "golang.org/x/crypto/ssh"
 )
 

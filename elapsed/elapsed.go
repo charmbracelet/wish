@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"charm.land/wish/v2"
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 // MiddlewareWithFormat returns a middleware that logs the elapsed time of the

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 type fsHandler struct{ fsys fs.FS }

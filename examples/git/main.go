@@ -18,7 +18,7 @@ import (
 	"charm.land/wish/v2"
 	"charm.land/wish/v2/git"
 	"charm.land/wish/v2/logging"
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 const (

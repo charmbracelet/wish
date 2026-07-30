@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/charmbracelet/ssh"
+	"charm.land/ssh"
 )
 
 func (c *Cmd) doRun(ppty ssh.Pty, _ <-chan ssh.Window) error {
