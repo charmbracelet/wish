@@ -32,7 +32,7 @@ func WithVersion(version string) ssh.Option {
 	}
 }
 
-// WithBanner return an ssh.Option that sets the server banner.
+// WithBanner returns an ssh.Option that sets the server banner.
 func WithBanner(banner string) ssh.Option {
 	return func(s *ssh.Server) error {
 		s.Banner = banner
@@ -40,7 +40,7 @@ func WithBanner(banner string) ssh.Option {
 	}
 }
 
-// WithBannerHandler return an ssh.Option that sets the server banner handler,
+// WithBannerHandler returns an ssh.Option that sets the server banner handler,
 // overriding WithBanner.
 func WithBannerHandler(h ssh.BannerHandler) ssh.Option {
 	return func(s *ssh.Server) error {
