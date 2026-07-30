@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"charm.land/log/v2"
-	"github.com/charmbracelet/keygen"
 	"charm.land/ssh"
+	"github.com/charmbracelet/keygen"
 	gossh "golang.org/x/crypto/ssh"
 )
 

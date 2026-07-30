@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/charmbracelet/keygen"
 	"charm.land/ssh"
+	"github.com/charmbracelet/keygen"
 )
 
 // Middleware is a function that takes an ssh.Handler and returns an

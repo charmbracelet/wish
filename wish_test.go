@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"charm.land/wish/v2/testsession"
 	"charm.land/ssh"
+	"charm.land/wish/v2/testsession"
 )
 
 func TestNewServer(t *testing.T) {
