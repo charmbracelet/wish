@@ -22,7 +22,7 @@ require (
 )
 
 require (
-	charm.land/lipgloss/v2 v2.0.3 // indirect
+	charm.land/lipgloss/v2 v2.0.5 // indirect
 	charm.land/ssh v0.4.1
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
