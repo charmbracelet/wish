@@ -15,12 +15,12 @@ jobs:
   codecov:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version: "stable"
           cache: true
       - run: go test -failfast -race -coverpkg=./... -covermode=atomic -coverprofile=coverage.txt ./... -timeout 5m
-      - uses: codecov/codecov-action@v6
+      - uses: codecov/codecov-action@v7
         with:
           file: ./coverage.txt
