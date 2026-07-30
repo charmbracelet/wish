@@ -4,26 +4,15 @@
 package wish
 
 import (
-	"fmt"
-	"time"
-
 	"charm.land/ssh"
+	"github.com/charmbracelet/x/xpty"
 )
 
 func (c *Cmd) doRun(ppty ssh.Pty, _ <-chan ssh.Window) error {
 	if err := ppty.Start(c.cmd); err != nil {
 		return err //nolint:wrapcheck
 	}
-
-	start := time.Now()
-	for c.cmd.ProcessState == nil {
-		if time.Since(start) > time.Second*10 {
-			return fmt.Errorf("could not start process")
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-	if !c.cmd.ProcessState.Success() {
-		return fmt.Errorf("process failed: exit %d", c.cmd.ProcessState.ExitCode())
-	}
-	return nil
+	// cmd.Wait() doesn't work with ConPTY; xpty.WaitProcess waits on the
+	// process directly and honors the session context for cancellation.
+	return xpty.WaitProcess(c.sess.Context(), c.cmd) //nolint:wrapcheck
 }

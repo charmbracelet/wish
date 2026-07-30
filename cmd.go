@@ -17,7 +17,7 @@ import (
 // itself.
 func CommandContext(ctx context.Context, s ssh.Session, name string, args ...string) *Cmd {
 	cmd := exec.CommandContext(ctx, name, args...)
-	return &Cmd{s, cmd}
+	return &Cmd{sess: s, cmd: cmd}
 }
 
 // Command sets stdin, stdout, and stderr to the current session's PTY.
@@ -32,8 +32,11 @@ func Command(s ssh.Session, name string, args ...string) *Cmd {
 
 // Cmd wraps a *exec.Cmd and a ssh.Pty so a command can be properly run.
 type Cmd struct {
-	sess ssh.Session
-	cmd  *exec.Cmd
+	sess   ssh.Session
+	cmd    *exec.Cmd
+	stdin  io.Reader
+	stdout io.Writer
+	stderr io.Writer
 }
 
 // SetEnv sets the underlying exec.Cmd env.
@@ -53,9 +56,22 @@ func (c *Cmd) SetDir(dir string) {
 
 // Run runs the program and waits for it to finish.
 func (c *Cmd) Run() error {
+	if c.hasCustomStdio() {
+		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.stdin, c.stdout, c.stderr
+		return c.cmd.Run() //nolint:wrapcheck
+	}
 	ppty, winCh, ok := c.sess.Pty()
 	if !ok {
 		c.cmd.Stdin, c.cmd.Stdout, c.cmd.Stderr = c.sess, c.sess, c.sess.Stderr()
+		if c.stdin != nil {
+			c.cmd.Stdin = c.stdin
+		}
+		if c.stdout != nil {
+			c.cmd.Stdout = c.stdout
+		}
+		if c.stderr != nil {
+			c.cmd.Stderr = c.stderr
+		}
 		if err := c.cmd.Run(); err != nil {
 			return fmt.Errorf("run command: %w", err)
 		}
@@ -64,13 +80,30 @@ func (c *Cmd) Run() error {
 	return c.doRun(ppty, winCh)
 }
 
+// hasCustomStdio reports whether all three stdio handles were set, e.g. by
+// tea.Exec. The gate is all-or-nothing: a partial set keeps the default
+// session/PTY wiring, since ppty.Start cannot mix custom handles with the
+// PTY slave.
+func (c *Cmd) hasCustomStdio() bool {
+	return c.stdin != nil && c.stdout != nil && c.stderr != nil
+}
+
 var _ tea.ExecCommand = &Cmd{}
 
-// SetStderr conforms with tea.ExecCommand.
-func (*Cmd) SetStderr(io.Writer) {}
+// SetStderr conforms with tea.ExecCommand. It must be called before Run;
+// Cmd is not safe for concurrent use.
+func (c *Cmd) SetStderr(w io.Writer) {
+	c.stderr = w
+}
 
-// SetStdin conforms with tea.ExecCommand.
-func (*Cmd) SetStdin(io.Reader) {}
+// SetStdin conforms with tea.ExecCommand. It must be called before Run;
+// Cmd is not safe for concurrent use.
+func (c *Cmd) SetStdin(r io.Reader) {
+	c.stdin = r
+}
 
-// SetStdout conforms with tea.ExecCommand.
-func (*Cmd) SetStdout(io.Writer) {}
+// SetStdout conforms with tea.ExecCommand. It must be called before Run;
+// Cmd is not safe for concurrent use.
+func (c *Cmd) SetStdout(w io.Writer) {
+	c.stdout = w
+}
