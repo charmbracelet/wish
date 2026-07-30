@@ -98,27 +98,30 @@ func TestCommandPtyError(t *testing.T) {
 	}
 }
 
-// TestCommandSetStdio verifies that SetStdin, SetStdout, SetStderr methods
-// properly store custom I/O handles. This is important for tea.Exec integration
-// where Bubble Tea sets these to share I/O with the child process.
+// TestCommandSetStdio verifies that Run uses the custom handles when all
+// three are set. The cat round trip proves both stdin and stdout flow
+// through: output can only appear in the buffer if both are wired.
 func TestCommandSetStdio(t *testing.T) {
 	srv := &ssh.Server{
 		Handler: func(s ssh.Session) {
-			cmd := Command(s, "echo", "custom")
-			var buf bytes.Buffer
-			// Set all stdio handles (required for custom stdio path)
-			cmd.SetStdin(strings.NewReader(""))
-			cmd.SetStdout(&buf)
-			cmd.SetStderr(&buf)
+			cmd := Command(s, "cat")
+			if runtime.GOOS == "windows" {
+				cmd = Command(s, "findstr", "roundtrip")
+			}
+			var out, errOut bytes.Buffer
+			cmd.SetStdin(strings.NewReader("roundtrip\n"))
+			cmd.SetStdout(&out)
+			cmd.SetStderr(&errOut)
 			if err := cmd.Run(); err != nil {
 				Fatal(s, err)
 			}
-			// Verify that output went to our custom buffer
-			if !strings.Contains(buf.String(), "custom") {
-				Fatal(s, "expected output in custom buffer")
+			if !strings.Contains(out.String(), "roundtrip") {
+				Fatalf(s, "expected stdin to round trip through custom stdout, got %q", out.String())
 			}
-			// Write success marker to session
 			_, _ = s.Write([]byte("SUCCESS"))
+			// for some reason sometimes on macos github action runners,
+			// it cuts parts of the output.
+			time.Sleep(100 * time.Millisecond)
 		},
 	}
 	if err := ssh.AllocatePty()(srv); err != nil {
@@ -138,12 +141,54 @@ func TestCommandSetStdio(t *testing.T) {
 	expectContains(t, stdout.String(), "SUCCESS")
 }
 
+// TestCommandSetStdioPartial verifies that a partial set keeps the default
+// PTY wiring: the gate is all-or-nothing.
+func TestCommandSetStdioPartial(t *testing.T) {
+	srv := &ssh.Server{
+		Handler: func(s ssh.Session) {
+			cmd := Command(s, "echo", "partial")
+			if runtime.GOOS == "windows" {
+				cmd = Command(s, "cmd", "/C", "echo", "partial")
+			}
+			// Only stdout is set, so the command must still run on the PTY
+			// and the session must see the output.
+			var sink bytes.Buffer
+			cmd.SetStdout(&sink)
+			if err := cmd.Run(); err != nil {
+				Fatal(s, err)
+			}
+			if sink.Len() != 0 {
+				Fatalf(s, "expected PTY fallback with partial stdio set, but output went to custom stdout: %q", sink.String())
+			}
+			// for some reason sometimes on macos github action runners,
+			// it cuts parts of the output.
+			time.Sleep(100 * time.Millisecond)
+		},
+	}
+	if err := ssh.AllocatePty()(srv); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	sess := testsession.New(t, srv, nil)
+	if err := sess.RequestPty("xterm", 500, 200, nil); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	var stdout bytes.Buffer
+	sess.Stdout = &stdout
+	if err := sess.Run(""); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	expectContains(t, stdout.String(), "partial")
+}
+
 func runEcho(s ssh.Session, str string) {
 	cmd := Command(s, "echo", str)
 	if runtime.GOOS == "windows" {
 		cmd = Command(s, "cmd", "/C", "echo", str)
 	}
-	// Setting nil should be safe and not change behavior
+	// With all handles nil, the gate stays closed and the command runs on
+	// the session/PTY as before.
 	cmd.SetStderr(nil)
 	cmd.SetStdin(nil)
 	cmd.SetStdout(nil)
