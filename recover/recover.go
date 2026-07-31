@@ -31,19 +31,28 @@ func MiddlewareWithLogger(logger Logger, mw ...wish.Middleware) wish.Middleware 
 	}
 	return func(sh ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
-			func() {
-				defer func() {
-					if r := recover(); r != nil {
-						logger.Printf(
-							"panic: %v\n%s",
-							r,
-							string(debug.Stack()),
-						)
-					}
-				}()
-				h(s)
-			}()
-			sh(s)
+			guard(logger, func() { h(s) })
+			guard(logger, func() { sh(s) })
 		}
 	}
+}
+
+// guard runs fn and recovers any panic it raises, logging it with a stack
+// trace.
+//
+// Both the wrapped middleware chain and the next handler are guarded. A panic
+// in either runs on the connection's goroutine, and Go has no process-wide
+// panic handler, so letting one escape would terminate the whole server
+// process rather than just the offending session.
+func guard(logger Logger, fn func()) {
+	defer func() {
+		if r := recover(); r != nil {
+			logger.Printf(
+				"panic: %v\n%s",
+				r,
+				string(debug.Stack()),
+			)
+		}
+	}()
+	fn()
 }
