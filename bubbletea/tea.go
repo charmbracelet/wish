@@ -3,6 +3,7 @@ package bubbletea
 
 import (
 	"context"
+	"runtime/debug"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/log/v2"
@@ -64,6 +65,22 @@ func MiddlewareWithProgramHandler(handler ProgramHandler) wish.Middleware {
 			}
 			ctx, cancel := context.WithCancel(sess.Context())
 			go func() {
+				// This runs on its own goroutine, so the recover middleware
+				// cannot see it: a recover only catches panics unwinding its
+				// own stack. Without this, a panic here would take down the
+				// whole server process rather than this one session.
+				//
+				// Quit the program on the way out, so the session ends instead
+				// of continuing with a window that no longer resizes.
+				defer func() {
+					if r := recover(); r != nil {
+						log.Error("panic in window change handler",
+							"panic", r,
+							"stack", string(debug.Stack()),
+						)
+						program.Quit()
+					}
+				}()
 				for {
 					select {
 					case <-ctx.Done():
