@@ -1,6 +1,7 @@
 package scp
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -44,15 +45,61 @@ func (h *fileSystemHandler) chtimes(path string, mtime, atime int64) error {
 
 func (h *fileSystemHandler) prefixed(path string) (string, error) {
 	clean := filepath.Clean(path)
-	if clean == h.root || strings.HasPrefix(clean, h.root+string(filepath.Separator)) {
-		return clean, nil
+	joined := clean
+	if clean != h.root && !strings.HasPrefix(clean, h.root+string(filepath.Separator)) {
+		safe := filepath.Clean("/" + path)
+		joined = filepath.Join(h.root, safe)
+		if joined != h.root && !strings.HasPrefix(joined, h.root+string(filepath.Separator)) {
+			return "", fmt.Errorf("path traversal detected: %q resolves outside root", path)
+		}
 	}
-	safe := filepath.Clean("/" + path)
-	joined := filepath.Join(h.root, safe)
-	if joined != h.root && !strings.HasPrefix(joined, h.root+string(filepath.Separator)) {
-		return "", fmt.Errorf("path traversal detected: %q resolves outside root", path)
+	if err := h.confined(joined); err != nil {
+		return "", err
 	}
 	return joined, nil
+}
+
+// confined reports whether path, with symlinks resolved, is still inside root.
+//
+// The checks above operate on the string, and a symlink sitting inside root
+// points wherever its target says. Both sinks here, os.Open and os.OpenFile,
+// follow symlinks, so a confinement decision made lexically does not describe
+// the file that ends up being touched.
+//
+// The path being written to usually does not exist yet, which is the whole
+// reason this walks up to the nearest existing ancestor instead of resolving
+// path itself. Once that ancestor is known to be inside root, the components
+// below it cannot leave: they have already been cleaned of "..", and a name
+// that does not exist cannot be a symlink.
+func (h *fileSystemHandler) confined(path string) error {
+	// The root can itself sit behind a symlink, /var on macOS being the common
+	// case, so compare resolved against resolved or everything looks like an
+	// escape.
+	root, err := filepath.EvalSymlinks(h.root)
+	if err != nil {
+		return fmt.Errorf("failed to resolve root %q: %w", h.root, err)
+	}
+
+	for cur := path; ; {
+		resolved, err := filepath.EvalSymlinks(cur)
+		if err == nil {
+			if resolved != root && !strings.HasPrefix(resolved, root+string(filepath.Separator)) {
+				return fmt.Errorf("path traversal detected: %q resolves outside root", path)
+			}
+			return nil
+		}
+		if !errors.Is(err, fs.ErrNotExist) {
+			return fmt.Errorf("failed to resolve %q: %w", path, err)
+		}
+
+		parent := filepath.Dir(cur)
+		if parent == cur {
+			// Walked to the filesystem root without finding anything that
+			// exists, so nothing ties this path to root.
+			return fmt.Errorf("path traversal detected: %q resolves outside root", path)
+		}
+		cur = parent
+	}
 }
 
 func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {

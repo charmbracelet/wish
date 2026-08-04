@@ -422,6 +422,90 @@ func TestPathTraversalEndToEnd(t *testing.T) {
 	})
 }
 
+// TestSymlinkEscapeEndToEnd covers confinement against symlinks rather than
+// against "..". The path checks were lexical, and os.Open and os.OpenFile both
+// follow symlinks, so a link already sitting inside root led out of it in both
+// directions. Something other than SCP has to place that link: an operator
+// layout, an unpacked archive, or another part of the host application writing
+// into the same directory.
+func TestSymlinkEscapeEndToEnd(t *testing.T) {
+	t.Run("read through symlink", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		outside := t.TempDir()
+
+		secret := filepath.Join(outside, "secret.txt")
+		is.NoErr(os.WriteFile(secret, []byte("super-secret"), 0o600))
+		is.NoErr(os.Symlink(secret, filepath.Join(root, "link.txt")))
+
+		session := setup(t, NewFileSystemHandler(root), nil)
+		out, err := session.CombinedOutput("scp -f link.txt")
+		is.True(err != nil)
+		is.True(!bytes.Contains(out, []byte("super-secret")))
+	})
+
+	t.Run("overwrite through symlink", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		outside := t.TempDir()
+
+		target := filepath.Join(outside, "target.txt")
+		is.NoErr(os.WriteFile(target, []byte("original"), 0o600))
+		is.NoErr(os.Symlink(target, filepath.Join(root, "link.txt")))
+
+		var in bytes.Buffer
+		in.WriteString("C0644 5 link.txt\n")
+		in.WriteString("pwned")
+		in.Write(NULL)
+
+		session := setup(t, nil, NewFileSystemHandler(root))
+		session.Stdin = &in
+		_, err := session.CombinedOutput("scp -t .")
+		is.True(err != nil)
+
+		// The out-of-root file must be untouched, not merely unwritten: the
+		// open uses O_TRUNC, so reaching it at all destroys the contents.
+		got, err := os.ReadFile(target)
+		is.NoErr(err)
+		is.Equal(string(got), "original")
+	})
+
+	t.Run("create under symlinked dir", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		outside := t.TempDir()
+
+		is.NoErr(os.Symlink(outside, filepath.Join(root, "dirlink")))
+
+		var in bytes.Buffer
+		in.WriteString("C0644 5 newfile\n")
+		in.WriteString("pwned")
+		in.Write(NULL)
+
+		session := setup(t, nil, NewFileSystemHandler(root))
+		session.Stdin = &in
+		_, err := session.CombinedOutput("scp -t dirlink")
+		is.True(err != nil)
+
+		_, statErr := os.Stat(filepath.Join(outside, "newfile"))
+		is.True(os.IsNotExist(statErr))
+	})
+
+	t.Run("symlink inside root still works", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+
+		target := filepath.Join(root, "real.txt")
+		is.NoErr(os.WriteFile(target, []byte("in-root"), 0o600))
+		is.NoErr(os.Symlink(target, filepath.Join(root, "link.txt")))
+
+		session := setup(t, NewFileSystemHandler(root), nil)
+		out, err := session.CombinedOutput("scp -f link.txt")
+		is.NoErr(err)
+		is.True(bytes.Contains(out, []byte("in-root")))
+	})
+}
+
 func chtimesTree(tb testing.TB, dir string, atime, mtime time.Time) {
 	is.New(tb).NoErr(filepath.WalkDir(dir, func(path string, _ fs.DirEntry, err error) error {
 		if err != nil {
