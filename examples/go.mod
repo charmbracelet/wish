@@ -15,12 +15,13 @@ require (
 )
 
 require (
+	github.com/charmbracelet/x/xpty v0.1.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/pires/go-proxyproto v0.12.0 // indirect
 )
 
 require (
-	charm.land/ssh v0.4.1
+	charm.land/ssh v0.4.2
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
