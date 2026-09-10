@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -71,10 +72,8 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 			cmd := s.Command()
 			if len(cmd) == 2 {
 				gc := cmd[0]
-				// repo should be in the form of "repo.git" or "user/repo.git"
-				repo := strings.TrimSuffix(strings.TrimPrefix(cmd[1], "/"), "/")
-				repo = filepath.Clean(repo)
-				if n := strings.Count(repo, "/"); n > 1 {
+				repo, ok := cleanRepo(cmd[1])
+				if !ok {
 					Fatal(s, ErrInvalidRepo)
 					return
 				}
@@ -116,6 +115,25 @@ func Middleware(repoDir string, gh Hooks) wish.Middleware {
 			sh(s)
 		}
 	}
+}
+
+// cleanRepo normalizes a repo name requested over the wire and reports whether
+// the server will act on it: "repo.git" or "user/repo.git", and nothing that
+// leaves repoDir once joined to it.
+//
+// Backslashes count as separators on every platform. Windows accepts them, so
+// a check that only knows "/" reads "..\..\evil" as one harmless file name and
+// both the depth limit and the containment check fall open.
+//
+// The result stays in slash form, so hooks see the same name everywhere.
+func cleanRepo(name string) (string, bool) {
+	repo := path.Clean(strings.Trim(strings.ReplaceAll(name, `\`, "/"), "/"))
+	// path.Clean turns an empty name into ".", which IsLocal accepts and Join
+	// would resolve to repoDir itself.
+	if repo == "." || !filepath.IsLocal(repo) || strings.Count(repo, "/") > 1 {
+		return "", false
+	}
+	return repo, true
 }
 
 func gitPack(s ssh.Session, gitCmd string, repoDir string, repo string) error {

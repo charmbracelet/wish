@@ -1,8 +1,11 @@
 package git
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"net"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -36,6 +39,9 @@ func TestGitMiddleware(t *testing.T) {
 			{pubkey, "repo7", AdminAccess},
 			{pubkey, "abc/repo1", AdminAccess},
 			{pubkey, "abc/def/repo1", AdminAccess},
+			// Permissive hooks are the reported scenario: the middleware, not
+			// the hooks, has to keep the traversal out.
+			{pubkey, "../escaped", AdminAccess},
 		},
 	}
 	srv, err := wish.NewServer(
@@ -93,6 +99,15 @@ func TestGitMiddleware(t *testing.T) {
 		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/abc/def/repo1"))
 		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
 		requireError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
+	})
+
+	t.Run("push one level above the repo dir", func(t *testing.T) {
+		cwd := t.TempDir()
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "init", "-b", "main"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "remote", "add", "origin", remote+"/../escaped"))
+		requireNoError(t, runGitHelper(t, pkPath, cwd, "commit", "--allow-empty", "-m", "initial commit"))
+		requireError(t, runGitHelper(t, pkPath, cwd, "push", "origin", "main"))
+		requireNotExists(t, filepath.Join(filepath.Dir(repoDir), "escaped"))
 	})
 
 	t.Run("create and clone repo", func(t *testing.T) {
@@ -181,6 +196,14 @@ func requireError(t *testing.T, err error) {
 	}
 }
 
+func requireNotExists(t *testing.T, path string) {
+	t.Helper()
+
+	if _, err := os.Stat(path); !errors.Is(err, fs.ErrNotExist) {
+		t.Fatalf("expected %q to not exist, got %v", path, err)
+	}
+}
+
 func requireHasAction(t *testing.T, actions []action, key ssh.PublicKey, repo string) {
 	t.Helper()
 
@@ -240,4 +263,47 @@ func (h *testHooks) Fetch(repo string, key ssh.PublicKey) {
 	defer h.Unlock()
 
 	h.fetches = append(h.fetches, action{key, repo})
+}
+
+func TestCleanRepo(t *testing.T) {
+	for _, tc := range []struct {
+		in   string
+		want string
+	}{
+		{"repo.git", "repo.git"},
+		{"/repo.git", "repo.git"},
+		{"/repo.git/", "repo.git"},
+		{"user/repo.git", "user/repo.git"},
+		{"user/./repo.git", "user/repo.git"},
+		{"user/sub/../repo.git", "user/repo.git"},
+
+		// Escapes repoDir. One level is the whole bug: it survives
+		// filepath.Clean with a single slash left in it.
+		{"/../repo.git", ""},
+		{"../repo.git", ""},
+		{"user/../../repo.git", ""},
+		{"//../../repo.git", ""},
+		{"..", ""},
+		{"/", ""},
+		{"", ""},
+
+		// Backslashes escape on Windows, so they are rejected everywhere.
+		{`..\repo.git`, ""},
+		{`..\..\..\repo.git`, ""},
+		{`user\..\..\repo.git`, ""},
+
+		// Deeper than "user/repo.git".
+		{"a/b/repo.git", ""},
+		{`a\b\repo.git`, ""},
+	} {
+		t.Run(tc.in, func(t *testing.T) {
+			got, ok := cleanRepo(tc.in)
+			if ok != (tc.want != "") {
+				t.Fatalf("cleanRepo(%q) ok = %v, want %v", tc.in, ok, tc.want != "")
+			}
+			if got != tc.want {
+				t.Fatalf("cleanRepo(%q) = %q, want %q", tc.in, got, tc.want)
+			}
+		})
+	}
 }
