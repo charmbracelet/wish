@@ -266,6 +266,12 @@ func TestPrefixedPathTraversal(t *testing.T) {
 	root := t.TempDir()
 	h := &fileSystemHandler{root: filepath.Clean(root)}
 
+	// An ancestor that exists but is not a directory, so resolving anything
+	// below it fails with something other than "does not exist".
+	if err := os.WriteFile(filepath.Join(root, "a.txt"), []byte("a text file"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
 	cases := []struct {
 		name       string
 		path       string
@@ -279,6 +285,8 @@ func TestPrefixedPathTraversal(t *testing.T) {
 		{"root-prefixed traversal", root + "/../../../etc/shadow", "", true},
 		{"valid relative path", "subdir/file.txt", filepath.Join(root, "subdir/file.txt"), false},
 		{"valid path under root", filepath.Join(root, "file.txt"), filepath.Join(root, "file.txt"), false},
+		{"glob pattern", "*.txt", filepath.Join(root, "*.txt"), false},
+		{"under a non-directory", "a.txt/b", filepath.Join(root, "a.txt/b"), false},
 		{"root slash", "/", root, false},
 		{"dot", ".", root, false},
 	}

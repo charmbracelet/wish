@@ -62,15 +62,14 @@ func (h *fileSystemHandler) prefixed(path string) (string, error) {
 // confined reports whether path, with symlinks resolved, is still inside root.
 //
 // The checks above operate on the string, and a symlink sitting inside root
-// points wherever its target says. Both sinks here, os.Open and os.OpenFile,
-// follow symlinks, so a confinement decision made lexically does not describe
-// the file that ends up being touched.
+// points wherever its target says. Both sinks, os.Open and os.OpenFile, follow
+// symlinks, so a lexical decision does not describe the file that gets touched.
 //
-// The path being written to usually does not exist yet, which is the whole
-// reason this walks up to the nearest existing ancestor instead of resolving
-// path itself. Once that ancestor is known to be inside root, the components
-// below it cannot leave: they have already been cleaned of "..", and a name
-// that does not exist cannot be a symlink.
+// The path being written to usually does not exist yet, which is why this walks
+// up to the nearest resolvable ancestor instead of resolving path itself. Once
+// that ancestor is known to be inside root, the components below it cannot
+// leave: they have already been cleaned of "..", and a name that does not
+// resolve cannot be a symlink.
 func (h *fileSystemHandler) confined(path string) error {
 	// The root can itself sit behind a symlink, /var on macOS being the common
 	// case, so compare resolved against resolved or everything looks like an
@@ -88,14 +87,18 @@ func (h *fileSystemHandler) confined(path string) error {
 			}
 			return nil
 		}
-		if !errors.Is(err, fs.ErrNotExist) {
+		// A component we are not allowed to look at could be a symlink, so
+		// there is nothing to conclude. Every other failure means the name
+		// names no file, missing or ENOTDIR or syntax the platform rejects
+		// outright, as Windows does for a glob metacharacter, so keep walking.
+		if errors.Is(err, fs.ErrPermission) {
 			return fmt.Errorf("failed to resolve %q: %w", path, err)
 		}
 
 		parent := filepath.Dir(cur)
 		if parent == cur {
-			// Walked to the filesystem root without finding anything that
-			// exists, so nothing ties this path to root.
+			// Walked to the filesystem root without resolving anything, so
+			// nothing ties this path to root.
 			return fmt.Errorf("path traversal detected: %q resolves outside root", path)
 		}
 		cur = parent
