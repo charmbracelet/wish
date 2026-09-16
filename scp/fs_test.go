@@ -88,6 +88,32 @@ func TestFS(t *testing.T) {
 		requireEqualGolden(t, bts)
 	})
 
+	for _, tc := range []struct {
+		name string
+		path string
+	}{
+		{name: "recursive sibling prefixes", path: "a"},
+		{name: "recursive sibling prefixes glob", path: "a/*"},
+		{name: "recursive sibling prefixes dot", path: "."},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			is := is.New(t)
+			dir := t.TempDir()
+			h := NewFSReadHandler(os.DirFS(dir))
+
+			is.NoErr(os.MkdirAll(filepath.Join(dir, "a/foo"), 0o755))
+			is.NoErr(os.MkdirAll(filepath.Join(dir, "a/foobar"), 0o755))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a/foo/one.txt"), []byte("one"), 0o644))
+			is.NoErr(os.WriteFile(filepath.Join(dir, "a/foobar/two.txt"), []byte("two"), 0o644))
+			chtimesTree(t, dir, atime, mtime)
+
+			session := setup(t, h, nil)
+			bts, err := session.CombinedOutput("scp -r -f " + tc.path)
+			is.NoErr(err)
+			requireEqualGolden(t, bts)
+		})
+	}
+
 	t.Run("recursive folder", func(t *testing.T) {
 		is := is.New(t)
 

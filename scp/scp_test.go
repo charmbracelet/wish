@@ -105,6 +105,63 @@ func TestNoDirRootEntry(t *testing.T) {
 	requireEqualGolden(t, out.Bytes())
 }
 
+func TestIsWithin(t *testing.T) {
+	for _, tc := range []struct {
+		dir, path string
+		want      bool
+	}{
+		{"a/foo", "a/foo", true},
+		{"a/foo", "a/foo/nested", true},
+		{"a/foo", "a/foobar", false},
+		{"a/foo", "a/foobar/nested", false},
+		{"a/foo", "a", false},
+		{".", ".", true},
+		{".", "a", true},
+		{".", "a/foo", true},
+		{".", "..", false},
+		{".", "../a", false},
+		{"/", "/", true},
+		{"/", "/a/foo", true},
+		{"C:/", "C:/a", true},
+		{"//server/share/", "//server/share/a", true},
+		{"//server/share/a", "//server/share/ab", false},
+	} {
+		if got := isWithin(tc.dir, tc.path); got != tc.want {
+			t.Errorf("isWithin(%q, %q) = %v, want %v", tc.dir, tc.path, got, tc.want)
+		}
+	}
+}
+
+func TestAppendSiblingDirectories(t *testing.T) {
+	for _, base := range []string{".", "a", "/"} {
+		t.Run(base, func(t *testing.T) {
+			foo := filepath.Join(base, "foo")
+			foobar := filepath.Join(base, "foobar")
+			fooFile := &FileEntry{Filepath: filepath.Join(foo, "same.txt")}
+			foobarFile := &FileEntry{Filepath: filepath.Join(foobar, "same.txt")}
+
+			root := &RootEntry{}
+			for _, entry := range []Entry{
+				&DirEntry{Filepath: base},
+				&DirEntry{Filepath: foo},
+				fooFile,
+				&DirEntry{Filepath: foobar},
+				foobarFile,
+			} {
+				root.Append(entry)
+			}
+
+			want := RootEntry{&DirEntry{Filepath: base, Children: []Entry{
+				&DirEntry{Filepath: foo, Children: []Entry{fooFile}},
+				&DirEntry{Filepath: foobar, Children: []Entry{foobarFile}},
+			}}}
+			if diff := cmp.Diff(want, *root); diff != "" {
+				t.Fatalf("incorrect directory tree (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func TestInvalidOps(t *testing.T) {
 	t.Run("not scp", func(t *testing.T) {
 		_, err := setup(t, nil, nil).CombinedOutput("not-scp ign")
