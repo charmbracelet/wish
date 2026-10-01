@@ -150,27 +150,7 @@ type RootEntry []Entry
 
 // Append the given entry to a child directory, or the root entry itself if
 // none matches.
-func (e *RootEntry) Append(entry Entry) {
-	parent := normalizePath(filepath.Dir(entry.path()))
-
-	for _, child := range *e {
-		switch dir := child.(type) {
-		case *DirEntry:
-			if child.path() == parent {
-				dir.Children = append(dir.Children, entry)
-				return
-			}
-			if strings.HasPrefix(parent, normalizePath(dir.Filepath)) {
-				dir.Append(entry)
-				return
-			}
-		default:
-			continue
-		}
-	}
-
-	*e = append(*e, entry)
-}
+func (e *RootEntry) Append(entry Entry) { appendEntry((*[]Entry)(e), entry) }
 
 // Write recursively writes all the children to the given writer.
 func (e *RootEntry) Write(w io.Writer) error {
@@ -220,26 +200,28 @@ func (e *DirEntry) Write(w io.Writer) error {
 }
 
 // Append adds an entry to the folder or their children.
-func (e *DirEntry) Append(entry Entry) {
-	parent := normalizePath(filepath.Dir(entry.path()))
+func (e *DirEntry) Append(entry Entry) { appendEntry(&e.Children, entry) }
 
-	for _, child := range e.Children {
-		switch dir := child.(type) {
-		case *DirEntry:
-			if child.path() == parent {
-				dir.Children = append(dir.Children, entry)
-				return
-			}
-			if strings.HasPrefix(parent, normalizePath(dir.path())) {
-				dir.Append(entry)
-				return
-			}
-		default:
-			continue
+// appendEntry places entry inside the first directory in children that
+// contains it, or appends it to children if none does.
+func appendEntry(children *[]Entry, entry Entry) {
+	parent := normalizePath(filepath.Dir(entry.path()))
+	for _, child := range *children {
+		if dir, ok := child.(*DirEntry); ok && isWithin(normalizePath(dir.Filepath), parent) {
+			dir.Append(entry)
+			return
 		}
 	}
+	*children = append(*children, entry)
+}
 
-	e.Children = append(e.Children, entry)
+// isWithin reports whether the normalized path p is dir or one of its
+// descendants, comparing whole path components.
+func isWithin(dir, p string) bool {
+	if dir == "." {
+		return p != ".." && !strings.HasPrefix(p, "../") && !filepath.IsAbs(p)
+	}
+	return p == dir || strings.HasPrefix(p, strings.TrimSuffix(dir, "/")+"/")
 }
 
 // Op defines which kind of SCP Operation is going on.
