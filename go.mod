@@ -3,7 +3,7 @@ module charm.land/wish/v2
 go 1.26.8
 
 require (
-	charm.land/bubbletea/v2 v2.0.9
+	charm.land/bubbletea/v2 v2.0.10
 	charm.land/log/v2 v2.0.1
 	github.com/charmbracelet/colorprofile v0.4.3
 	github.com/charmbracelet/keygen v0.5.4
