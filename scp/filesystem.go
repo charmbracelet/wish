@@ -46,10 +46,10 @@ func (h *fileSystemHandler) chtimes(path string, mtime, atime int64) error {
 func (h *fileSystemHandler) prefixed(path string) (string, error) {
 	clean := filepath.Clean(path)
 	joined := clean
-	if clean != h.root && !strings.HasPrefix(clean, h.root+string(filepath.Separator)) {
+	if !isWithinRoot(h.root, clean) {
 		safe := filepath.Clean("/" + path)
 		joined = filepath.Join(h.root, safe)
-		if joined != h.root && !strings.HasPrefix(joined, h.root+string(filepath.Separator)) {
+		if !isWithinRoot(h.root, joined) {
 			return "", fmt.Errorf("path traversal detected: %q resolves outside root", path)
 		}
 	}
@@ -57,6 +57,13 @@ func (h *fileSystemHandler) prefixed(path string) (string, error) {
 		return "", err
 	}
 	return joined, nil
+}
+
+// isWithinRoot compares native filesystem paths by whole components.
+// Unlike isWithin, it does not expect slash-normalized entry paths.
+func isWithinRoot(root, path string) bool {
+	rel, err := filepath.Rel(root, path)
+	return err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 // confined reports whether path, with symlinks resolved, is still inside root.
@@ -74,15 +81,25 @@ func (h *fileSystemHandler) confined(path string) error {
 	// The root can itself sit behind a symlink, /var on macOS being the common
 	// case, so compare resolved against resolved or everything looks like an
 	// escape.
-	root, err := filepath.EvalSymlinks(h.root)
+	// Absolute paths also keep relative roots and absolute symlink targets
+	// comparable.
+	root, err := filepath.Abs(h.root)
+	if err != nil {
+		return fmt.Errorf("failed to resolve root %q: %w", h.root, err)
+	}
+	root, err = filepath.EvalSymlinks(root)
 	if err != nil {
 		return fmt.Errorf("failed to resolve root %q: %w", h.root, err)
 	}
 
-	for cur := path; ; {
+	cur, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("failed to resolve %q: %w", path, err)
+	}
+	for {
 		resolved, err := filepath.EvalSymlinks(cur)
 		if err == nil {
-			if resolved != root && !strings.HasPrefix(resolved, root+string(filepath.Separator)) {
+			if !isWithinRoot(root, resolved) {
 				return fmt.Errorf("path traversal detected: %q resolves outside root", path)
 			}
 			return nil
@@ -117,7 +134,7 @@ func (h *fileSystemHandler) Glob(_ ssh.Session, s string) ([]string, error) {
 
 	var safe []string
 	for _, match := range matches {
-		if match != h.root && !strings.HasPrefix(match, h.root+string(filepath.Separator)) {
+		if !isWithinRoot(h.root, match) {
 			continue
 		}
 		rel, err := filepath.Rel(h.root, match)
