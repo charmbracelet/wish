@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	reTimestamp = regexp.MustCompile(`^T(\d{10}) 0 (\d{10}) 0$`)
+	reTimestamp = regexp.MustCompile(`^T(\d+) 0 (\d+) 0$`)
 	reNewFolder = regexp.MustCompile(`^D(\d{4}) 0 (.*)$`)
 	reNewFile   = regexp.MustCompile(`^C(\d{4}) (\d+) (.*)$`)
 )

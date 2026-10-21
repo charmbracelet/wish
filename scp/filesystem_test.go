@@ -144,6 +144,27 @@ func TestFilesystem(t *testing.T) {
 			is.Equal("hello\n", string(bts))
 		})
 
+		t.Run("file with timestamp before 2001", func(t *testing.T) {
+			is := is.New(t)
+			dir := t.TempDir()
+			h := NewFileSystemHandler(dir)
+			session := setup(t, nil, h)
+
+			var in bytes.Buffer
+			in.WriteString("T915148800 0 915148800 0\n")
+			in.WriteString("C0644 6 a.txt\n")
+			in.WriteString("hello\n")
+			in.Write(NULL)
+			session.Stdin = &in
+
+			_, err := session.CombinedOutput("scp -t .")
+			is.NoErr(err)
+
+			stat, err := os.Stat(filepath.Join(dir, "a.txt"))
+			is.NoErr(err)
+			is.Equal(stat.ModTime().Unix(), int64(915148800))
+		})
+
 		t.Run("recursive", func(t *testing.T) {
 			is := is.New(t)
 			dir := t.TempDir()
