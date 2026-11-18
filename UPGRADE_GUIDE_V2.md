@@ -533,7 +533,7 @@ If you run into issues:
 - Ask on [Discord](https://charm.land/chat) or [Matrix](https://charm.land/matrix)
 - Open an issue on [GitHub](https://github.com/charmbracelet/wish/issues)
 
-[bbtea-upgrade]: https://github.com/charmbracelet/bubbletea/blob/v2/UPGRADE_GUIDE_V2.md
+[bbtea-upgrade]: https://github.com/charmbracelet/bubbletea/blob/main/UPGRADE_GUIDE_V2.md
 
 ---
 
