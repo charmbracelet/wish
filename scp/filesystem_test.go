@@ -499,6 +499,28 @@ func TestSymlinkEscapeEndToEnd(t *testing.T) {
 		is.True(os.IsNotExist(statErr))
 	})
 
+	t.Run("create through dangling symlink", func(t *testing.T) {
+		is := is.New(t)
+		root := t.TempDir()
+		outside := t.TempDir()
+
+		target := filepath.Join(outside, "pwned.txt")
+		is.NoErr(os.Symlink(target, filepath.Join(root, "dangling")))
+
+		var in bytes.Buffer
+		in.WriteString("C0644 5 dangling\n")
+		in.WriteString("pwned")
+		in.Write(NULL)
+
+		session := setup(t, nil, NewFileSystemHandler(root))
+		session.Stdin = &in
+		_, err := session.CombinedOutput("scp -t .")
+		is.True(err != nil)
+
+		_, statErr := os.Stat(target)
+		is.True(os.IsNotExist(statErr))
+	})
+
 	t.Run("symlink inside root still works", func(t *testing.T) {
 		is := is.New(t)
 		root := t.TempDir()

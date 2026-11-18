@@ -29,12 +29,13 @@ func (h *fileSystemHandler) chtimes(path string, mtime, atime int64) error {
 	if mtime == 0 || atime == 0 {
 		return nil
 	}
-	p, err := h.prefixed(path)
+	r, name, err := h.inRoot(path)
 	if err != nil {
 		return err
 	}
-	if err := os.Chtimes(
-		p,
+	defer r.Close() //nolint:errcheck
+	if err := r.Chtimes(
+		name,
 		time.Unix(atime, 0),
 		time.Unix(mtime, 0),
 	); err != nil {
@@ -59,6 +60,26 @@ func (h *fileSystemHandler) prefixed(path string) (string, error) {
 	return joined, nil
 }
 
+// inRoot validates path and returns an os.Root for h.root along with path
+// relative to it. Writes go through the Root so the kernel refuses to follow a
+// symlink out of root at open time, which covers dangling symlinks and links
+// swapped in after the check above.
+func (h *fileSystemHandler) inRoot(path string) (*os.Root, string, error) {
+	p, err := h.prefixed(path)
+	if err != nil {
+		return nil, "", err
+	}
+	rel, err := filepath.Rel(h.root, p)
+	if err != nil {
+		return nil, "", err //nolint:wrapcheck
+	}
+	r, err := os.OpenRoot(h.root)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to open root %q: %w", h.root, err)
+	}
+	return r, rel, nil
+}
+
 // confined reports whether path, with symlinks resolved, is still inside root.
 //
 // The checks above operate on the string, and a symlink sitting inside root
@@ -68,8 +89,8 @@ func (h *fileSystemHandler) prefixed(path string) (string, error) {
 // The path being written to usually does not exist yet, which is why this walks
 // up to the nearest resolvable ancestor instead of resolving path itself. Once
 // that ancestor is known to be inside root, the components below it cannot
-// leave: they have already been cleaned of "..", and a name that does not
-// resolve cannot be a symlink.
+// leave: they have already been cleaned of "..". A dangling symlink also fails
+// to resolve, so writes additionally go through inRoot.
 func (h *fileSystemHandler) confined(path string) error {
 	// The root can itself sit behind a symlink, /var on macOS being the common
 	// case, so compare resolved against resolved or everything looks like an
@@ -188,22 +209,24 @@ func (h *fileSystemHandler) NewFileEntry(_ ssh.Session, name string) (*FileEntry
 }
 
 func (h *fileSystemHandler) Mkdir(_ ssh.Session, entry *DirEntry) error {
-	p, err := h.prefixed(entry.Filepath)
+	r, name, err := h.inRoot(entry.Filepath)
 	if err != nil {
 		return err
 	}
-	if err := os.Mkdir(p, entry.Mode); err != nil {
+	defer r.Close() //nolint:errcheck
+	if err := r.Mkdir(name, entry.Mode); err != nil {
 		return fmt.Errorf("failed to create dir: %q: %w", entry.Filepath, err)
 	}
 	return h.chtimes(entry.Filepath, entry.Mtime, entry.Atime)
 }
 
 func (h *fileSystemHandler) Write(_ ssh.Session, entry *FileEntry) (int64, error) {
-	p, err := h.prefixed(entry.Filepath)
+	r, name, err := h.inRoot(entry.Filepath)
 	if err != nil {
 		return 0, err
 	}
-	f, err := os.OpenFile(p, os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
+	defer r.Close() //nolint:errcheck
+	f, err := r.OpenFile(name, os.O_TRUNC|os.O_RDWR|os.O_CREATE, entry.Mode)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open file: %q: %w", entry.Filepath, err)
 	}
