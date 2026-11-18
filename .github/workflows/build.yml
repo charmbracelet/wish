@@ -7,10 +7,38 @@ on:
   pull_request:
 
 jobs:
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: true
+      - run: go install golang.org/x/vuln/cmd/govulncheck@latest
+      - run: govulncheck -format json ./... > govulncheck.json
+      - name: Fail only on vulnerabilities in this module's code
+        run: |
+          mod=$(go list -m)
+          jq -r --arg mod "$mod" 'select(.finding.trace[0].function and .finding.trace[0].module != $mod) | "::warning::\(.finding.osv) in \(.finding.trace[0].module) (dependency or standard library, not failing)"' govulncheck.json | sort -u
+          count=$(jq -s --arg mod "$mod" '[.[] | select(.finding.trace[0].module == $mod)] | length' govulncheck.json)
+          test "$count" -eq 0
+
   build:
-    uses: charmbracelet/meta/.github/workflows/build.yml@main
-    secrets:
-      gh_pat: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: stable
+          cache: true
+      - run: go mod tidy
+      - run: git diff --exit-code
+      - run: go build ./...
+      - run: go test ./...
 
   codecov:
     runs-on: ubuntu-latest
