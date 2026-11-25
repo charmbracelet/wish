@@ -212,3 +212,8 @@ func WithSubsystem(key string, h ssh.SubsystemHandler) ssh.Option {
 		return nil
 	}
 }
+
+// WithNoClientAuth returns an ssh.Option that sets the server to allow unauthenticated connections.
+func WithNoClientAuth() ssh.Option {
+	return ssh.NoClientAuth()
+}
